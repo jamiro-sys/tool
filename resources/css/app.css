@@ -1,0 +1,82 @@
+@import '@fontsource/plus-jakarta-sans/400.css';
+@import '@fontsource/plus-jakarta-sans/700.css';
+@import '@fontsource/plus-jakarta-sans/800.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    html { -webkit-tap-highlight-color: transparent; }
+    body { @apply bg-kreide text-nacht antialiased font-sans; }
+    h1, h2, h3 { @apply uppercase; }
+    em, i { font-style: normal; }
+    [x-cloak] { display: none !important; }
+    .grid > * { min-width: 0; }
+    :focus-visible { @apply outline-none ring-2 ring-rot ring-offset-2 ring-offset-kreide; }
+    input[type="checkbox"] { @apply accent-rot; }
+}
+
+@layer components {
+    /* Typografie */
+    .titel { @apply font-extrabold uppercase leading-none tracking-tight text-nacht; }
+    .label { @apply text-[11px] font-bold uppercase tracking-label text-beton; }
+    .zahl { @apply font-extrabold tabular-nums leading-none; }
+
+    /* Flaechen: feine Linie statt Schatten */
+    .karte { @apply bg-white border border-nacht/10; }
+    .karte-kopf { @apply flex items-center justify-between gap-3 border-b border-nacht/10 px-4 py-3; }
+
+    /* Knoepfe */
+    .knopf { @apply inline-flex items-center justify-center gap-2 px-4 min-h-[44px] text-xs font-bold uppercase tracking-label transition-colors duration-150 select-none disabled:opacity-50 disabled:cursor-not-allowed; }
+    .knopf-rot { @apply knopf bg-rot text-white hover:bg-rot-dunkel; }
+    .knopf-nacht { @apply knopf bg-nacht text-white hover:bg-nacht-hell; }
+    .knopf-rahmen { @apply knopf border border-nacht/20 bg-white text-nacht hover:border-nacht; }
+    .knopf-leise { @apply knopf text-nacht hover:bg-nacht/5; }
+    .knopf-klein { @apply min-h-[34px] px-3 text-[11px]; }
+
+    /* Formulare */
+    .feld { @apply block w-full min-h-[44px] border border-nacht/20 bg-white px-3 py-2 text-sm text-nacht placeholder:text-beton/70 focus:border-nacht focus:outline-none focus:ring-0; }
+    .feld-label { @apply label mb-1 block; }
+    textarea.feld { @apply min-h-[110px] leading-relaxed; }
+
+    /* Eckige Kategorie-Labels */
+    .marke { @apply inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-label whitespace-nowrap; }
+    .marke-offen { @apply marke bg-beton-hell text-nacht; }
+    .marke-in_arbeit { @apply marke bg-nacht text-white; }
+    .marke-erledigt { @apply marke bg-rot text-white; }
+    .marke-entfaellt { @apply marke border border-beton/40 text-beton line-through; }
+    .marke-gelb { @apply marke bg-gelb text-nacht; }
+    .marke-rahmen { @apply marke border border-nacht/20 text-nacht; }
+
+    /* Tempo-Band: geneigte Flaeche, Text gerade */
+    .tempo { @apply relative inline-block px-4 py-1.5; }
+    .tempo::before { content: ''; @apply absolute inset-0 -z-0 bg-rot; transform: skewX(-12deg); }
+    .tempo > * { @apply relative; }
+    .tempo-gelb::before { @apply bg-gelb; }
+    .tempo-nacht::before { @apply bg-nacht; }
+
+    /* Fortschritt */
+    .balken { @apply h-1.5 w-full bg-nacht/10 overflow-hidden; }
+    .balken > span { @apply block h-full bg-rot transition-[width] duration-700 ease-out; }
+
+    /* Navigation */
+    .nav-link { @apply flex items-center gap-3 px-4 py-2.5 text-[13px] font-bold uppercase tracking-label text-white/70 hover:text-white hover:bg-white/5 border-l-[3px] border-transparent; }
+    .nav-link.aktiv { @apply text-white border-rot bg-white/5; }
+
+    .tabelle { @apply w-full text-sm; }
+    .tabelle th { @apply label text-left px-3 py-2 border-b border-nacht/10 bg-kreide/60; }
+    .tabelle td { @apply px-3 py-2.5 border-b border-nacht/5 align-top; }
+
+    .prosa { @apply text-sm leading-relaxed whitespace-pre-line; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+@media print {
+    .kein-druck { display: none !important; }
+    body { background: #fff; }
+    .karte { border-color: #ddd; break-inside: avoid; }
+}
