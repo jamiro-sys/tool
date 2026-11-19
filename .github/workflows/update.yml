@@ -1,0 +1,78 @@
+name: Tests und automatisches Update
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: update-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, intl, pdo_sqlite, gmp, bcmath
+          coverage: none
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: composer install --no-interaction --prefer-dist --no-progress
+      - run: npm ci && npm run build
+      - run: cp .env.example .env && php artisan key:generate
+      - run: php artisan test
+      - run: composer audit
+
+  update:
+    # Laeuft nur auf main und nur, wenn in den Repository-Variablen DEPLOY_AKTIV=ja gesetzt ist.
+    needs: tests
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.DEPLOY_AKTIV == 'ja'
+    runs-on: ubuntu-latest
+    environment: produktion
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 30
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, intl, gmp, bcmath
+          coverage: none
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Paket bauen
+        run: |
+          composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-progress
+          npm ci && npm run build
+          VERSION="$(date -u +%Y.%m.%d)-${GITHUB_SHA::7}"
+          echo "$VERSION" > VERSION
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          git log -8 --pretty='- %s' > AENDERUNGEN.txt
+          rm -rf node_modules tests .git .github storage
+          tar czf /tmp/release.tgz .
+      - name: SSH einrichten
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p "${{ secrets.SSH_PORT || 22 }}" "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
+      - name: Auf Netcup hochladen und umschalten
+        env:
+          ZIEL: ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}
+          PORT: ${{ secrets.SSH_PORT || 22 }}
+          BASIS: ${{ secrets.DEPLOY_PFAD }}
+          PHP_BIN: ${{ vars.PHP_BIN || 'php' }}
+        run: |
+          RELEASE="$(date -u +%Y%m%d%H%M%S)-${GITHUB_SHA::7}"
+          ssh -p "$PORT" "$ZIEL" "mkdir -p '$BASIS/releases/$RELEASE'"
+          ssh -p "$PORT" "$ZIEL" "tar xzf - -C '$BASIS/releases/$RELEASE'" < /tmp/release.tgz
+          ssh -p "$PORT" "$ZIEL" "bash '$BASIS/releases/$RELEASE/scripts/server-update.sh' '$BASIS' '$RELEASE' '$PHP_BIN' '$GITHUB_SHA'"
