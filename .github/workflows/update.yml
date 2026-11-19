@@ -20,7 +20,7 @@ jobs:
           php-version: '8.3'
           extensions: mbstring, intl, pdo_sqlite, gmp, bcmath
           coverage: none
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: npm
@@ -45,7 +45,7 @@ jobs:
           php-version: '8.3'
           extensions: mbstring, intl, gmp, bcmath
           coverage: none
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: npm
