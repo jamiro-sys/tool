@@ -21,7 +21,12 @@ Ein Update lädt eine neue Version nach `releases/`, sichert die Datenbank, migr
 1. **PHP**: Unter *PHP-Einstellungen* der Domain PHP 8.3 oder neuer wählen (FPM). Erweiterungen `pdo_mysql`, `mbstring`, `intl`, `gmp` (für Push) aktiv lassen.
 2. **Datenbank**: Unter *Datenbanken* eine MariaDB-Datenbank mit Benutzer anlegen.
 3. **SSH**: Unter *Webhosting-Zugang* SSH-Zugriff aktivieren (`/bin/bash`).
-4. **Dokumentstamm**: Unter *Hosting-Einstellungen* den Dokumentstamm auf `ok-tool/current/public` setzen.
+4. **Dokumentstamm**: Unter *Hosting-Einstellungen* den Dokumentstamm auf den Ordner `ok-tool` setzen (nicht `current/public`: Netcup erlaubt kein erweitertes `open_basedir`). Das Update legt dort eine `.htaccess` an, die alles nach `current/public` weiterleitet.
+   Unter *Apache und nginx* bei *Zusätzliche nginx-Anweisungen* eintragen, damit nginx keine Dateien aus den internen Ordnern ausliefert:
+
+   ```
+   location ~ ^/(shared|releases|current)/ { return 404; }
+   ```
 5. **SSL**: Let's Encrypt aktivieren und "Weiterleitung auf HTTPS" einschalten.
 6. **E-Mail**: Ein Postfach anlegen, z. B. `ok@deine-domain.ch`, für den Versand.
 
@@ -95,7 +100,7 @@ Den `APP_KEY` erzeugst du nach dem ersten Update (Schritt 4).
 
 2. Den Inhalt von `ok-tool-deploy.pub` auf dem Server an `~/.ssh/authorized_keys` anhängen.
 3. Im GitHub-Repository unter *Settings > Secrets and variables > Actions*:
-   - Secrets: `SSH_HOST` (Server aus Plesk), `SSH_USER`, `SSH_PORT` (falls nicht 22), `SSH_KEY` (Inhalt von `ok-tool-deploy`), `DEPLOY_PFAD` (absoluter Pfad, z. B. `/var/www/vhosts/deine-domain.ch/ok-tool`, mit `pwd` im Ordner prüfen)
+   - Secrets: `SSH_HOST` (Server aus Plesk), `SSH_USER`, `SSH_PORT` (falls nicht 22), `SSH_KEY` (Inhalt von `ok-tool-deploy`), `DEPLOY_PFAD` (Pfad, wie ihn die SSH-Sitzung sieht, mit `pwd` im Ordner prüfen; bei chroot-SSH z. B. `/tool.deine-domain.ch/ok-tool`)
    - Variables: `DEPLOY_AKTIV` = `ja`, optional `PHP_BIN` (z. B. `/opt/plesk/php/8.3/bin/php`)
 4. Unter *Settings > Environments* ein Environment `produktion` anlegen. Dort kann man auf Wunsch eine Freigabe vor jedem Update verlangen.
 
@@ -112,7 +117,7 @@ php artisan db:seed --force
 php artisan ok:admin deine@adresse.ch "Vorname Nachname"
 ```
 
-`key:generate` schreibt in `shared/.env`. Danach einmal `php artisan optimize` ausführen. `db:seed` legt Ressorts, die zwei Turniere, zwei Hallen und typische Vorlagen an (in Produktion ohne Demodaten). `ok:admin` gibt einen Einladungslink aus, über den du dein Passwort setzt.
+`key:generate` schreibt in `shared/.env`. `db:seed` legt Ressorts, die zwei Turniere, zwei Hallen und typische Vorlagen an (in Produktion ohne Demodaten). `ok:admin` gibt einen Einladungslink aus, über den du dein Passwort setzt.
 
 ## 5. Cronjob
 
@@ -126,7 +131,11 @@ Der Cron erledigt: Warteschlange (Mails, Push), Erinnerungen 07.15 Uhr, Tageszus
 
 ## 6. Push einschalten
 
-Unter *Admin > System > Push-Schlüssel erzeugen* klicken und die zwei Werte in `shared/.env` eintragen, dann `php artisan optimize`. Danach kann jede Person Push unter *Benachrichtigungen* auf ihrem Gerät aktivieren. Auf dem iPhone muss das Tool dafür zuerst über *Teilen > Zum Home-Bildschirm* installiert werden.
+Unter *Admin > System > Push-Schlüssel erzeugen* klicken und die zwei Werte in `shared/.env` eintragen. Danach kann jede Person Push unter *Benachrichtigungen* auf ihrem Gerät aktivieren. Auf dem iPhone muss das Tool dafür zuerst über *Teilen > Zum Home-Bildschirm* installiert werden.
+
+## Hinweis zu chroot-SSH
+
+Bei Netcup sieht SSH den Webspace als `/`, der Webserver dagegen unter `/var/www/vhosts/...`. Darum verwendet das Update nur relative Links und speichert die Konfiguration nicht zwischen (`config:cache` nie ausführen).
 
 ## Zurückrollen
 

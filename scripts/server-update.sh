@@ -19,10 +19,24 @@ if [ ! -f shared/.env ]; then
     exit 1
 fi
 
-# Geteilte Daten verbinden
+# Webzugriff: Der Dokumentstamm zeigt auf $BASIS. Alles wird nach current/public
+# weitergeleitet, damit shared/ und releases/ nie direkt erreichbar sind.
+if [ ! -f .htaccess ]; then
+    cat > .htaccess <<'HTA'
+Options -Indexes
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^(.*)$ current/public/$1 [L]
+</IfModule>
+HTA
+fi
+printf 'Require all denied\n' > shared/.htaccess
+
+# Geteilte Daten verbinden. Relative Links, weil SSH (chroot) und Webserver
+# denselben Ordner unter verschiedenen absoluten Pfaden sehen.
 rm -rf "$NEU/storage"
-ln -s "$BASIS/shared/storage" "$NEU/storage"
-ln -sfn "$BASIS/shared/.env" "$NEU/.env"
+ln -s ../../shared/storage "$NEU/storage"
+ln -sfn ../../shared/.env "$NEU/.env"
 mkdir -p "$NEU/bootstrap/cache"
 
 # Sicherung vor dem Update (mit der bisherigen Version)
@@ -32,7 +46,11 @@ fi
 
 cd "$NEU"
 "$PHP" artisan migrate --force
-"$PHP" artisan optimize
+# Keine Konfiguration zwischenspeichern: Sie enthaelt absolute Pfade, und die
+# unterscheiden sich zwischen SSH/Cron (chroot) und Webserver.
+"$PHP" artisan optimize:clear
+"$PHP" artisan route:cache
+"$PHP" artisan event:cache
 
 # Umschalten ohne Ausfall
 cd "$BASIS"
