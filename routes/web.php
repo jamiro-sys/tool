@@ -144,6 +144,7 @@ Route::middleware(['auth', 'aktiv'])->group(function () {
         Route::get('/daten/vorlagen', [Admin\DatenController::class, 'vorlagenExport'])->name('daten.vorlagen');
         Route::post('/daten/vorlagen', [Admin\DatenController::class, 'vorlagenImport']);
         Route::get('/daten/gesamt', [Admin\DatenController::class, 'gesamtExport'])->name('daten.gesamt');
+        Route::post('/daten/leeren', [Admin\DatenController::class, 'leeren'])->name('daten.leeren');
         Route::get('/daten/ausgaben/{ausgabe}/csv', [Admin\DatenController::class, 'aufgabenCsv'])->name('daten.csv');
 
         Route::get('/einstellungen', [Admin\EinstellungenController::class, 'index'])->name('einstellungen');
