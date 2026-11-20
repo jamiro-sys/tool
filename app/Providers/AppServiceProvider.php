@@ -24,6 +24,8 @@ class AppServiceProvider extends ServiceProvider
     {
         Carbon::setLocale('de_CH');
 
+        \Illuminate\Database\Eloquent\Relations\Relation::morphMap(\App\Models\Verknuepfung::BEZUEGE);
+
         \Illuminate\Support\Facades\View::composer('components.app', function ($view) {
             $user = auth()->user();
             $view->with('navAusgabe', $user ? \App\Models\Ausgabe::naechste() : null);

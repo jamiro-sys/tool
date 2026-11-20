@@ -90,4 +90,14 @@ class Ausgabe extends Model
             ->orderBy('datum_von')
             ->first();
     }
+
+    public function verknuepfungen(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->morphMany(Verknuepfung::class, 'bezug')->latest();
+    }
+
+    public function kennzahlen(): HasMany
+    {
+        return $this->hasMany(Kennzahl::class);
+    }
 }

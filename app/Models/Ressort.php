@@ -115,4 +115,9 @@ class Ressort extends Model
 
         return ['punkte' => min(100, $punkte), 'stufe' => $stufe, 'hinweise' => $hinweise];
     }
+
+    public function verknuepfungen(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->morphMany(Verknuepfung::class, 'bezug')->latest();
+    }
 }

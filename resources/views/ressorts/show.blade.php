@@ -132,6 +132,8 @@
                 @endif
             </section>
 
+            @include('partials.verknuepfungen', ['bezug' => $ressort, 'typ' => 'ressort'])
+
             <section id="personen" class="karte">
                 <div class="karte-kopf"><h2 class="titel text-sm">Personen</h2></div>
                 <ul class="divide-y divide-nacht/5">

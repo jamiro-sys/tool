@@ -73,6 +73,11 @@
         </section>
     </div>
 
+    <div class="mt-6 grid gap-6 lg:grid-cols-2">
+        @include('ausgaben._kennzahlen')
+        @include('partials.verknuepfungen', ['bezug' => $ausgabe, 'typ' => 'ausgabe'])
+    </div>
+
     @if ($ausgabe->notizen)
         <section class="karte mt-6 p-4"><p class="label mb-2">Notizen</p><div class="prosa">{{ $ausgabe->notizen }}</div></section>
     @endif

@@ -126,4 +126,9 @@ class Aufgabe extends Model
             default => $this->faellig_am->format('d.m.Y'),
         };
     }
+
+    public function verknuepfungen(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->morphMany(Verknuepfung::class, 'bezug')->latest();
+    }
 }

@@ -50,4 +50,11 @@
             </div>
         </section>
     </div>
+
+    @if ($kennzahlen['reihen'])
+        <section class="karte mt-6">
+            <div class="karte-kopf"><h2 class="titel text-sm">Kennzahlen im Vergleich</h2><span class="label">eigene Kennzahlen je Ausgabe</span></div>
+            <div class="h-80 p-4"><canvas x-data x-init="diagramm($el, 'balken', {{ json_encode($kennzahlen) }})" aria-label="Kennzahlen je Ausgabe"></canvas></div>
+        </section>
+    @endif
 </x-app>

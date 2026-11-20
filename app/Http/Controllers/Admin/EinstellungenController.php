@@ -17,6 +17,7 @@ class EinstellungenController extends Controller
             'werte' => collect(Einstellung::STANDARD)->mapWithKeys(fn ($s, $k) => [$k => Einstellung::wert($k, $s)]),
             'hallen' => Halle::orderBy('name')->get(),
             'turniere' => Turnier::with('halle')->get(),
+            'listen' => \App\Models\Auswahlliste::orderBy('sortierung')->orderBy('wert')->get()->groupBy('bereich'),
         ]);
     }
 

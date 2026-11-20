@@ -51,4 +51,31 @@
             </div>
         </section>
     </div>
+
+    <section class="karte mt-6" id="listen">
+        <div class="karte-kopf"><h2 class="titel text-sm">Eigene Listen</h2><span class="label">ab Werk leer, ihr bestimmt die Einträge</span></div>
+        <div class="grid gap-px bg-nacht/5 md:grid-cols-2 xl:grid-cols-3">
+            @foreach (\App\Models\Auswahlliste::BEREICHE as $bereich => [$name, $hilfe])
+                <div class="bg-white p-4">
+                    <p class="text-sm font-bold">{{ $name }}</p>
+                    <p class="mt-0.5 text-xs text-beton">{{ $hilfe }}</p>
+                    <ul class="mt-3 flex flex-wrap gap-1.5">
+                        @forelse ($listen->get($bereich, collect()) as $e)
+                            <li class="flex items-center gap-1 border border-nacht/15 py-1 pl-2.5 pr-1 text-xs">
+                                {{ $e->wert }}
+                                <form method="POST" action="{{ route('admin.auswahllisten.loeschen', $e) }}" onsubmit="return confirm('Eintrag entfernen?')">@csrf @method('DELETE')<button class="p-0.5 text-beton hover:text-rot" aria-label="{{ $e->wert }} entfernen"><x-icon name="x" class="h-3.5 w-3.5" /></button></form>
+                            </li>
+                        @empty
+                            <li class="text-xs text-beton">Noch keine Einträge.</li>
+                        @endforelse
+                    </ul>
+                    <form method="POST" action="{{ route('admin.auswahllisten.speichern') }}" class="mt-3 flex gap-2">@csrf
+                        <input type="hidden" name="bereich" value="{{ $bereich }}">
+                        <input name="wert" required maxlength="120" class="feld py-2 text-sm" placeholder="Neuer Eintrag" aria-label="Neuer Eintrag für {{ $name }}">
+                        <button class="knopf-nacht knopf-klein" aria-label="Hinzufügen"><x-icon name="plus" class="h-4 w-4" /></button>
+                    </form>
+                </div>
+            @endforeach
+        </div>
+    </section>
 </x-app>

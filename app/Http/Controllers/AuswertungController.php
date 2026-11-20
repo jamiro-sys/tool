@@ -61,7 +61,17 @@ class AuswertungController extends Controller
             'offen' => Erkenntnis::whereNull('umgesetzt_am')->count(),
         ];
 
+        $kennzahlWerte = \App\Models\Kennzahl::whereIn('ausgabe_id', $ausgaben->pluck('id'))->get();
+        $kennzahlen = [
+            'labels' => $ausgaben->map(fn ($a) => $a->turnier->kurz.' '.$a->saison)->all(),
+            'reihen' => \App\Models\Auswahlliste::werte('kennzahl')
+                ->filter(fn ($n) => $kennzahlWerte->where('name', $n)->isNotEmpty())
+                ->map(fn ($n) => ['name' => $n, 'werte' => $ausgaben->map(fn ($a) => $kennzahlWerte->where('ausgabe_id', $a->id)->firstWhere('name', $n)?->wert)->all()])
+                ->values()->all(),
+        ];
+
         return view('auswertung', [
+            'kennzahlen' => $kennzahlen,
             'aufwand' => $aufwand,
             'vergleich' => $vergleich,
             'ressortNamen' => $ressorts->pluck('name')->all(),

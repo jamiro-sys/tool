@@ -13,6 +13,7 @@ use App\Http\Controllers\RessortInhaltController;
 use App\Http\Controllers\StartController;
 use App\Http\Controllers\SucheController;
 use App\Http\Controllers\UebergabeController;
+use App\Http\Controllers\VerknuepfungController;
 use App\Http\Controllers\VorlageController;
 use Illuminate\Support\Facades\Route;
 
@@ -43,6 +44,11 @@ Route::middleware(['auth', 'aktiv'])->group(function () {
     Route::delete('/ausgaben/{ausgabe}', [AusgabeController::class, 'destroy'])->name('ausgaben.destroy');
     Route::get('/ausgaben/{ausgabe}/rueckblick', [AusgabeController::class, 'rueckblick'])->name('ausgaben.rueckblick');
     Route::post('/ausgaben/{ausgabe}/aufwand', [AusgabeController::class, 'aufwand'])->name('ausgaben.aufwand');
+
+    // Links zu externen Werkzeugen und Kennzahlen
+    Route::post('/verknuepfungen', [VerknuepfungController::class, 'speichern'])->name('verknuepfungen.speichern');
+    Route::delete('/verknuepfungen/{verknuepfung}', [VerknuepfungController::class, 'loeschen'])->name('verknuepfungen.loeschen');
+    Route::post('/ausgaben/{ausgabe}/kennzahlen', [VerknuepfungController::class, 'kennzahlen'])->name('ausgaben.kennzahlen');
 
     // Aufgaben
     Route::get('/ausgaben/{ausgabe}/aufgaben', [AufgabeController::class, 'index'])->name('aufgaben.index');
@@ -149,6 +155,8 @@ Route::middleware(['auth', 'aktiv'])->group(function () {
 
         Route::get('/einstellungen', [Admin\EinstellungenController::class, 'index'])->name('einstellungen');
         Route::post('/einstellungen', [Admin\EinstellungenController::class, 'speichern']);
+        Route::post('/auswahllisten', [Admin\AuswahllistenController::class, 'speichern'])->name('auswahllisten.speichern');
+        Route::delete('/auswahllisten/{eintrag}', [Admin\AuswahllistenController::class, 'loeschen'])->name('auswahllisten.loeschen');
         Route::post('/hallen/{halle?}', [Admin\EinstellungenController::class, 'halle'])->name('hallen.speichern');
         Route::post('/turniere/{turnier?}', [Admin\EinstellungenController::class, 'turnier'])->name('turniere.speichern');
 
