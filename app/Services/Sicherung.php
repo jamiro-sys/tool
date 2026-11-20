@@ -19,7 +19,9 @@ class Sicherung
 
     public function tabellen(): array
     {
-        $alle = collect(Schema::getTables())->pluck('name')
+        // Nur die Tabellen dieser Datenbank. Ohne Angabe liefert MySQL alle Datenbanken,
+        // auf die der Benutzer Zugriff hat (bei Netcup z. B. auch die der Hauptseite).
+        $alle = collect(Schema::getTables(Schema::getCurrentSchemaListing()))->pluck('name')
             ->reject(fn ($t) => str_starts_with($t, 'sqlite_'))
             ->reject(fn ($t) => in_array($t, $this->ausnehmen, true))
             ->values()->all();

@@ -24,7 +24,13 @@ class DatenController extends Controller
     {
         $request->validate(['bestaetigung' => ['required', 'in:LEEREN']], ['bestaetigung.in' => 'Bitte genau LEEREN eintippen.']);
 
-        $ergebnis = $inhalte->leeren();
+        try {
+            $ergebnis = $inhalte->leeren();
+        } catch (\Throwable $e) {
+            report($e);
+
+            return back()->with('warnung', 'Leeren abgebrochen, es wurde nichts gelöscht. Grund: '.\Illuminate\Support\Str::limit($e->getMessage(), 200));
+        }
         Aktivitaet::protokolliere('daten.leeren', 'Alle Inhalte geleert (Sicherung '.$ergebnis['sicherung'].')');
 
         return redirect()->route('admin.einstellungen')

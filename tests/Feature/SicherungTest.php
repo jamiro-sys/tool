@@ -20,6 +20,18 @@ class SicherungTest extends OkTestCase
         $this->assertSame($anzahl, Vorlage::count());
     }
 
+    public function test_sicherung_liest_nur_eigene_datenbank(): void
+    {
+        $fremd = tempnam(sys_get_temp_dir(), 'fremd');
+        \Illuminate\Support\Facades\DB::statement("ATTACH DATABASE '{$fremd}' AS fremd");
+        \Illuminate\Support\Facades\DB::statement('CREATE TABLE fremd.wp_options (id integer)');
+
+        $tabellen = app(Sicherung::class)->tabellen();
+
+        $this->assertContains('vorlagen', $tabellen);
+        $this->assertNotContains('wp_options', $tabellen);
+    }
+
     public function test_vorlagen_export_und_import(): void
     {
         $admin = $this->person('admin');
