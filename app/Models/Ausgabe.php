@@ -106,6 +106,11 @@ class Ausgabe extends Model
         return $this->hasMany(EinkaufPosten::class)->orderBy('bezeichnung');
     }
 
+    public function material(): HasMany
+    {
+        return $this->hasMany(MaterialEinsatz::class);
+    }
+
     public function kassen(): HasMany
     {
         return $this->hasMany(Kasse::class)->orderBy('name');

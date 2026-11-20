@@ -90,6 +90,21 @@ Alpine.data('checkpunkt', (url, index, erledigt) => ({
     },
 }));
 
+/* Haken in der Material-Einsatzliste */
+Alpine.data('materialHaken', (url, feld, wert) => ({
+    wert,
+    async umschalten() {
+        this.wert = !this.wert;
+        try {
+            const r = await post(url, { feld });
+            this.wert = r.wert;
+        } catch (e) {
+            this.wert = !this.wert;
+            Alpine.store('toast').zeige(e.message, 'fehler');
+        }
+    },
+}));
+
 /* Zahlen hochzaehlen */
 Alpine.data('zaehler', (ziel, dauer = 700) => ({
     wert: 0,

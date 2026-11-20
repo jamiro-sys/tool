@@ -8,6 +8,7 @@ use App\Http\Controllers\AuswertungController;
 use App\Http\Controllers\BenachrichtigungController;
 use App\Http\Controllers\ErkenntnisController;
 use App\Http\Controllers\FestwirtschaftController;
+use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\ProfilController;
 use App\Http\Controllers\RessortController;
 use App\Http\Controllers\RessortInhaltController;
@@ -62,6 +63,17 @@ Route::middleware(['auth', 'aktiv'])->group(function () {
     Route::delete('/ausgaben/{ausgabe}/einkauf/{posten}', [FestwirtschaftController::class, 'postenLoeschen'])->name('festwirtschaft.posten.loeschen');
     Route::post('/ausgaben/{ausgabe}/kassen/{kasse?}', [FestwirtschaftController::class, 'kasse'])->name('festwirtschaft.kasse');
     Route::delete('/ausgaben/{ausgabe}/kassen/{kasse}', [FestwirtschaftController::class, 'kasseLoeschen'])->name('festwirtschaft.kasse.loeschen');
+
+    // Material und Inventar
+    Route::get('/material', [MaterialController::class, 'index'])->name('material.index');
+    Route::post('/material/{material?}', [MaterialController::class, 'speichern'])->name('material.speichern');
+    Route::delete('/material/{material}', [MaterialController::class, 'loeschen'])->name('material.loeschen');
+    Route::get('/material/{material}/foto', [MaterialController::class, 'foto'])->name('material.foto');
+    Route::get('/ausgaben/{ausgabe}/material', [MaterialController::class, 'ausgabe'])->name('material.ausgabe');
+    Route::post('/ausgaben/{ausgabe}/material/uebernehmen', [MaterialController::class, 'uebernehmen'])->name('material.uebernehmen');
+    Route::post('/ausgaben/{ausgabe}/material/{einsatz?}', [MaterialController::class, 'einsatz'])->name('material.einsatz');
+    Route::post('/ausgaben/{ausgabe}/material/{einsatz}/haken', [MaterialController::class, 'haken'])->name('material.haken');
+    Route::delete('/ausgaben/{ausgabe}/material/{einsatz}', [MaterialController::class, 'einsatzLoeschen'])->name('material.einsatz.loeschen');
 
     // Aufgaben
     Route::get('/ausgaben/{ausgabe}/aufgaben', [AufgabeController::class, 'index'])->name('aufgaben.index');

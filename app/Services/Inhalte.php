@@ -16,7 +16,7 @@ class Inhalte
 {
     /** Reihenfolge: abhaengige Tabellen zuerst. */
     public const TABELLEN = [
-        'notifications', 'verknuepfungen', 'kennzahlen', 'kassen', 'einkauf_posten', 'produkte', 'versandprotokoll', 'rundmeldungen', 'aktivitaeten',
+        'notifications', 'verknuepfungen', 'kennzahlen', 'kassen', 'einkauf_posten', 'produkte', 'material_einsatz', 'material', 'versandprotokoll', 'rundmeldungen', 'aktivitaeten',
         'uebergaben', 'wissen', 'dokumente', 'kontakte', 'erkenntnisse', 'kommentare',
         'aufgaben', 'vorlage_versionen', 'vorlagen', 'ausgaben', 'turniere', 'hallen',
         'ressort_user', 'ressorts',
@@ -29,7 +29,8 @@ class Inhalte
     {
         $name = $this->sicherung->erstelle('vor-leeren');
 
-        $dateien = Dokument::query()->where('typ', 'datei')->whereNotNull('pfad')->pluck('pfad')->all();
+        $dateien = Dokument::query()->where('typ', 'datei')->whereNotNull('pfad')->pluck('pfad')
+            ->merge(\App\Models\Material::whereNotNull('foto_pfad')->pluck('foto_pfad'))->all();
 
         $geloescht = 0;
         Schema::disableForeignKeyConstraints();
