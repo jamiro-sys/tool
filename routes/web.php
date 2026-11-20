@@ -7,6 +7,7 @@ use App\Http\Controllers\AusgabeController;
 use App\Http\Controllers\AuswertungController;
 use App\Http\Controllers\BenachrichtigungController;
 use App\Http\Controllers\ErkenntnisController;
+use App\Http\Controllers\FestwirtschaftController;
 use App\Http\Controllers\ProfilController;
 use App\Http\Controllers\RessortController;
 use App\Http\Controllers\RessortInhaltController;
@@ -49,6 +50,18 @@ Route::middleware(['auth', 'aktiv'])->group(function () {
     Route::post('/verknuepfungen', [VerknuepfungController::class, 'speichern'])->name('verknuepfungen.speichern');
     Route::delete('/verknuepfungen/{verknuepfung}', [VerknuepfungController::class, 'loeschen'])->name('verknuepfungen.loeschen');
     Route::post('/ausgaben/{ausgabe}/kennzahlen', [VerknuepfungController::class, 'kennzahlen'])->name('ausgaben.kennzahlen');
+
+    // Festwirtschaft
+    Route::get('/festwirtschaft', [FestwirtschaftController::class, 'index'])->name('festwirtschaft.index');
+    Route::get('/festwirtschaft/preisliste', [FestwirtschaftController::class, 'preisliste'])->name('festwirtschaft.preisliste');
+    Route::post('/festwirtschaft/produkte/{produkt?}', [FestwirtschaftController::class, 'produkt'])->name('festwirtschaft.produkt');
+    Route::delete('/festwirtschaft/produkte/{produkt}', [FestwirtschaftController::class, 'produktLoeschen'])->name('festwirtschaft.produkt.loeschen');
+    Route::get('/ausgaben/{ausgabe}/festwirtschaft', [FestwirtschaftController::class, 'ausgabe'])->name('festwirtschaft.ausgabe');
+    Route::post('/ausgaben/{ausgabe}/einkauf/uebernehmen', [FestwirtschaftController::class, 'uebernehmen'])->name('festwirtschaft.uebernehmen');
+    Route::post('/ausgaben/{ausgabe}/einkauf/{posten?}', [FestwirtschaftController::class, 'posten'])->name('festwirtschaft.posten');
+    Route::delete('/ausgaben/{ausgabe}/einkauf/{posten}', [FestwirtschaftController::class, 'postenLoeschen'])->name('festwirtschaft.posten.loeschen');
+    Route::post('/ausgaben/{ausgabe}/kassen/{kasse?}', [FestwirtschaftController::class, 'kasse'])->name('festwirtschaft.kasse');
+    Route::delete('/ausgaben/{ausgabe}/kassen/{kasse}', [FestwirtschaftController::class, 'kasseLoeschen'])->name('festwirtschaft.kasse.loeschen');
 
     // Aufgaben
     Route::get('/ausgaben/{ausgabe}/aufgaben', [AufgabeController::class, 'index'])->name('aufgaben.index');
