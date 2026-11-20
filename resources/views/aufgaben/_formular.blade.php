@@ -49,29 +49,8 @@
             <x-aufwand name="aufwand_geplant" id="aufwand_geplant" :wert="old('aufwand_geplant', $a?->aufwand_geplant)" />
         </div>
     </div>
-    @if (! $a)
-        @can('vorlagen-verwalten')
-            @php $turnierarten = \App\Models\Turnier::orderBy('name')->get(); $hier = isset($ausgabe) && $ausgabe ? $ausgabe->turnier_id : null; @endphp
-            <fieldset x-data="{ oft: @js(old('wiederkehrend', 'einmalig')) }">
-                <legend class="feld-label">Wie oft?</legend>
-                <div class="grid gap-2 sm:grid-cols-2">
-                    @foreach (['einmalig' => ['Nur dieses Turnier', 'Kommt nur jetzt vor, z. B. Musikboxen ausleihen'], 'jedes_jahr' => ['Jedes Jahr', 'Kommt in den Jahresplan und bei jedem neuen Turnier wieder']] as $k => [$t, $txt])
-                        <label class="flex cursor-pointer items-start gap-3 border border-nacht/20 bg-white px-3 py-2.5 has-[:checked]:border-rot has-[:checked]:bg-rot/5">
-                            <input type="radio" name="wiederkehrend" value="{{ $k }}" class="mt-1" x-model="oft" @checked(old('wiederkehrend', 'einmalig') === $k)>
-                            <span><span class="block text-sm font-bold">{{ $t }}</span><span class="block text-xs text-beton">{{ $txt }}</span></span>
-                        </label>
-                    @endforeach
-                </div>
-                @if ($turnierarten->count() > 1)
-                    <div x-show="oft === 'jedes_jahr'" x-collapse x-cloak class="mt-3 border-l-4 border-rot bg-kreide/60 p-3">
-                        <p class="feld-label">Bei welchen Turnieren?</p>
-                        <x-turnierarten :turniere="$turnierarten" :gewaehlt="old('turniere', $hier ? [$hier] : [])" klein />
-                        <p class="mt-1.5 text-xs text-beton">Eines oder mehrere anhaken. Später im Jahresplan änderbar.</p>
-                        @error('turniere')<p class="mt-1 text-xs font-bold text-rot">{{ $message }}</p>@enderror
-                    </div>
-                @endif
-            </fieldset>
-        @endcan
+    @if ($a ? auth()->user()->can('ressort-verwalten', $a->ressort) : auth()->user()->can('vorlagen-verwalten'))
+        @include('aufgaben._wie_oft', ['a' => $a])
     @endif
     <div>
         <label class="feld-label" for="beschreibung">Beschreibung</label>

@@ -60,7 +60,7 @@ class AufgabeController extends Controller
 
     public function show(Aufgabe $aufgabe)
     {
-        $aufgabe->load(['ausgabe.turnier', 'ressort.mitglieder', 'verantwortlich', 'begleitung', 'kommentare.user', 'erkenntnisse.user', 'dokumente', 'vorlage']);
+        $aufgabe->load(['ausgabe.turnier', 'ressort.mitglieder', 'verantwortlich', 'begleitung', 'kommentare.user', 'erkenntnisse.user', 'dokumente', 'vorlage.turniere']);
 
         $frueher = $aufgabe->vorlage_id
             ? Aufgabe::with('ausgabe', 'verantwortlich')->where('vorlage_id', $aufgabe->vorlage_id)->where('id', '!=', $aufgabe->id)->latest('faellig_am')->limit(5)->get()
@@ -81,13 +81,7 @@ class AufgabeController extends Controller
         abort_unless(Gate::allows('ressort-mitarbeiten', $ressort) || Gate::allows('ressort-verwalten', $ressort), 403);
 
         $jedesJahr = $request->input('wiederkehrend') === 'jedes_jahr' && Gate::allows('ressort-verwalten', $ressort);
-        $turniere = [];
-        if ($jedesJahr) {
-            $turniere = $request->validate([
-                'turniere' => ['required_with:turniere_gesendet', 'array'],
-                'turniere.*' => ['integer', 'exists:turniere,id'],
-            ], ['turniere.required_with' => 'Bitte mindestens ein Turnier anhaken.'])['turniere'] ?? [];
-        }
+        $turniere = $jedesJahr ? $this->turnierWahl($request) : [];
         unset($daten['wiederkehrend']);
         $aufgabe = $ausgabe->aufgaben()->create($daten);
         Aktivitaet::protokolliere('aufgabe.erstellt', 'Aufgabe erstellt: '.$aufgabe->titel, $aufgabe);
@@ -121,12 +115,25 @@ class AufgabeController extends Controller
             unset($daten['checkliste_text']);
         }
 
+        // Wie oft? Jahresplan anpassen (nur Ressortleitung/Admin)
+        $hinweis = null;
+        if ($request->filled('wiederkehrend') && Gate::allows('ressort-verwalten', $aufgabe->ressort)) {
+            $planer = app(AusgabePlaner::class);
+            if ($request->input('wiederkehrend') === 'jedes_jahr') {
+                $planer->inJahresplan($aufgabe, $this->turnierWahl($request));
+                $hinweis = ' Kommt jedes Jahr wieder'.($aufgabe->vorlage->turnierartText() ? ' ('.$aufgabe->vorlage->turnierartText().')' : '').'.';
+            } elseif ($aufgabe->vorlage?->aktiv) {
+                $planer->ausJahresplan($aufgabe->vorlage, 'Bei der Aufgabe auf «Nur dieses Turnier» gestellt');
+                $hinweis = ' Kommt bei neuen Turnieren nicht mehr.';
+            }
+        }
+
         $aufgabe->update($daten);
         $this->setzeErledigt($aufgabe);
         Aktivitaet::protokolliere('aufgabe.geaendert', 'Aufgabe geändert: '.$aufgabe->titel, $aufgabe);
         $this->meldeZuweisung($aufgabe, $vorher);
 
-        return back()->with('erfolg', 'Gespeichert.');
+        return back()->with('erfolg', 'Gespeichert.'.$hinweis);
     }
 
     /** Schneller Statuswechsel (auch per fetch aus Listen und Board). */
@@ -233,6 +240,15 @@ class AufgabeController extends Controller
             'aufwand_effektiv' => ['nullable', 'numeric', 'min:0', 'max:999'],
             'checkliste_text' => ['nullable', 'string', 'max:5000'],
         ]);
+    }
+
+    /** Gewaehlte Turnierarten bei "Jedes Jahr"; wurden Haekchen angezeigt, muss mindestens eines gesetzt sein. */
+    protected function turnierWahl(Request $request): array
+    {
+        return $request->validate([
+            'turniere' => ['required_with:turniere_gesendet', 'array'],
+            'turniere.*' => ['integer', 'exists:turniere,id'],
+        ], ['turniere.required_with' => 'Bitte mindestens ein Turnier anhaken.'])['turniere'] ?? [];
     }
 
     protected function setzeErledigt(Aufgabe $aufgabe): void

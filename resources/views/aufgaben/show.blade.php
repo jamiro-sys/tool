@@ -147,16 +147,23 @@
                         </form>
                     @endif
                 </div>
-                @if ($aufgabe->vorlage)
-                    <a href="{{ route('vorlagen.show', $aufgabe->vorlage) }}" class="flex items-center justify-between px-4 py-3 text-sm hover:bg-kreide"><span><span class="label block">Jahresplan</span><span class="block text-xs text-beton">{{ $aufgabe->vorlage->aktiv ? 'Kommt jedes Jahr wieder' : 'Kommt nicht mehr bei neuen Turnieren' }}</span></span><span class="flex items-center gap-1 font-bold">{{ $aufgabe->vorlage->aktiv ? 'Ja' : 'Nein' }} <x-icon name="pfeil" class="h-3.5 w-3.5" /></span></a>
+                @can('ressort-verwalten', $aufgabe->ressort)
+                    <form method="POST" action="{{ route('aufgaben.update', $aufgabe) }}" class="space-y-3 px-4 py-3">@csrf @method('PATCH')
+                        @include('aufgaben._wie_oft', ['a' => $aufgabe, 'schmal' => true])
+                        <div class="flex items-center justify-between gap-2">
+                            @if ($aufgabe->vorlage)<a href="{{ route('vorlagen.show', $aufgabe->vorlage) }}" class="label hover:text-rot">Im Jahresplan ansehen</a>@else<span></span>@endif
+                            <button class="knopf-nacht knopf-klein">Speichern</button>
+                        </div>
+                    </form>
                 @else
-                    <div class="px-4 py-3">
-                        <p class="text-xs text-beton">Einmalige Aufgabe. Kommt sie jedes Jahr wieder, nimm sie in den Jahresplan.</p>
-                        @can('ressort-verwalten', $aufgabe->ressort)
-                            <form method="POST" action="{{ route('aufgaben.wiederholen', $aufgabe) }}" class="mt-2">@csrf<button class="knopf-rahmen knopf-klein"><x-icon name="wiederholen" class="h-4 w-4" /> In den Jahresplan</button></form>
-                        @endcan
+                    <div class="px-4 py-3 text-sm"><span class="label block">Wie oft?</span>
+                        @if ($aufgabe->vorlage?->aktiv)
+                            Jedes Jahr{{ $aufgabe->vorlage->turnierartText() ? ', '.$aufgabe->vorlage->turnierartText() : '' }}
+                        @else
+                            Nur dieses Turnier
+                        @endif
                     </div>
-                @endif
+                @endcan
             </section>
             @include('partials.verknuepfungen', ['bezug' => $aufgabe, 'typ' => 'aufgabe'])
 
