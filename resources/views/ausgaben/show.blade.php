@@ -4,7 +4,6 @@
         <x-slot:unter>{{ $ausgabe->datumText() }} @if ($ausgabe->halle) | {{ $ausgabe->halle->name }} @endif | <span class="font-bold text-nacht">{{ \App\Models\Ausgabe::STATUS[$ausgabe->status] }}</span></x-slot:unter>
         <x-slot:aktionen>
             <a href="{{ route('aufgaben.index', $ausgabe) }}" class="knopf-nacht"><x-icon name="aufgaben" class="h-4 w-4" /> Aufgaben</a>
-            <a href="{{ route('festwirtschaft.ausgabe', $ausgabe) }}" class="knopf-rahmen"><x-icon name="becher" class="h-4 w-4" /> Festwirtschaft</a>
             <a href="{{ route('material.ausgabe', $ausgabe) }}" class="knopf-rahmen"><x-icon name="kiste" class="h-4 w-4" /> Material</a>
             @if (in_array($ausgabe->status, ['rueckblick', 'abgeschlossen'], true) || $tage < 0)
                 <a href="{{ route('ausgaben.rueckblick', $ausgabe) }}" class="knopf-rot"><x-icon name="idee" class="h-4 w-4" /> Rückblick</a>

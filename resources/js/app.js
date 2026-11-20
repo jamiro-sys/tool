@@ -107,6 +107,21 @@ Alpine.data('aktionsMenue', () => ({
     init() { window.addEventListener('scroll', () => { this.m = false; }, { passive: true }); },
 }));
 
+/* Dateiablage: Ziehen und Ablegen mehrerer Dateien */
+Alpine.data('dateiAblage', () => ({
+    art: 'datei',
+    ueber: false,
+    namen: [],
+    gewaehlt() { this.namen = [...this.$refs.eingabe.files].map((f) => f.name); },
+    ablegen(e) {
+        this.ueber = false;
+        const dt = new DataTransfer();
+        [...e.dataTransfer.files].forEach((f) => dt.items.add(f));
+        this.$refs.eingabe.files = dt.files;
+        this.gewaehlt();
+    },
+}));
+
 /* Haken in der Material-Einsatzliste */
 Alpine.data('materialHaken', (url, feld, wert) => ({
     wert,

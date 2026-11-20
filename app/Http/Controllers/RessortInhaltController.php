@@ -82,7 +82,9 @@ class RessortInhaltController extends Controller
         $eintrag = ['titel' => $daten['titel'], 'user_id' => $request->user()->id, 'aufgabe_id' => $daten['aufgabe_id'] ?? null];
         if ($request->hasFile('datei')) {
             $eintrag['typ'] = 'datei';
-            $eintrag['pfad'] = $request->file('datei')->store('dokumente/'.$ressort->id, 'local');
+            $datei = $request->file('datei');
+            $eintrag['pfad'] = $datei->store('dokumente/'.$ressort->id, 'local');
+            $eintrag += ['original_name' => $datei->getClientOriginalName(), 'groesse' => $datei->getSize(), 'mime' => $datei->getMimeType()];
         } else {
             $eintrag['typ'] = 'link';
             $eintrag['url'] = $daten['url'];
@@ -97,12 +99,21 @@ class RessortInhaltController extends Controller
         abort_unless($dokument->typ === 'datei' && $dokument->pfad && Storage::disk('local')->exists($dokument->pfad), 404);
         $endung = pathinfo($dokument->pfad, PATHINFO_EXTENSION);
 
-        return Storage::disk('local')->download($dokument->pfad, \Illuminate\Support\Str::slug($dokument->titel).'.'.$endung);
+        $name = \Illuminate\Support\Str::slug($dokument->titel).'.'.$endung;
+
+        // Bilder und PDF direkt im Browser anzeigen, alles andere herunterladen
+        return request()->boolean('ansehen') && preg_match('/^(image\/|application\/pdf)/', (string) $dokument->mime)
+            ? Storage::disk('local')->response($dokument->pfad, $name)
+            : Storage::disk('local')->download($dokument->pfad, $name);
     }
 
     public function dokumentLoeschen(Dokument $dokument)
     {
-        abort_unless($dokument->ressort && Gate::allows('ressort-mitarbeiten', $dokument->ressort), 403);
+        abort_unless(
+            ($dokument->ressort && Gate::allows('ressort-mitarbeiten', $dokument->ressort))
+            || $dokument->user_id === auth()->id() || Gate::allows('admin'),
+            403
+        );
         if ($dokument->pfad) {
             Storage::disk('local')->delete($dokument->pfad);
         }

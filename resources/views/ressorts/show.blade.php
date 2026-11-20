@@ -16,7 +16,7 @@
 
     {{-- Navigation innerhalb des Steckbriefs --}}
     <nav class="-mx-4 mb-6 flex gap-1 overflow-x-auto border-b border-nacht/10 px-4 sm:mx-0 sm:px-0 kein-druck">
-        @foreach (['auftrag' => 'Auftrag', 'personen' => 'Personen', 'aufgaben' => 'Aufgaben', 'jahreslauf' => 'Jahreslauf', 'kontakte' => 'Kontakte', 'wissen' => 'Wissen', 'dokumente' => 'Dokumente', 'erkenntnisse' => 'Erkenntnisse'] as $k => $l)
+        @foreach (['auftrag' => 'Auftrag', 'personen' => 'Personen', 'aufgaben' => 'Aufgaben', 'jahreslauf' => 'Jahreslauf', 'kontakte' => 'Kontakte', 'wissen' => 'Wissen', 'material' => 'Material', 'dokumente' => 'Dateien', 'erkenntnisse' => 'Erkenntnisse'] as $k => $l)
             <a href="#{{ $k }}" class="whitespace-nowrap border-b-2 border-transparent px-3 py-2.5 text-[11px] font-bold uppercase tracking-label text-beton hover:border-rot hover:text-nacht">{{ $l }}</a>
         @endforeach
     </nav>
@@ -164,18 +164,26 @@
                 @endif
             </section>
 
-            <section id="material" class="karte">
-                <div class="karte-kopf"><h2 class="titel text-sm">Material</h2><a href="{{ route('material.index', ['ressort' => $ressort->id]) }}" class="label hover:text-rot">Alle</a></div>
-                @forelse ($ressort->material->take(8) as $m)
+            <section id="material" class="karte" x-data="{ neu: false }">
+                <div class="karte-kopf"><h2 class="titel text-sm">Material</h2>
+                    <span class="flex items-center gap-1">
+                        @if ($ressort->material->isNotEmpty())<a href="{{ route('material.drucken', ['ressort' => $ressort->id]) }}" target="_blank" class="knopf-leise knopf-klein" aria-label="Materialliste drucken"><x-icon name="drucker" class="h-4 w-4" /></a>@endif
+                        @can('schreiben')<button type="button" class="knopf-leise knopf-klein" x-on:click="neu = !neu" aria-label="Material erfassen"><x-icon name="plus" class="h-4 w-4" /></button>@endcan
+                    </span>
+                </div>
+                @can('schreiben')
+                    <div x-show="neu" x-collapse x-cloak class="border-b border-nacht/10 px-4 pb-4">@include('material._formular', ['m' => null, 'vorRessort' => $ressort->id])</div>
+                @endcan
+                @forelse ($ressort->material as $m)
                     @php $b = $m->mietBilanz(); @endphp
                     <a href="{{ route('material.index', ['ressort' => $ressort->id, 'q' => $m->name]) }}" class="flex items-center justify-between gap-2 border-b border-nacht/5 px-4 py-2.5 text-sm hover:text-rot">
-                        <span class="min-w-0"><span class="block truncate font-bold">{{ $m->name }}</span>@if ($m->zweck)<span class="block truncate text-xs text-beton">{{ $m->zweck }}</span>@endif</span>
-                        @if ($b['pruefen'])<span class="marke-gelb shrink-0">Kauf prüfen</span>@endif
+                        <span class="min-w-0"><span class="block truncate font-bold">{{ $m->name }} <span class="font-normal text-beton">{{ rtrim(rtrim(number_format($m->menge, 2, '.', "'"), '0'), '.') }} {{ $m->einheit }}</span></span>@if ($m->zweck)<span class="block truncate text-xs text-beton">{{ $m->zweck }}</span>@endif</span>
+                        @if ($b['pruefen'])<span class="marke-gelb shrink-0">Kauf prüfen</span>@elseif ($m->zustand !== 'gut')<span class="marke-offen shrink-0">{{ \App\Models\Material::ZUSTAND[$m->zustand] }}</span>@endif
                     </a>
                 @empty
-                    <p class="px-4 py-3 text-xs text-beton">Noch kein Material für dieses Ressort.</p>
+                    <p class="px-4 py-3 text-xs text-beton">Noch kein Material für dieses Ressort. Mit + erfassen.</p>
                 @endforelse
-                @can('schreiben')<a href="{{ route('material.index', ['ressort' => $ressort->id]) }}#neu" class="label flex items-center gap-2 px-4 py-3 text-rot"><x-icon name="plus" class="h-4 w-4" /> Material erfassen</a>@endcan
+                @if ($ressort->material->isNotEmpty())<a href="{{ route('material.index', ['ressort' => $ressort->id]) }}" class="label flex items-center gap-2 px-4 py-3 hover:text-rot">In der Materialliste filtern <x-icon name="pfeil" class="h-3.5 w-3.5" /></a>@endif
             </section>
 
             <section id="kontakte" class="karte" x-data="{ neu: false }">
@@ -225,7 +233,7 @@
             </section>
 
             <section id="dokumente" class="karte" x-data="{ neu: false, art: 'link' }">
-                <div class="karte-kopf"><h2 class="titel text-sm">Dokumente</h2>
+                <div class="karte-kopf"><h2 class="titel text-sm"><a href="{{ route('dateien.index', ['ressort' => $ressort->id]) }}" class="hover:text-rot">Dateien</a></h2>
                     @if ($mitarbeiten)<button type="button" class="knopf-rahmen knopf-klein" x-on:click="neu = !neu"><x-icon name="plus" class="h-3.5 w-3.5" /></button>@endif</div>
                 @if ($mitarbeiten)
                     <form x-show="neu" x-collapse method="POST" action="{{ route('dokumente.speichern', $ressort) }}" enctype="multipart/form-data" class="space-y-2 border-b border-nacht/10 p-4">@csrf
@@ -235,7 +243,7 @@
                             <button type="button" class="py-2" :class="art === 'datei' ? 'bg-nacht text-white' : 'border border-nacht/20'" x-on:click="art = 'datei'">Datei</button>
                         </div>
                         <input x-show="art === 'link'" name="url" type="url" class="feld" placeholder="https://... (z.B. iCloud, Google Drive)">
-                        <input x-show="art === 'datei'" name="datei" type="file" class="feld py-2.5 text-xs">
+                        <input x-show="art === 'datei'" name="datei" type="file" class="feld">
                         <button class="knopf-rot knopf-klein">Ablegen</button>
                     </form>
                 @endif
@@ -249,9 +257,10 @@
                             @endif
                         </li>
                     @empty
-                        <li class="px-4 py-5 text-sm text-beton">Noch keine Dokumente.</li>
+                        <li class="px-4 py-5 text-sm text-beton">Noch keine Dateien.</li>
                     @endforelse
                 </ul>
+                <a href="{{ route('dateien.index', ['ressort' => $ressort->id]) }}" class="label flex items-center gap-2 border-t border-nacht/5 px-4 py-3 hover:text-rot">In der Dateiablage öffnen <x-icon name="pfeil" class="h-3.5 w-3.5" /></a>
             </section>
 
             @if ($aufwandJahre->count())

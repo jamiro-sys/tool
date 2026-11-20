@@ -20,8 +20,10 @@
     $nav = [
         ['start', 'Start', route('start'), 'start', request()->routeIs('start')],
         ['aufgaben', 'Aufgaben', $navAusgabe ? route('aufgaben.index', $navAusgabe) : route('ausgaben.index'), 'aufgaben', request()->routeIs('aufgaben.*')],
-        ['ausgaben', 'Turniere', route('ausgaben.index'), 'pokal', request()->routeIs('ausgaben.*', 'festwirtschaft.*', 'material.ausgabe')],
+        ['ausgaben', 'Turniere', route('ausgaben.index'), 'pokal', request()->routeIs('ausgaben.*', 'material.ausgabe')],
         ['ressorts', 'Ressorts', route('ressorts.index'), 'ressorts', request()->routeIs('ressorts.*')],
+        ['material', 'Material', route('material.index'), 'kiste', request()->routeIs('material.index', 'material.drucken')],
+        ['dateien', 'Dateien', route('dateien.index'), 'datei', request()->routeIs('dateien.*')],
     ];
     $navRessorts ??= collect();
     $aktivesRessort = request()->route('ressort');
@@ -30,7 +32,6 @@
         ['Vorlagen', route('vorlagen.index'), 'vorlagen', request()->routeIs('vorlagen.*')],
         ['Auswertung', route('auswertung'), 'auswertung', request()->routeIs('auswertung')],
         ['Übergaben', route('uebergaben.index'), 'uebergabe', request()->routeIs('uebergaben.*')],
-        ['Material', route('material.index'), 'kiste', request()->routeIs('material.index')],
         ['System', route('admin.system'), 'server', request()->routeIs('admin.system', 'admin.logs')],
         ['Sicherungen', route('admin.sicherungen'), 'datenbank', request()->routeIs('admin.sicherungen')],
         ['Daten', route('admin.daten'), 'archiv', request()->routeIs('admin.daten')],

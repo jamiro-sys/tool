@@ -103,53 +103,126 @@
             okPost(karte.dataset.url, { status: $event.detail.status }).then(() => window.location.reload()).catch(e => $store.toast.zeige(e.message, 'fehler'))"></div>
         <p class="mt-2 text-xs text-beton">Karten mit der Maus in eine andere Spalte ziehen, um den Status zu ändern.</p>
     @else
-        {{-- Zeitstrahl relativ zum Turniertag --}}
+        {{-- Zeitstrahl: Wochenleiste zur Orientierung, darunter Agenda Woche fuer Woche --}}
         @php
-            $tag = $ausgabe->datum_von;
+            $tag = $ausgabe->datum_von->copy()->startOfDay();
+            $turnierWoche = $tag->copy()->startOfWeek();
+            $dieseWoche = today()->startOfWeek();
             $mitTermin = $aufgaben->whereNotNull('faellig_am');
-            $min = min(-7, (int) $tag->diffInDays($mitTermin->min('faellig_am') ?? $tag, false));
-            $max = max(7, (int) $tag->diffInDays($mitTermin->max('faellig_am') ?? $tag, false));
-            $spanne = max(1, $max - $min);
-            $pos = fn ($d) => (($tag->diffInDays($d, false) - $min) / $spanne) * 100;
-            $heutePos = $pos(today());
+            $nachWoche = $mitTermin->groupBy(fn ($a) => $a->faellig_am->copy()->startOfWeek()->format('Y-m-d'));
+            $erste = collect([$turnierWoche, $dieseWoche])->merge($nachWoche->keys()->map(fn ($k) => \Carbon\Carbon::parse($k)))->min();
+            $letzte = collect([$turnierWoche, $dieseWoche])->merge($nachWoche->keys()->map(fn ($k) => \Carbon\Carbon::parse($k)))->max();
+            if ($erste->diffInWeeks($letzte) > 70) { $erste = $letzte->copy()->subWeeks(70); }
+            $wochen = [];
+            for ($w = $erste->copy(); $w->lte($letzte); $w->addWeek()) {
+                $k = $w->format('Y-m-d'); $liste = $nachWoche->get($k, collect());
+                $wochen[$k] = [
+                    'start' => $w->copy(), 'ende' => $w->copy()->endOfWeek(),
+                    'abstand' => (int) round($turnierWoche->diffInDays($w, false) / 7),
+                    'aufgaben' => $liste->sortBy('faellig_am'),
+                    'erledigt' => $liste->whereIn('status', ['erledigt', 'entfaellt'])->count(),
+                    'ueberfaellig' => $liste->filter->istUeberfaellig()->count(),
+                ];
+            }
+            $maxAnzahl = max(1, collect($wochen)->max(fn ($w) => $w['aufgaben']->count()));
+            $wochenText = fn ($n) => $n === 0 ? 'Turnierwoche' : (abs($n) === 1 ? '1 Woche' : abs($n).' Wochen').($n < 0 ? ' vorher' : ' danach');
+            $ohneTermin = $aufgaben->whereNull('faellig_am');
         @endphp
-        <p class="mb-2 text-xs text-beton sm:hidden">Seitlich wischen, um den ganzen Zeitstrahl zu sehen.</p>
-        <div class="karte overflow-x-auto">
-            <div class="min-w-[760px]">
-                <div class="relative ml-28 h-10 border-b border-nacht/10 sm:ml-48">
-                    @php $schritt = $spanne > 200 ? 56 : ($spanne > 100 ? 28 : ($spanne > 50 ? 14 : 7)); @endphp
-                    @for ($w = (int) (ceil($min / $schritt) * $schritt); $w <= $max; $w += $schritt)
-                        <span class="absolute top-3 -translate-x-1/2 whitespace-nowrap text-[10px] font-bold uppercase tracking-label {{ $w === 0 ? 'text-rot' : 'text-beton' }}" style="left: {{ ($w - $min) / $spanne * 100 }}%">
-                            {{ $w === 0 ? 'Turnier' : ($w < 0 ? '-' : '+').abs(intdiv($w, 7)).' W' }}
-                        </span>
-                    @endfor
+
+        <section class="karte mb-6 p-4">
+            <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+                <h2 class="titel text-sm">Wochen bis zum Turnier</h2>
+                <div class="flex flex-wrap gap-3 text-[11px] text-beton">
+                    <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 bg-rot"></span> erledigt</span>
+                    <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 bg-nacht"></span> offen</span>
+                    <span class="flex items-center gap-1.5"><span class="h-2.5 w-2.5 bg-gelb"></span> überfällig</span>
                 </div>
-                @foreach ($aufgaben->groupBy('ressort_id') as $gruppe)
-                    <div class="flex border-b border-nacht/5">
-                        <div class="sticky left-0 z-10 w-28 shrink-0 border-r border-nacht/10 bg-white px-3 py-2 sm:w-48"><span class="titel block text-[11px] leading-tight sm:text-xs">{{ $gruppe->first()->ressort->name }}</span></div>
-                        <div class="relative flex-1 py-2" style="min-height: {{ max(1, $gruppe->count()) * 30 + 8 }}px">
-                            <span class="absolute inset-y-0 w-[2px] bg-rot/40" style="left: {{ ($tag->diffInDays($tag, false) - $min) / $spanne * 100 }}%"></span>
-                            @if ($heutePos >= 0 && $heutePos <= 100)<span class="absolute inset-y-0 w-px border-l border-dashed border-nacht/40" style="left: {{ $heutePos }}%"></span>@endif
-                            @foreach ($gruppe->values() as $i => $aufgabe)
-                                @if ($aufgabe->faellig_am)
-                                    @php $p = $pos($aufgabe->faellig_am); $links = $p < 30; @endphp
-                                    <a href="{{ route('aufgaben.show', $aufgabe) }}" title="{{ $aufgabe->titel }} ({{ $aufgabe->faellig_am->format('d.m.') }})"
-                                       class="absolute flex h-6 items-center gap-1.5 whitespace-nowrap text-[11px] font-bold hover:text-rot {{ $links ? 'flex-row-reverse -translate-x-[6px]' : '-translate-x-full pr-2' }}" style="left: calc({{ $p }}% + {{ $links ? '0px' : '6px' }}); top: {{ $i * 30 + 6 }}px">
-                                        <span class="max-w-[200px] truncate {{ $aufgabe->status === 'erledigt' ? 'text-beton line-through' : '' }}">{{ $aufgabe->titel }}</span>
-                                        <span class="h-3 w-3 shrink-0 {{ $aufgabe->status === 'erledigt' ? 'bg-rot' : ($aufgabe->istUeberfaellig() ? 'bg-gelb' : 'border-2 border-nacht bg-white') }}"></span>
-                                    </a>
-                                @endif
-                            @endforeach
-                        </div>
-                    </div>
+            </div>
+            <div class="flex h-28 items-end gap-px sm:gap-[3px]" role="list" aria-label="Aufgaben pro Woche">
+                @foreach ($wochen as $k => $w)
+                    @php $n = $w['aufgaben']->count(); $offen = $n - $w['erledigt'] - $w['ueberfaellig']; $istTurnier = $w['abstand'] === 0; $istHeute = $w['start']->eq($dieseWoche); @endphp
+                    <a href="{{ $n && $w['ende']->lt(today()) && $w['erledigt'] === $n ? '#erledigt' : '#woche-'.$k }}" role="listitem" title="{{ $wochenText($w['abstand']) }}: {{ $n }} {{ $n === 1 ? 'Aufgabe' : 'Aufgaben' }}"
+                       class="group relative flex h-full min-w-0 flex-1 flex-col justify-end {{ $istTurnier ? 'bg-rot/10' : ($istHeute ? 'bg-gelb/25' : 'hover:bg-nacht/5') }}">
+                        @if ($n)
+                            <span class="flex flex-col-reverse" style="height: {{ max(8, $n / $maxAnzahl * 100) }}%">
+                                @if ($w['erledigt'])<span class="bg-rot" style="flex: {{ $w['erledigt'] }}"></span>@endif
+                                @if ($offen)<span class="bg-nacht" style="flex: {{ $offen }}"></span>@endif
+                                @if ($w['ueberfaellig'])<span class="bg-gelb" style="flex: {{ $w['ueberfaellig'] }}"></span>@endif
+                            </span>
+                        @endif
+                        @if ($istTurnier)<span class="absolute inset-x-0 top-0 h-[3px] bg-rot"></span>@endif
+                        @if ($istHeute)<span class="absolute inset-x-0 top-0 h-[3px] bg-gelb"></span>@endif
+                    </a>
                 @endforeach
             </div>
-        </div>
-        <div class="mt-3 flex flex-wrap gap-4 text-xs text-beton">
-            <span class="flex items-center gap-1.5"><span class="h-3 w-3 bg-rot"></span> erledigt</span>
-            <span class="flex items-center gap-1.5"><span class="h-3 w-3 border-2 border-nacht"></span> offen</span>
-            <span class="flex items-center gap-1.5"><span class="h-3 w-3 bg-gelb"></span> überfällig</span>
-            <span class="flex items-center gap-1.5"><span class="h-3 w-px border-l border-dashed border-nacht"></span> heute</span>
+            <div class="mt-1.5 flex gap-px text-[9px] font-bold uppercase tracking-label text-beton sm:gap-[3px] sm:text-[10px]">
+                @php $schritt = max(1, (int) ceil(count($wochen) / 8)) * 2; @endphp
+                @foreach (array_values($wochen) as $i => $w)
+                    <span class="relative min-w-0 flex-1 overflow-visible whitespace-nowrap text-center {{ $w['abstand'] === 0 ? 'text-rot' : '' }}">
+                        @if ($w['abstand'] === 0) T @elseif ($w['start']->eq($dieseWoche)) <span class="text-nacht">Heute</span> @elseif ($w['abstand'] % $schritt === 0) {{ $w['abstand'] > 0 ? '+' : '' }}{{ $w['abstand'] }} @endif
+                    </span>
+                @endforeach
+            </div>
+        </section>
+
+        @php
+            $erledigtVorbei = collect($wochen)->filter(fn ($w) => $w['aufgaben']->count() && $w['ende']->lt(today()) && $w['erledigt'] === $w['aufgaben']->count());
+        @endphp
+        <div class="space-y-3">
+            @if ($erledigtVorbei->isNotEmpty())
+                <details id="erledigt" class="group karte scroll-mt-24">
+                    <summary class="flex cursor-pointer list-none items-center gap-3 px-4 py-3">
+                        <span class="min-w-0 flex-1"><span class="titel block text-sm">Bereits erledigt</span><span class="block text-xs text-beton">{{ $erledigtVorbei->count() }} {{ $erledigtVorbei->count() === 1 ? 'Woche' : 'Wochen' }} ohne offene Aufgaben</span></span>
+                        <span class="label">{{ $erledigtVorbei->sum(fn ($w) => $w['aufgaben']->count()) }}</span>
+                        <x-icon name="pfeil" class="h-4 w-4 shrink-0 transition-transform group-open:rotate-90" />
+                    </summary>
+                    <div class="border-t border-nacht/10">
+                        @foreach ($erledigtVorbei as $w)
+                            <p class="label bg-kreide/70 px-4 py-1.5">{{ $wochenText($w['abstand']) }} | {{ $w['start']->format('d.m.') }} bis {{ $w['ende']->format('d.m.') }}</p>
+                            @foreach ($w['aufgaben'] as $aufgabe) @include('aufgaben._zeile', ['aufgabe' => $aufgabe]) @endforeach
+                        @endforeach
+                    </div>
+                </details>
+            @endif
+            @foreach ($wochen as $k => $w)
+                @php
+                    $n = $w['aufgaben']->count(); $istTurnier = $w['abstand'] === 0; $istHeute = $w['start']->eq($dieseWoche);
+                    $vorbei = $w['ende']->lt(today()); $fertig = $n && $w['erledigt'] === $n;
+                @endphp
+                @continue(! $n && ! $istTurnier && ! $istHeute)
+                @continue($vorbei && $fertig)
+                <details id="woche-{{ $k }}" class="group karte scroll-mt-24 {{ $istHeute ? 'border-l-4 border-l-gelb' : '' }}" open>
+                    <summary class="flex cursor-pointer list-none items-center gap-3 px-4 py-3 {{ $istTurnier ? 'bg-rot text-white' : '' }}">
+                        <span class="min-w-0 flex-1">
+                            <span class="titel block text-sm {{ $istTurnier ? 'text-white' : '' }}">{{ $wochenText($w['abstand']) }}</span>
+                            <span class="block text-xs {{ $istTurnier ? 'text-white/80' : 'text-beton' }}">{{ $w['start']->format('d.m.') }} bis {{ $w['ende']->format('d.m.Y') }}@if ($istTurnier) | Turnier {{ $ausgabe->datumText() }}@endif</span>
+                        </span>
+                        @if ($istHeute)<span class="marke-gelb">Diese Woche</span>@endif
+                        @if ($w['ueberfaellig'] && ! $istTurnier)<span class="marke-gelb">{{ $w['ueberfaellig'] }} überfällig</span>@endif
+                        @if ($n)<span class="label {{ $istTurnier ? 'text-white' : '' }}">{{ $w['erledigt'] }}/{{ $n }}</span>@endif
+                        <x-icon name="pfeil" class="h-4 w-4 shrink-0 transition-transform group-open:rotate-90" />
+                    </summary>
+                    @if ($n)
+                        <div class="border-t border-nacht/10">
+                            @foreach ($w['aufgaben'] as $aufgabe)
+                                @include('aufgaben._zeile', ['aufgabe' => $aufgabe])
+                            @endforeach
+                        </div>
+                    @else
+                        <p class="border-t border-nacht/10 px-4 py-3 text-sm {{ $istTurnier ? '' : 'text-beton' }}">{{ $istTurnier ? 'Keine Aufgaben mit Termin in der Turnierwoche.' : 'Diese Woche ist nichts fällig.' }}</p>
+                    @endif
+                </details>
+            @endforeach
+
+            @if ($ohneTermin->isNotEmpty())
+                <details class="group karte" open>
+                    <summary class="flex cursor-pointer list-none items-center gap-3 px-4 py-3">
+                        <span class="titel flex-1 text-sm">Ohne Termin</span><span class="label">{{ $ohneTermin->count() }}</span>
+                        <x-icon name="pfeil" class="h-4 w-4 shrink-0 transition-transform group-open:rotate-90" />
+                    </summary>
+                    <div class="border-t border-nacht/10">@foreach ($ohneTermin as $aufgabe) @include('aufgaben._zeile', ['aufgabe' => $aufgabe]) @endforeach</div>
+                </details>
+            @endif
         </div>
     @endif
 

@@ -14,8 +14,6 @@ class Auswahlliste extends Model
     /** Bereiche, fuer die das OK eigene Eintraege anlegt. Ab Werk ohne Eintraege. */
     public const BEREICHE = [
         'kennzahl' => ['Kennzahlen', 'Was ihr pro Turnier festhalten wollt, z. B. aus turnieragenda.ch oder helfereinsatz.ch.'],
-        'produktkategorie' => ['Produktkategorien', 'Gruppen für die Produkte der Festwirtschaft.'],
-        'allergen' => ['Allergene', 'Allergene, die ihr bei Produkten angebt.'],
         'materialgruppe' => ['Materialgruppen', 'Gruppen für Material und Inventar.'],
         'standort' => ['Standorte', 'Wo Material gelagert wird.'],
     ];

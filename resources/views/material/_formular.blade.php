@@ -1,7 +1,7 @@
 {{-- Formular fuer Material ($m = null fuer neues Material) --}}
 <form method="POST" action="{{ route('material.speichern', $m) }}" enctype="multipart/form-data" class="mt-3 grid gap-2 sm:grid-cols-2">@csrf
     <input name="name" required maxlength="150" class="feld sm:col-span-2" value="{{ $m?->name }}" placeholder="Bezeichnung, z. B. Beamer" aria-label="Bezeichnung">
-    <select name="ressort_id" class="feld" aria-label="Ressort"><option value="">Ressort wählen</option>@foreach ($ressorts as $r)<option value="{{ $r->id }}" @selected(($m?->ressort_id ?? request('ressort')) == $r->id)>{{ $r->name }}</option>@endforeach</select>
+    <select name="ressort_id" class="feld" aria-label="Ressort"><option value="">Ressort wählen</option>@foreach ($ressorts as $r)<option value="{{ $r->id }}" @selected(($m?->ressort_id ?? $vorRessort ?? request('ressort')) == $r->id)>{{ $r->name }}</option>@endforeach</select>
     <input name="zweck" maxlength="255" class="feld" value="{{ $m?->zweck }}" placeholder="Wofür, z. B. Rangliste im Turnierbüro" aria-label="Wofür">
     <div class="grid grid-cols-2 gap-2">
         <input name="menge" type="number" step="any" min="0" inputmode="decimal" class="feld" value="{{ $m?->menge ?? 1 }}" aria-label="Menge">

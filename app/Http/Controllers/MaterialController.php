@@ -18,25 +18,63 @@ class MaterialController extends Controller
     public function index(Request $request)
     {
         $alle = Material::with(['ressort', 'einsaetze.ausgabe', 'einsaetze.quellePerson'])->orderBy('name')->get();
-        $ressortFilter = $request->query('ressort');
-        $suche = trim((string) $request->query('q'));
-        $liste = $alle
-            ->when($ressortFilter === 'ohne', fn ($c) => $c->whereNull('ressort_id'))
-            ->when($ressortFilter && $ressortFilter !== 'ohne', fn ($c) => $c->where('ressort_id', (int) $ressortFilter))
-            ->when($suche !== '', fn ($c) => $c->filter(fn ($m) => str_contains(mb_strtolower($m->name.' '.$m->zweck.' '.$m->notizen), mb_strtolower($suche))));
+        $filter = $this->filter($request);
 
         return view('material.index', [
-            'gruppiert' => $liste->groupBy(fn ($m) => $m->ressort?->name ?? 'Ohne Ressort')->sortKeys(),
+            'gruppiert' => $this->gefiltert($alle, $filter)->groupBy(fn ($m) => $m->ressort?->name ?? 'Ohne Ressort')->sortKeys(),
             'anzahl' => $alle->count(),
-            'ressortFilter' => $ressortFilter,
-            'suche' => $suche,
+            'filter' => $filter,
             'ressorts' => \App\Models\Ressort::orderBy('sortierung')->orderBy('name')->get(),
             'gruppen' => Auswahlliste::werte('materialgruppe'),
             'standorte' => Auswahlliste::werte('standort'),
+            'alleGruppen' => $alle->pluck('gruppe')->filter()->unique()->sort()->values(),
+            'alleStandorte' => $alle->pluck('standort')->filter()->unique()->sort()->values(),
             'ausgaben' => Ausgabe::with('turnier')->orderByDesc('datum_von')->get(),
             'reparieren' => $alle->where('zustand', '!=', 'gut')->count(),
             'kaufPruefen' => $alle->filter(fn ($m) => $m->mietBilanz()['pruefen'])->count(),
         ]);
+    }
+
+    /** Druckansicht: gefilterte Materialliste oder Packliste fuer ein Turnier. */
+    public function drucken(Request $request)
+    {
+        $filter = $this->filter($request);
+        $turnier = $request->filled('turnier') ? Ausgabe::with('turnier')->find($request->integer('turnier')) : null;
+        $alle = Material::with(['ressort'])->orderBy('name')->get();
+        $einsatz = $turnier ? $turnier->material()->with('quellePerson')->get()->keyBy('material_id') : collect();
+        if ($turnier) {
+            $alle = $alle->whereIn('id', $einsatz->keys());
+        }
+
+        return view('material.drucken', [
+            'gruppiert' => $this->gefiltert($alle, $filter)->groupBy(fn ($m) => $m->ressort?->name ?? 'Ohne Ressort')->sortKeys(),
+            'filter' => $filter,
+            'turnier' => $turnier,
+            'einsatz' => $einsatz,
+            'ressortName' => $filter['ressort'] && $filter['ressort'] !== 'ohne' ? \App\Models\Ressort::find((int) $filter['ressort'])?->name : null,
+        ]);
+    }
+
+    private function filter(Request $request): array
+    {
+        return [
+            'ressort' => $request->query('ressort'),
+            'gruppe' => $request->query('gruppe'),
+            'standort' => $request->query('standort'),
+            'eigentum' => in_array($request->query('eigentum'), array_keys(Material::EIGENTUM), true) ? $request->query('eigentum') : null,
+            'q' => trim((string) $request->query('q')),
+        ];
+    }
+
+    private function gefiltert($liste, array $f)
+    {
+        return $liste
+            ->when($f['ressort'] === 'ohne', fn ($c) => $c->whereNull('ressort_id'))
+            ->when($f['ressort'] && $f['ressort'] !== 'ohne', fn ($c) => $c->where('ressort_id', (int) $f['ressort']))
+            ->when($f['gruppe'], fn ($c) => $c->where('gruppe', $f['gruppe']))
+            ->when($f['standort'], fn ($c) => $c->where('standort', $f['standort']))
+            ->when($f['eigentum'], fn ($c) => $c->where('eigentum', $f['eigentum']))
+            ->when($f['q'] !== '', fn ($c) => $c->filter(fn ($m) => str_contains(mb_strtolower($m->name.' '.$m->zweck.' '.$m->notizen), mb_strtolower($f['q']))));
     }
 
     public function speichern(Request $request, ?Material $material = null)

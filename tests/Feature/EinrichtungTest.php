@@ -40,7 +40,7 @@ class EinrichtungTest extends TestCase
         $this->assertSame(1, $ausgabe->aufgaben()->count());
         $this->assertSame('2026-11-21', $ausgabe->aufgaben()->first()->faellig_am->format('Y-m-d'));
 
-        foreach (['ausgaben.show', 'aufgaben.index', 'festwirtschaft.ausgabe', 'material.ausgabe'] as $r) {
+        foreach (['ausgaben.show', 'aufgaben.index', 'material.ausgabe'] as $r) {
             $this->get(route($r, $ausgabe))->assertOk();
         }
         $this->get(route('start'))->assertOk()->assertSee('5 von 6');

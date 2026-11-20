@@ -2,7 +2,10 @@
 <x-app :titel="'Material '.$ausgabe->titel">
     <x-seitenkopf titel="Material" :ueber="$ausgabe->titel" :zurueck="route('ausgaben.show', $ausgabe)">
         <x-slot:unter>{{ $ausgabe->datumText() }}. Einsatzliste für Auf- und Abbau, am Turniertag direkt auf dem Handy abhaken.</x-slot:unter>
-        <x-slot:aktionen><a href="{{ route('material.index') }}" class="knopf-rahmen"><x-icon name="kiste" class="h-4 w-4" /> Materialliste</a></x-slot:aktionen>
+        <x-slot:aktionen>
+            <a href="{{ route('material.drucken', ['turnier' => $ausgabe->id]) }}" target="_blank" class="knopf-rahmen"><x-icon name="drucker" class="h-4 w-4" /> Packliste drucken</a>
+            <a href="{{ route('material.index') }}" class="knopf-rahmen"><x-icon name="kiste" class="h-4 w-4" /> Materialliste</a>
+        </x-slot:aktionen>
     </x-seitenkopf>
 
     <div class="mb-6 grid grid-cols-3 gap-3">
