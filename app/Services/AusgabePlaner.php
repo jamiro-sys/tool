@@ -225,6 +225,9 @@ class AusgabePlaner
             if (! $aufgabe->vorlage->aktiv) {
                 $this->aendereVorlage($aufgabe->vorlage, ['aktiv' => true, 'deaktiviert_am' => null, 'deaktiviert_grund' => null], 'Wieder im Jahresplan');
             }
+            if ($turniere !== null) {
+                $aufgabe->vorlage->setzeTurniere($turniere);
+            }
 
             return $aufgabe->vorlage;
         }

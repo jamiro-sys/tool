@@ -46,7 +46,7 @@ class WiederkehrendTest extends OkTestCase
         $this->actingAs($this->person('mitglied', $r->kuerzel))->post(route('aufgaben.wiederholen', $aufgabe))->assertForbidden();
 
         $leitung = $this->person('mitglied', $r->kuerzel, 'leitung');
-        $this->actingAs($leitung)->get(route('aufgaben.show', $aufgabe))->assertSee('In den Jahresplan');
+        $this->actingAs($leitung)->get(route('aufgaben.show', $aufgabe))->assertSee('Wie oft?')->assertDontSee('Im Jahresplan ansehen');
         $this->actingAs($leitung)->post(route('aufgaben.wiederholen', $aufgabe))->assertRedirect();
 
         $vorlage = Vorlage::where('titel', 'Beamer reservieren XYZ')->firstOrFail();
@@ -55,7 +55,7 @@ class WiederkehrendTest extends OkTestCase
         $this->assertSame(0.5, $vorlage->aufwand_std);
         $this->assertSame($vorlage->id, $aufgabe->fresh()->vorlage_id);
 
-        $this->actingAs($leitung)->get(route('aufgaben.show', $aufgabe))->assertSee('Kommt jedes Jahr wieder')->assertDontSee('In den Jahresplan</button>', false);
+        $this->actingAs($leitung)->get(route('aufgaben.show', $aufgabe))->assertSee('Im Jahresplan ansehen');
         $this->actingAs($leitung)->post(route('aufgaben.wiederholen', $aufgabe))->assertStatus(409);
     }
 
@@ -222,5 +222,42 @@ class WiederkehrendTest extends OkTestCase
 
         // Lesende sehen keinen Knopf
         $this->actingAs($this->person('lesend'))->get(route('ressorts.show', [$r, 'tab' => 'aufgaben']))->assertDontSee('modal-neue-aufgabe', false);
+    }
+
+    public function test_bestehende_aufgabe_wie_oft_anpassen(): void
+    {
+        $a = $this->turnier();
+        $r = Ressort::first();
+        $dez = Turnier::where('kurz', 'DEZ')->first();
+        $feb = Turnier::where('kurz', 'FEB')->first();
+        $leitung = $this->person('mitglied', $r->kuerzel, 'leitung');
+        $aufgabe = Aufgabe::create(['ausgabe_id' => $a->id, 'ressort_id' => $r->id, 'titel' => 'Bestehend QQQ', 'status' => 'offen']);
+
+        // Einmalig -> jedes Jahr, nur Februar (ueber Kasten auf der Aufgabe)
+        $this->actingAs($leitung)->patch(route('aufgaben.update', $aufgabe), ['wiederkehrend' => 'jedes_jahr', 'turniere_gesendet' => 1, 'turniere' => [$feb->id]])->assertSessionHasNoErrors();
+        $aufgabe->refresh();
+        $this->assertSame([$feb->id], $aufgabe->vorlage->turniere->pluck('id')->all());
+
+        // Seite zeigt Auswahl mit Februar angehakt, Dezember nicht
+        $html = $this->actingAs($leitung)->get(route('aufgaben.show', $aufgabe))->assertOk()->getContent();
+        $this->assertMatchesRegularExpression('/value="'.$feb->id.'" checked/', $html);
+        $this->assertDoesNotMatchRegularExpression('/value="'.$dez->id.'" checked/', $html);
+
+        // Anpassen auf beide (= alle), Titel im Bearbeiten-Fenster gleichzeitig aendern
+        $this->actingAs($leitung)->patch(route('aufgaben.update', $aufgabe), ['titel' => 'Bestehend neu QQQ', 'wiederkehrend' => 'jedes_jahr', 'turniere_gesendet' => 1, 'turniere' => [$dez->id, $feb->id]])->assertSessionHasNoErrors();
+        $this->assertCount(0, $aufgabe->fresh()->vorlage->turniere);
+        $this->assertSame('Bestehend neu QQQ', $aufgabe->fresh()->titel);
+
+        // Ohne Haekchen: Fehler; zurueck auf nur dieses Turnier: Jahresplan auf Nein
+        $this->actingAs($leitung)->patch(route('aufgaben.update', $aufgabe), ['wiederkehrend' => 'jedes_jahr', 'turniere_gesendet' => 1])->assertSessionHasErrors('turniere');
+        $this->actingAs($leitung)->patch(route('aufgaben.update', $aufgabe), ['wiederkehrend' => 'einmalig'])->assertSessionHasNoErrors();
+        $this->assertFalse($aufgabe->fresh()->vorlage->aktiv);
+        $this->assertSame(1, Vorlage::where('id', $aufgabe->vorlage_id)->count());
+
+        // Mitglied ohne Leitung: keine Auswahl, Aenderung wird ignoriert
+        $m = $this->person('mitglied', $r->kuerzel);
+        $this->actingAs($m)->get(route('aufgaben.show', $aufgabe))->assertSee('Nur dieses Turnier')->assertDontSee('name="wiederkehrend"', false);
+        $this->actingAs($m)->patch(route('aufgaben.update', $aufgabe), ['wiederkehrend' => 'jedes_jahr']);
+        $this->assertFalse($aufgabe->fresh()->vorlage->aktiv);
     }
 }
