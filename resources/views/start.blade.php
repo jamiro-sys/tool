@@ -30,6 +30,8 @@
         @endif
     </div>
 
+    @can('admin') @include('partials.erste-schritte') @endcan
+
     @if (! $ausgabe)
         <div class="karte">
             <x-leer icon="pokal" titel="Keine laufende Ausgabe" text="Sobald die nächste Ausgabe geplant ist, erscheinen hier deine Aufgaben.">

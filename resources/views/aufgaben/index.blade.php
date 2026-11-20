@@ -154,6 +154,9 @@
 
     @can('schreiben')
         <x-modal name="neue-aufgabe" titel="Neue Aufgabe">
+            @if ($ressorts->isEmpty())
+                <x-ohne-ressort />
+            @else
             <form method="POST" action="{{ route('aufgaben.store', $ausgabe) }}">
                 @csrf
                 @include('aufgaben._formular', ['aufgabe' => null])
@@ -162,6 +165,7 @@
                     <button class="knopf-rot">Erstellen</button>
                 </div>
             </form>
+            @endif
         </x-modal>
     @endcan
 </x-app>

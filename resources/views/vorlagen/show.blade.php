@@ -1,6 +1,6 @@
 <x-app :titel="$vorlage->titel">
     <x-seitenkopf :titel="$vorlage->titel" :ueber="'Vorlage | '.$vorlage->ressort->name" :zurueck="route('vorlagen.index')">
-        <x-slot:unter>{{ $vorlage->zeitpunktText() }} | {{ $vorlage->turnier ? 'nur '.$vorlage->turnier->name : 'beide Turniere' }} @if ($vorlage->aufwand_std) | ca. {{ $vorlage->aufwand_std }} Std. @endif</x-slot:unter>
+        <x-slot:unter>{{ $vorlage->zeitpunktText() }} | {{ $vorlage->turnier ? 'nur '.$vorlage->turnier->name : 'alle Turniere' }} @if ($vorlage->aufwand_std) | ca. {{ $vorlage->aufwand_std }} Std. @endif</x-slot:unter>
         <x-slot:aktionen>
             @can('ressort-verwalten', $vorlage->ressort)
                 <a href="{{ route('vorlagen.edit', $vorlage) }}" class="knopf-rahmen" data-kuerzel="e"><x-icon name="stift" class="h-4 w-4" /> Bearbeiten</a>

@@ -3,6 +3,13 @@
         <x-slot:unter>Schritt {{ $vorschlag ? '2' : '1' }} von 2: {{ $vorschlag ? 'Aufgaben prüfen, anpassen oder weglassen.' : 'Turnier und Datum wählen.' }}</x-slot:unter>
     </x-seitenkopf>
 
+    @if ($turniere->isEmpty())
+        <section class="karte">
+            <x-leer icon="pokal" titel="Zuerst ein Turnier anlegen" text="Eine Ausgabe gehört immer zu einem Turnier, z. B. dem Hallencup im Dezember. Lege Turniere und Hallen unter Admin > Einstellungen an.">
+                @can('admin')<a href="{{ route('admin.einstellungen') }}" class="knopf-rot mt-4"><x-icon name="einstellungen" class="h-4 w-4" /> Zu den Einstellungen</a>@endcan
+            </x-leer>
+        </section>
+    @else
     {{-- Schritt 1 --}}
     <form method="GET" action="{{ route('ausgaben.create') }}" class="karte mb-6 p-4">
         <div class="grid gap-4 md:grid-cols-4">
@@ -54,6 +61,7 @@
                     <div class="md:col-span-2">
                         <label class="feld-label" for="halle_id">Halle</label>
                         <select id="halle_id" name="halle_id" class="feld">
+                            <option value="">Keine Halle</option>
                             @foreach ($hallen as $h)<option value="{{ $h->id }}" @selected($turnier->halle_id === $h->id)>{{ $h->name }}</option>@endforeach
                         </select>
                     </div>
@@ -61,7 +69,7 @@
             </section>
 
             <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-                <p class="text-sm"><span class="zahl text-xl" x-text="{{ $alle->count() }} - Object.values(weg).filter(Boolean).length + zusatz.length">{{ $alle->count() }}</span> Aufgaben werden erstellt.
+                <p class="text-sm"><span x-data="{ get n() { return {{ $alle->count() }} - Object.values(weg).filter(Boolean).length + zusatz.length } }"><span class="zahl text-xl" x-text="n">{{ $alle->count() }}</span> <span x-text="n === 1 ? 'Aufgabe wird' : 'Aufgaben werden'">{{ $alle->count() === 1 ? 'Aufgabe wird' : 'Aufgaben werden' }}</span> erstellt.</span>
                     @php $hinweise = $alle->filter(fn ($e) => $e['erkenntnisse']->count())->count(); @endphp
                     @if ($hinweise)<span class="marke-gelb ml-2">{{ $hinweise }} mit Hinweisen vom letzten Mal</span>@endif
                 </p>
@@ -108,7 +116,7 @@
 
             <section class="karte mb-6">
                 <div class="karte-kopf"><h2 class="titel text-sm">Zusätzliche Aufgaben</h2>
-                    <button type="button" class="knopf-rahmen knopf-klein" x-on:click="zusatz.push({})"><x-icon name="plus" class="h-3.5 w-3.5" /> Hinzufügen</button></div>
+                    @if ($ressorts->isNotEmpty())<button type="button" class="knopf-rahmen knopf-klein" x-on:click="zusatz.push({})"><x-icon name="plus" class="h-3.5 w-3.5" /> Hinzufügen</button>@endif</div>
                 <template x-for="(z, i) in zusatz" :key="i">
                     <div class="grid gap-2 border-b border-nacht/5 p-3 sm:grid-cols-[1fr_180px_160px_44px]">
                         <input :name="`zusatz[${i}][titel]`" class="feld" placeholder="Neue Aufgabe für diese Ausgabe">
@@ -119,12 +127,17 @@
                         <button type="button" class="knopf-leise" x-on:click="zusatz.splice(i, 1)" aria-label="Entfernen"><x-icon name="x" class="h-4 w-4" /></button>
                     </div>
                 </template>
-                <p x-show="zusatz.length === 0" class="px-4 py-4 text-sm text-beton">Neue Aufgaben, die es bisher nicht gab. Sie können im Rückblick zu Vorlagen werden.</p>
+                @if ($ressorts->isEmpty())
+                    <p class="px-4 py-4 text-sm text-beton">Aufgaben gehören zu einem Ressort. Lege unter Ressorts zuerst eure Ressorts an. Du kannst die Ausgabe auch jetzt ohne Aufgaben erstellen und sie später ergänzen.</p>
+                @else
+                    <p x-show="zusatz.length === 0" class="px-4 py-4 text-sm text-beton">Neue Aufgaben, die es bisher nicht gab. Sie können im Rückblick zu Vorlagen werden.</p>
+                @endif
             </section>
 
             <div class="sticky bottom-20 z-20 flex justify-end lg:bottom-4">
                 <button class="knopf-rot px-8"><x-icon name="check" class="h-4 w-4" /> Ausgabe erstellen</button>
             </div>
         </form>
+    @endif
     @endif
 </x-app>
