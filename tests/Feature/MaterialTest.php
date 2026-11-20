@@ -100,4 +100,39 @@ class MaterialTest extends OkTestCase
         $this->actingAs($this->person('mitglied'))->post(route('material.einsatz', [$a, $e]), ['herkunft' => 'gemietet', 'kosten' => '80', 'quelle' => 'Sport AG'])->assertSessionHasNoErrors();
         $this->assertSame('Gemietet bei Sport AG', $e->fresh()->herkunftText());
     }
+
+    public function test_material_fuer_alle_sichtbar_filtern_und_drucken(): void
+    {
+        $ressort = \App\Models\Ressort::first();
+        $m = $this->person('mitglied', $ressort->kuerzel);
+        $this->actingAs($m)->get(route('start'))->assertSee(route('material.index'))->assertSee(route('dateien.index'));
+
+        $this->actingAs($m)->post(route('material.speichern'), ['name' => 'Beamer', 'ressort_id' => $ressort->id, 'zweck' => 'Anzeige Spielstand', 'gruppe' => 'Technik', 'zustand' => 'gut', 'eigentum' => 'verein'])->assertSessionHasNoErrors();
+        Material::create(['name' => 'Festbank', 'gruppe' => 'Mobiliar', 'eigentum' => 'halle']);
+
+        $this->actingAs($m)->get(route('ressorts.show', $ressort))->assertSee('Beamer')->assertSee('Anzeige Spielstand');
+        $this->actingAs($m)->get(route('material.index', ['gruppe' => 'Technik']))->assertSee('Anzeige Spielstand')->assertDontSee('Festbank');
+        $this->actingAs($m)->get(route('material.index', ['eigentum' => 'halle']))->assertSee('Festbank')->assertDontSee('Anzeige Spielstand');
+        $this->actingAs($m)->get(route('material.drucken', ['ressort' => $ressort->id]))->assertOk()->assertSee('Beamer')->assertDontSee('Festbank')->assertSee($ressort->name);
+
+        $a = $this->ausgabe(10);
+        MaterialEinsatz::create(['ausgabe_id' => $a->id, 'material_id' => Material::where('name', 'Festbank')->value('id'), 'menge' => 8, 'herkunft' => 'halle']);
+        $this->actingAs($m)->get(route('material.drucken', ['turnier' => $a->id]))->assertOk()->assertSee('Packliste')->assertSee('Festbank')->assertDontSee('Beamer')->assertSee('Weg = versorgt');
+    }
+
+    public function test_festwirtschaft_ist_entfernt(): void
+    {
+        $this->assertFalse(\Illuminate\Support\Facades\Route::has('festwirtschaft.index'));
+        $this->actingAs($this->person('mitglied'))->get('/festwirtschaft')->assertNotFound();
+    }
+
+    public function test_zeitstrahl_zeigt_wochen_heute_und_turnier(): void
+    {
+        $a = $this->ausgabe(21);
+        $r = \App\Models\Ressort::first();
+        \App\Models\Aufgabe::create(['ausgabe_id' => $a->id, 'ressort_id' => $r->id, 'titel' => 'Schiris aufbieten', 'faellig_am' => today()->addDays(7), 'status' => 'offen']);
+        \App\Models\Aufgabe::create(['ausgabe_id' => $a->id, 'ressort_id' => $r->id, 'titel' => 'Ohne Datum', 'status' => 'offen']);
+        $this->actingAs($this->person('mitglied'))->get(route('aufgaben.index', [$a, 'ansicht' => 'zeitstrahl']))->assertOk()
+            ->assertSee('Wochen bis zum Turnier')->assertSee('Turnierwoche')->assertSee('Diese Woche')->assertSee('Schiris aufbieten')->assertSee('Ohne Termin');
+    }
 }

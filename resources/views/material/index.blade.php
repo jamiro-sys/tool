@@ -2,6 +2,10 @@
 <x-app titel="Material">
     <x-seitenkopf titel="Materialliste" ueber="Alle Ressorts">
         <x-slot:unter>Was ihr wofür braucht, wem es gehört und wer es bei welchem Turnier mitgebracht oder gemietet hat.</x-slot:unter>
+        <x-slot:aktionen>
+            @if ($anzahl)<a href="{{ route('material.drucken', array_filter($filter)) }}" target="_blank" class="knopf-rahmen"><x-icon name="drucker" class="h-4 w-4" /> Liste drucken</a>@endif
+            @can('schreiben')<a href="#neu" class="knopf-rot" x-data x-on:click="document.querySelector('#neu details').open = true"><x-icon name="plus" class="h-4 w-4" /> Material</a>@endcan
+        </x-slot:aktionen>
     </x-seitenkopf>
 
     <div class="mb-6 grid grid-cols-3 gap-3">
@@ -10,16 +14,24 @@
         <div class="karte p-4 {{ $kaufPruefen ? 'border-gelb' : '' }}"><p class="label">Kauf prüfen</p><p class="zahl mt-2 text-3xl {{ $kaufPruefen ? '' : 'text-beton' }}">{{ $kaufPruefen }}</p></div>
     </div>
 
-    <form method="GET" class="mb-5 grid gap-2 sm:grid-cols-[220px_1fr_auto] sm:items-end" x-data x-on:change="$el.submit()">
+    <form method="GET" class="mb-5 grid gap-2 sm:grid-cols-2 lg:grid-cols-[repeat(4,minmax(0,1fr))_minmax(0,1.5fr)] lg:items-end" x-data x-on:change="$el.submit()">
         <div><label class="feld-label" for="m-ressort">Ressort</label>
-            <select id="m-ressort" name="ressort" class="feld"><option value="">Alle Ressorts</option>@foreach ($ressorts as $r)<option value="{{ $r->id }}" @selected($ressortFilter == $r->id)>{{ $r->name }}</option>@endforeach<option value="ohne" @selected($ressortFilter === 'ohne')>Ohne Ressort</option></select></div>
-        <div><label class="feld-label" for="m-q">Suche</label><input id="m-q" name="q" value="{{ $suche }}" class="feld" placeholder="Name, Zweck oder Notiz, z. B. Beamer"></div>
-        @if ($ressortFilter || $suche)<a href="{{ route('material.index') }}" class="knopf-leise">Zurücksetzen</a>@endif
+            <select id="m-ressort" name="ressort" class="feld"><option value="">Alle Ressorts</option>@foreach ($ressorts as $r)<option value="{{ $r->id }}" @selected($filter['ressort'] == $r->id)>{{ $r->name }}</option>@endforeach<option value="ohne" @selected($filter['ressort'] === 'ohne')>Ohne Ressort</option></select></div>
+        <div><label class="feld-label" for="m-gruppe">Gruppe</label>
+            <select id="m-gruppe" name="gruppe" class="feld"><option value="">Alle Gruppen</option>@foreach ($alleGruppen as $g)<option @selected($filter['gruppe'] === $g)>{{ $g }}</option>@endforeach</select></div>
+        <div><label class="feld-label" for="m-standort">Standort</label>
+            <select id="m-standort" name="standort" class="feld"><option value="">Alle Standorte</option>@foreach ($alleStandorte as $o)<option @selected($filter['standort'] === $o)>{{ $o }}</option>@endforeach</select></div>
+        <div><label class="feld-label" for="m-eigentum">Eigentum</label>
+            <select id="m-eigentum" name="eigentum" class="feld"><option value="">Alle</option>@foreach (\App\Models\Material::EIGENTUM as $k => $l)<option value="{{ $k }}" @selected($filter['eigentum'] === $k)>{{ $l }}</option>@endforeach</select></div>
+        <div><label class="feld-label" for="m-q">Suche</label><input id="m-q" name="q" value="{{ $filter['q'] }}" class="feld" placeholder="Name, Zweck oder Notiz"></div>
     </form>
+    @if (array_filter($filter))
+        <p class="-mt-3 mb-5 text-xs"><a href="{{ route('material.index') }}" class="font-bold text-rot hover:underline">Filter zurücksetzen</a></p>
+    @endif
 
     @if ($anzahl === 0)
         <section class="karte mb-6"><x-leer icon="kiste" titel="Noch kein Material" text="Erfasse, was eure Ressorts fürs Turnier brauchen. Bei jedem Turnier haltet ihr fest, ob es vom Verein kam, mitgebracht oder gemietet wurde." /></section>
-    @elseif ($gruppiert->isEmpty())
+    @elseif ($gruppiert->isEmpty() && array_filter($filter))
         <section class="karte mb-6"><x-leer icon="filter" titel="Nichts gefunden" text="Passe Ressort oder Suche an." /></section>
     @endif
 
@@ -82,7 +94,7 @@
 
     @can('schreiben')
         <section class="karte" id="neu">
-            <details class="group px-4 py-3" @if ($anzahl === 0 || request('ressort')) open @endif>
+            <details class="group px-4 py-3" @if ($anzahl === 0) open @endif>
                 <summary class="label flex cursor-pointer list-none items-center gap-2 text-rot"><x-icon name="plus" class="h-4 w-4" /> Neues Material</summary>
                 @include('material._formular', ['m' => null])
             </details>

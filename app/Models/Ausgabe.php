@@ -101,19 +101,9 @@ class Ausgabe extends Model
         return $this->hasMany(Kennzahl::class);
     }
 
-    public function einkauf(): HasMany
-    {
-        return $this->hasMany(EinkaufPosten::class)->orderBy('bezeichnung');
-    }
-
     public function material(): HasMany
     {
         return $this->hasMany(MaterialEinsatz::class);
-    }
-
-    public function kassen(): HasMany
-    {
-        return $this->hasMany(Kasse::class)->orderBy('name');
     }
 
     /** Letzte fruehere Ausgabe desselben Turniers, als Vergleich und Vorlage. */

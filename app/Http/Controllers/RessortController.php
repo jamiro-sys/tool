@@ -52,6 +52,9 @@ class RessortController extends Controller
         $erkenntnisse = $ressort->erkenntnisse()->with('user', 'ausgabe', 'vorlage')->latest()->limit(20)->get();
 
         return view('ressorts.show', [
+            'ressorts' => Ressort::orderBy('sortierung')->orderBy('name')->get(),
+            'gruppen' => \App\Models\Auswahlliste::werte('materialgruppe'),
+            'standorte' => \App\Models\Auswahlliste::werte('standort'),
             'ressort' => $ressort,
             'ausgabe' => $ausgabe,
             'offen' => $offen,

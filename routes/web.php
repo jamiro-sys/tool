@@ -6,8 +6,8 @@ use App\Http\Controllers\AufgabeController;
 use App\Http\Controllers\AusgabeController;
 use App\Http\Controllers\AuswertungController;
 use App\Http\Controllers\BenachrichtigungController;
+use App\Http\Controllers\DateienController;
 use App\Http\Controllers\ErkenntnisController;
-use App\Http\Controllers\FestwirtschaftController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\ProfilController;
 use App\Http\Controllers\RessortController;
@@ -52,20 +52,14 @@ Route::middleware(['auth', 'aktiv'])->group(function () {
     Route::delete('/verknuepfungen/{verknuepfung}', [VerknuepfungController::class, 'loeschen'])->name('verknuepfungen.loeschen');
     Route::post('/ausgaben/{ausgabe}/kennzahlen', [VerknuepfungController::class, 'kennzahlen'])->name('ausgaben.kennzahlen');
 
-    // Festwirtschaft
-    Route::get('/festwirtschaft', [FestwirtschaftController::class, 'index'])->name('festwirtschaft.index');
-    Route::get('/festwirtschaft/preisliste', [FestwirtschaftController::class, 'preisliste'])->name('festwirtschaft.preisliste');
-    Route::post('/festwirtschaft/produkte/{produkt?}', [FestwirtschaftController::class, 'produkt'])->name('festwirtschaft.produkt');
-    Route::delete('/festwirtschaft/produkte/{produkt}', [FestwirtschaftController::class, 'produktLoeschen'])->name('festwirtschaft.produkt.loeschen');
-    Route::get('/ausgaben/{ausgabe}/festwirtschaft', [FestwirtschaftController::class, 'ausgabe'])->name('festwirtschaft.ausgabe');
-    Route::post('/ausgaben/{ausgabe}/einkauf/uebernehmen', [FestwirtschaftController::class, 'uebernehmen'])->name('festwirtschaft.uebernehmen');
-    Route::post('/ausgaben/{ausgabe}/einkauf/{posten?}', [FestwirtschaftController::class, 'posten'])->name('festwirtschaft.posten');
-    Route::delete('/ausgaben/{ausgabe}/einkauf/{posten}', [FestwirtschaftController::class, 'postenLoeschen'])->name('festwirtschaft.posten.loeschen');
-    Route::post('/ausgaben/{ausgabe}/kassen/{kasse?}', [FestwirtschaftController::class, 'kasse'])->name('festwirtschaft.kasse');
-    Route::delete('/ausgaben/{ausgabe}/kassen/{kasse}', [FestwirtschaftController::class, 'kasseLoeschen'])->name('festwirtschaft.kasse.loeschen');
+    // Gemeinsame Dateiablage
+    Route::get('/dateien', [DateienController::class, 'index'])->name('dateien.index');
+    Route::post('/dateien', [DateienController::class, 'speichern'])->name('dateien.speichern');
+    Route::patch('/dateien/{dokument}', [DateienController::class, 'aendern'])->name('dateien.aendern');
 
     // Material und Inventar
     Route::get('/material', [MaterialController::class, 'index'])->name('material.index');
+    Route::get('/material/drucken', [MaterialController::class, 'drucken'])->name('material.drucken');
     Route::post('/material/{material?}', [MaterialController::class, 'speichern'])->name('material.speichern');
     Route::delete('/material/{material}', [MaterialController::class, 'loeschen'])->name('material.loeschen');
     Route::get('/material/{material}/foto', [MaterialController::class, 'foto'])->name('material.foto');
