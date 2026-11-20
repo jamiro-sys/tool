@@ -113,9 +113,10 @@
             $pos = fn ($d) => (($tag->diffInDays($d, false) - $min) / $spanne) * 100;
             $heutePos = $pos(today());
         @endphp
+        <p class="mb-2 text-xs text-beton sm:hidden">Seitlich wischen, um den ganzen Zeitstrahl zu sehen.</p>
         <div class="karte overflow-x-auto">
-            <div class="min-w-[720px]">
-                <div class="relative ml-48 h-10 border-b border-nacht/10">
+            <div class="min-w-[760px]">
+                <div class="relative ml-28 h-10 border-b border-nacht/10 sm:ml-48">
                     @php $schritt = $spanne > 200 ? 56 : ($spanne > 100 ? 28 : ($spanne > 50 ? 14 : 7)); @endphp
                     @for ($w = (int) (ceil($min / $schritt) * $schritt); $w <= $max; $w += $schritt)
                         <span class="absolute top-3 -translate-x-1/2 whitespace-nowrap text-[10px] font-bold uppercase tracking-label {{ $w === 0 ? 'text-rot' : 'text-beton' }}" style="left: {{ ($w - $min) / $spanne * 100 }}%">
@@ -125,7 +126,7 @@
                 </div>
                 @foreach ($aufgaben->groupBy('ressort_id') as $gruppe)
                     <div class="flex border-b border-nacht/5">
-                        <div class="w-48 shrink-0 border-r border-nacht/10 px-3 py-2"><span class="titel text-xs">{{ $gruppe->first()->ressort->name }}</span></div>
+                        <div class="sticky left-0 z-10 w-28 shrink-0 border-r border-nacht/10 bg-white px-3 py-2 sm:w-48"><span class="titel block text-[11px] leading-tight sm:text-xs">{{ $gruppe->first()->ressort->name }}</span></div>
                         <div class="relative flex-1 py-2" style="min-height: {{ max(1, $gruppe->count()) * 30 + 8 }}px">
                             <span class="absolute inset-y-0 w-[2px] bg-rot/40" style="left: {{ ($tag->diffInDays($tag, false) - $min) / $spanne * 100 }}%"></span>
                             @if ($heutePos >= 0 && $heutePos <= 100)<span class="absolute inset-y-0 w-px border-l border-dashed border-nacht/40" style="left: {{ $heutePos }}%"></span>@endif

@@ -1,6 +1,6 @@
 <x-app titel="Festwirtschaft">
     <x-seitenkopf titel="Festwirtschaft">
-        <x-slot:unter>Eure Produkte mit Preisen und Allergenen. Einkauf und Kassen planst du pro Ausgabe.</x-slot:unter>
+        <x-slot:unter>Eure Produkte mit Preisen und Allergenen. Einkauf und Kassen planst du pro Turnier.</x-slot:unter>
         <x-slot:aktionen>
             @if ($produkte->where('aktiv', true)->isNotEmpty())
                 <a href="{{ route('festwirtschaft.preisliste') }}" class="knopf-rahmen"><x-icon name="drucker" class="h-4 w-4" /> Preisliste</a>
@@ -45,7 +45,7 @@
                     <x-icon name="pfeil" class="h-4 w-4" />
                 </a>
             @empty
-                <p class="px-4 py-3 text-xs text-beton">Sobald es eine Ausgabe gibt, planst du hier Einkauf und Kassen.</p>
+                <p class="px-4 py-3 text-xs text-beton">Sobald es ein Turnier gibt, planst du hier Einkauf und Kassen.</p>
             @endforelse
         </section>
     </div>

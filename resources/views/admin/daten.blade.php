@@ -30,7 +30,7 @@
 
     <section class="karte mt-6 border-rot/40 p-4">
         <p class="titel text-sm text-rot">Neu beginnen</p>
-        <p class="mt-1 text-sm text-beton">Löscht alle Inhalte: Ressorts, Turniere, Hallen, Vorlagen, Ausgaben, Aufgaben, Kontakte, Wissen und Verlauf. Personen und Einstellungen bleiben erhalten. Vorher wird automatisch eine Sicherung angelegt, die du unter Admin &gt; Sicherungen wieder einspielen kannst.</p>
+        <p class="mt-1 text-sm text-beton">Löscht alle Inhalte: Ressorts, Turnierarten, Hallen, Vorlagen, Turniere, Aufgaben, Kontakte, Wissen und Verlauf. Personen und Einstellungen bleiben erhalten. Vorher wird automatisch eine Sicherung angelegt, die du unter Admin &gt; Sicherungen wieder einspielen kannst.</p>
         <form method="POST" action="{{ route('admin.daten.leeren') }}" class="mt-4 flex flex-col gap-2 sm:flex-row sm:items-end" onsubmit="return confirm('Wirklich alle Inhalte löschen?')">@csrf
             <label class="flex-1">
                 <span class="label">Zur Bestätigung LEEREN eintippen</span>

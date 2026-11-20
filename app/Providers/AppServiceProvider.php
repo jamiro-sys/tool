@@ -30,6 +30,7 @@ class AppServiceProvider extends ServiceProvider
             $user = auth()->user();
             $view->with('navAusgabe', $user ? \App\Models\Ausgabe::naechste() : null);
             $view->with('ungelesen', $user ? $user->unreadNotifications()->count() : 0);
+            $view->with('navRessorts', $user ? \App\Models\Ressort::orderBy('sortierung')->orderBy('name')->get(['id', 'name', 'kuerzel']) : collect());
         });
 
         Event::listen(NotificationSent::class, VersandProtokollieren::class);

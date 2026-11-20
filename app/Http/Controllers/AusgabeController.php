@@ -81,12 +81,12 @@ class AusgabeController extends Controller
         $ausgabe = $this->planer->erstelle($turnier, $daten, $daten['auswahl'] ?? [], $daten['zusatz'] ?? []);
 
         $this->benachrichtiger->sende(
-            User::where('aktiv', true)->get(), 'ausgabe', 'Neue Ausgabe: '.$ausgabe->titel,
+            User::where('aktiv', true)->get(), 'ausgabe', 'Neues Turnier: '.$ausgabe->titel,
             'Die Planung für '.$ausgabe->datumText().' hat begonnen. Schau dir deine Aufgaben an.',
             route('ausgaben.show', $ausgabe), $request->user()
         );
 
-        return redirect()->route('ausgaben.show', $ausgabe)->with('erfolg', 'Ausgabe erstellt. Viel Erfolg bei der Planung!');
+        return redirect()->route('ausgaben.show', $ausgabe)->with('erfolg', 'Turnier erstellt. Viel Erfolg bei der Planung!');
     }
 
     public function show(Ausgabe $ausgabe)
@@ -159,9 +159,9 @@ class AusgabeController extends Controller
             );
         }
 
-        Aktivitaet::protokolliere('ausgabe.geaendert', 'Ausgabe geändert: '.$ausgabe->titel, $ausgabe);
+        Aktivitaet::protokolliere('ausgabe.geaendert', 'Turnier geändert: '.$ausgabe->titel, $ausgabe);
 
-        return back()->with('erfolg', 'Ausgabe gespeichert.');
+        return back()->with('erfolg', 'Turnier gespeichert.');
     }
 
     public function rueckblick(Request $request, Ausgabe $ausgabe)
@@ -214,9 +214,9 @@ class AusgabeController extends Controller
     public function destroy(Ausgabe $ausgabe)
     {
         Gate::authorize('admin');
-        Aktivitaet::protokolliere('ausgabe.geloescht', 'Ausgabe gelöscht: '.$ausgabe->titel);
+        Aktivitaet::protokolliere('ausgabe.geloescht', 'Turnier gelöscht: '.$ausgabe->titel);
         $ausgabe->delete();
 
-        return redirect()->route('ausgaben.index')->with('erfolg', 'Ausgabe gelöscht.');
+        return redirect()->route('ausgaben.index')->with('erfolg', 'Turnier gelöscht.');
     }
 }

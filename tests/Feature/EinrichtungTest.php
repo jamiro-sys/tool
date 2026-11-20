@@ -23,7 +23,7 @@ class EinrichtungTest extends TestCase
         $this->actingAs($admin);
 
         $this->get(route('start'))->assertOk()->assertSee('Erste Schritte')->assertSee('0 von 6');
-        $this->get(route('ausgaben.create'))->assertOk()->assertSee('Zuerst ein Turnier anlegen');
+        $this->get(route('ausgaben.create'))->assertOk()->assertSee('Zuerst eine Turnierart anlegen');
         $this->get(route('ressorts.index'))->assertOk()->assertSee('Noch keine Ressorts');
         $this->get(route('vorlagen.create'))->assertOk()->assertSee('Zuerst ein Ressort anlegen');
 

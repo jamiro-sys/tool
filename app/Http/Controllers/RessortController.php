@@ -24,7 +24,7 @@ class RessortController extends Controller
 
     public function show(Ressort $ressort)
     {
-        $ressort->load(['mitglieder', 'vorlagen.turnier', 'kontakte', 'dokumente.user', 'wissen.user', 'uebergaben.von', 'uebergaben.an']);
+        $ressort->load(['mitglieder', 'vorlagen.turnier', 'kontakte', 'dokumente.user', 'wissen.user', 'uebergaben.von', 'uebergaben.an', 'material.einsaetze']);
         $ausgabe = Ausgabe::naechste();
 
         $offen = $ausgabe ? $ressort->aufgaben()->with('verantwortlich')->where('ausgabe_id', $ausgabe->id)->offen()->orderBy('faellig_am')->get() : collect();

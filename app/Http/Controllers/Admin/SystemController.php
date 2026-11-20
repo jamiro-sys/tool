@@ -30,7 +30,7 @@ class SystemController extends Controller
                 'Laravel' => app()->version(),
                 'Datenbank' => DB::connection()->getDriverName().' '.$this->dbVersion(),
                 'Mail' => config('mail.default').' ('.config('mail.mailers.smtp.host').')',
-                'Push' => WebPushKanal::konfiguriert() ? 'eingerichtet' : 'VAPID-Schlüssel fehlen',
+                'Push' => WebPushKanal::konfiguriert() ? 'eingerichtet' : 'Schlüssel fehlen oder sind ungültig: unten «Push-Schlüssel erzeugen»',
                 'Speicher frei' => $this->freierSpeicher(),
                 'Zeitzone' => config('app.timezone'),
             ],
@@ -128,12 +128,28 @@ class SystemController extends Controller
         }
     }
 
+    /** Push-Schluessel erzeugen und direkt in die .env schreiben (Fallback: anzeigen). */
     public function vapid()
     {
         $schluessel = \Minishlink\WebPush\VAPID::createVapidKeys();
+        $datei = base_path('.env');
+        $inhalt = is_file($datei) ? (string) file_get_contents($datei) : '';
+        foreach (['VAPID_PUBLIC_KEY' => $schluessel['publicKey'], 'VAPID_PRIVATE_KEY' => $schluessel['privateKey']] as $name => $wert) {
+            $zeile = $name.'='.$wert;
+            $inhalt = preg_match('/^'.$name.'=.*$/m', $inhalt)
+                ? preg_replace_callback('/^'.$name.'=.*$/m', fn () => $zeile, $inhalt)
+                : rtrim($inhalt)."\n".$zeile."\n";
+        }
+        if (is_file($datei) && is_writable($datei) && file_put_contents($datei, $inhalt) !== false) {
+            \App\Models\PushAbo::query()->delete();
+            Aktivitaet::protokolliere('system.vapid', 'Neue Push-Schlüssel erzeugt');
 
-        return back()->with('vapid', $schluessel);
+            return back()->with('erfolg', 'Push ist eingerichtet. Jede Person aktiviert Push jetzt unter Benachrichtigungen auf ihrem Gerät.');
+        }
+
+        return back()->with('vapid', $schluessel)->with('warnung', 'Die Konfiguration konnte nicht automatisch gespeichert werden. Bitte die Werte von Hand eintragen.');
     }
+
 
     protected function wartungAn(): string
     {

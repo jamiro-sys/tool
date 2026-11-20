@@ -1,6 +1,6 @@
 <x-app :titel="$vorlage->titel">
     <x-seitenkopf :titel="$vorlage->titel" :ueber="'Vorlage | '.$vorlage->ressort->name" :zurueck="route('vorlagen.index')">
-        <x-slot:unter>{{ $vorlage->zeitpunktText() }} | {{ $vorlage->turnier ? 'nur '.$vorlage->turnier->name : 'alle Turniere' }} @if ($vorlage->aufwand_std) | ca. {{ $vorlage->aufwand_std }} Std. @endif</x-slot:unter>
+        <x-slot:unter>{{ $vorlage->zeitpunktText() }} | {{ $vorlage->turnier ? 'nur '.$vorlage->turnier->name : 'alle Turnierarten' }} @if ($vorlage->aufwand_std) | ca. {{ $vorlage->aufwand_std }} Std. @endif</x-slot:unter>
         <x-slot:aktionen>
             @can('ressort-verwalten', $vorlage->ressort)
                 <a href="{{ route('vorlagen.edit', $vorlage) }}" class="knopf-rahmen" data-kuerzel="e"><x-icon name="stift" class="h-4 w-4" /> Bearbeiten</a>
@@ -35,10 +35,10 @@
             @endif
 
             <section class="karte">
-                <div class="karte-kopf"><h2 class="titel text-sm">In früheren Ausgaben</h2></div>
+                <div class="karte-kopf"><h2 class="titel text-sm">In früheren Turnieren</h2></div>
                 <div class="overflow-x-auto">
                     <table class="tabelle">
-                        <thead><tr><th>Ausgabe</th><th>Verantwortlich</th><th>Status</th><th>Aufwand</th></tr></thead>
+                        <thead><tr><th>Turnier</th><th>Verantwortlich</th><th>Status</th><th>Aufwand</th></tr></thead>
                         <tbody>
                             @forelse ($vorlage->aufgaben->sortByDesc(fn ($a) => $a->ausgabe->datum_von) as $a)
                                 <tr><td><a href="{{ route('aufgaben.show', $a) }}" class="font-bold hover:text-rot">{{ $a->ausgabe->titel }}</a></td><td>{{ $a->verantwortlich?->name ?? '' }}</td><td><x-status :status="$a->status" /></td><td>{{ $a->aufwand_effektiv ? $a->aufwand_effektiv.' Std.' : '' }}</td></tr>
@@ -94,7 +94,7 @@
     <x-modal name="archivieren" titel="Vorlage archivieren">
         <form method="POST" action="{{ route('vorlagen.aktiv', $vorlage) }}" class="space-y-4">@csrf
             <input type="hidden" name="aktiv" value="0">
-            <p class="text-sm">Die Vorlage erscheint nicht mehr in neuen Ausgaben. Alles bleibt im Archiv erhalten.</p>
+            <p class="text-sm">Die Vorlage erscheint nicht mehr in neuen Turnieren. Alles bleibt im Archiv erhalten.</p>
             <div><label class="feld-label" for="grund">Grund</label><input id="grund" name="grund" class="feld" placeholder="z.B. Wird neu von der Halle erledigt"></div>
             <div class="flex justify-end"><button class="knopf-nacht">Archivieren</button></div>
         </form>

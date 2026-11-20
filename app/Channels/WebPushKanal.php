@@ -12,7 +12,12 @@ class WebPushKanal
 {
     public static function konfiguriert(): bool
     {
-        return filled(config('services.webpush.public_key')) && filled(config('services.webpush.private_key'));
+        // Oeffentlicher Schluessel: base64url, 65 Bytes (87 Zeichen ohne Auffuellung)
+        $k = (string) config('services.webpush.public_key');
+        $bytes = base64_decode(strtr($k, '-_', '+/').str_repeat('=', (4 - strlen($k) % 4) % 4), true);
+
+        return (bool) preg_match('/^[A-Za-z0-9_-]{86,88}$/', $k) && $bytes !== false && strlen($bytes) === 65
+            && filled(config('services.webpush.private_key'));
     }
 
     public function send(User $notifiable, Notification $notification): void

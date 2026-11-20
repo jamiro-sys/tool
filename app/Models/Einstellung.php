@@ -30,6 +30,7 @@ class Einstellung extends Model
         'funktion_push' => true,
         'funktion_wochenmail' => true,
         'wochenmail_tag' => 1,
+        'anschaffung_ab' => 3,
     ];
 
     public static function wert(string $schluessel, mixed $standard = null): mixed

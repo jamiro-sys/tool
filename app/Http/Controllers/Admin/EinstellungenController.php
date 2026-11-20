@@ -29,6 +29,7 @@ class EinstellungenController extends Controller
             'erinnerung_tage' => ['required', 'integer', 'min:0', 'max:30'],
             'backup_aufbewahrung' => ['required', 'integer', 'min:1', 'max:365'],
             'wochenmail_tag' => ['required', 'integer', 'min:1', 'max:7'],
+            'anschaffung_ab' => ['required', 'integer', 'min:0', 'max:20'],
         ]);
         foreach ($daten as $k => $w) {
             Einstellung::setze($k, is_numeric($w) ? (int) $w : $w);
@@ -66,6 +67,6 @@ class EinstellungenController extends Controller
         ]);
         $turnier && $turnier->exists ? $turnier->update($daten) : Turnier::create($daten);
 
-        return back()->with('erfolg', 'Turnier gespeichert.');
+        return back()->with('erfolg', 'Turnierart gespeichert.');
     }
 }

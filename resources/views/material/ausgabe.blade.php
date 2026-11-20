@@ -2,7 +2,7 @@
 <x-app :titel="'Material '.$ausgabe->titel">
     <x-seitenkopf titel="Material" :ueber="$ausgabe->titel" :zurueck="route('ausgaben.show', $ausgabe)">
         <x-slot:unter>{{ $ausgabe->datumText() }}. Einsatzliste für Auf- und Abbau, am Turniertag direkt auf dem Handy abhaken.</x-slot:unter>
-        <x-slot:aktionen><a href="{{ route('material.index') }}" class="knopf-rahmen"><x-icon name="kiste" class="h-4 w-4" /> Inventar</a></x-slot:aktionen>
+        <x-slot:aktionen><a href="{{ route('material.index') }}" class="knopf-rahmen"><x-icon name="kiste" class="h-4 w-4" /> Materialliste</a></x-slot:aktionen>
     </x-seitenkopf>
 
     <div class="mb-6 grid grid-cols-3 gap-3">
@@ -30,7 +30,7 @@
                     <div class="flex flex-wrap items-center gap-3">
                         <button type="button" class="min-w-0 flex-1 text-left" x-on:click="auf = !auf">
                             <span class="block text-sm font-bold">{{ $e->material->name }} <span class="font-normal text-beton">{{ $f($e->menge) }} {{ $e->material->einheit }}</span></span>
-                            <span class="block text-xs {{ $e->rueckgabeUeberfaellig() ? 'font-bold text-rot' : 'text-beton' }}">{{ collect([$e->material->standort, $e->ausleihe ? 'Leihe: '.$e->ausleihe : null, $e->rueckgabe_bis ? 'zurück bis '.$e->rueckgabe_bis->format('d.m.Y') : null, $e->notiz])->filter()->implode(' | ') }}</span>
+                            <span class="block text-xs {{ $e->rueckgabeUeberfaellig() ? 'font-bold text-rot' : 'text-beton' }}">{{ collect([$e->material->ressort?->kuerzel, $e->herkunftText(), $e->kosten !== null ? 'CHF '.number_format($e->kosten, 2, '.', "'") : null, $e->rueckgabe_bis ? 'zurück bis '.$e->rueckgabe_bis->format('d.m.Y') : null, $e->notiz])->filter()->implode(' | ') }}</span>
                         </button>
                         <div class="flex gap-1.5">
                             @foreach (\App\Models\MaterialEinsatz::HAKEN as $feld => $label)
@@ -50,7 +50,10 @@
                             <form method="POST" action="{{ route('material.einsatz', [$ausgabe, $e]) }}" class="mt-3 grid gap-2 sm:grid-cols-2">@csrf
                                 <label><span class="feld-label">Menge</span><input name="menge" type="number" step="any" min="0" inputmode="decimal" class="feld" value="{{ $f($e->menge) }}"></label>
                                 <label><span class="feld-label">Notiz</span><input name="notiz" maxlength="255" class="feld" value="{{ $e->notiz }}"></label>
-                                <label><span class="feld-label">Geliehen von oder an</span><input name="ausleihe" maxlength="150" class="feld" value="{{ $e->ausleihe }}"></label>
+                                <label><span class="feld-label">Woher</span><select name="herkunft" class="feld">@foreach (\App\Models\MaterialEinsatz::HERKUNFT as $k => $l)<option value="{{ $k }}" @selected($e->herkunft === $k)>{{ $l }}</option>@endforeach</select></label>
+                                <label><span class="feld-label">Wer aus dem OK</span><select name="quelle_user_id" class="feld"><option value="">niemand</option>@foreach ($personen as $p)<option value="{{ $p->id }}" @selected($e->quelle_user_id === $p->id)>{{ $p->name }}</option>@endforeach</select></label>
+                                <label><span class="feld-label">Firma oder Person</span><input name="quelle" maxlength="150" class="feld" value="{{ $e->quelle }}" placeholder="z. B. Musik Meier, Primarschule"></label>
+                                <label><span class="feld-label">Kosten CHF</span><input name="kosten" type="number" step="0.05" min="0" inputmode="decimal" class="feld" value="{{ $e->kosten }}"></label>
                                 <label><span class="feld-label">Zurück bis</span><input name="rueckgabe_bis" type="date" class="feld" value="{{ $e->rueckgabe_bis?->format('Y-m-d') }}"></label>
                                 <label class="sm:col-span-2"><span class="feld-label">Erinnerung an</span><select name="verantwortlich_id" class="feld"><option value="">niemand</option>@foreach ($personen as $p)<option value="{{ $p->id }}" @selected($e->verantwortlich_id === $p->id)>{{ $p->name }}</option>@endforeach</select></label>
                                 <div class="flex items-center justify-end sm:col-span-2"><button class="knopf-rot knopf-klein">Speichern</button></div>
@@ -64,12 +67,12 @@
         @can('schreiben')
             @if ($verfuegbar->isNotEmpty())
                 <form method="POST" action="{{ route('material.einsatz', $ausgabe) }}" class="flex flex-col gap-2 border-t border-nacht/10 p-4 sm:flex-row">@csrf
-                    <select name="material_id" required class="feld" aria-label="Material hinzufügen"><option value="">Material hinzufügen</option>@foreach ($verfuegbar as $m)<option value="{{ $m->id }}">{{ $m->name }}{{ $m->gruppe ? ' ('.$m->gruppe.')' : '' }}</option>@endforeach</select>
+                    <select name="material_id" required class="feld" aria-label="Material hinzufügen"><option value="">Material hinzufügen</option>@foreach ($verfuegbar as $m)<option value="{{ $m->id }}">{{ $m->name }}{{ $m->ressort ? ' ('.$m->ressort->kuerzel.')' : '' }}</option>@endforeach</select>
                     <input name="menge" type="number" step="any" min="0" inputmode="decimal" class="feld sm:w-28" placeholder="Menge" aria-label="Menge">
                     <button class="knopf-rot">Hinzufügen</button>
                 </form>
             @elseif ($einsatz->isEmpty())
-                <p class="border-t border-nacht/10 px-4 py-3 text-xs text-beton">Erfasse zuerst Material im <a href="{{ route('material.index') }}" class="font-bold text-rot">Inventar</a>.</p>
+                <p class="border-t border-nacht/10 px-4 py-3 text-xs text-beton">Erfasse zuerst Material in der <a href="{{ route('material.index') }}" class="font-bold text-rot">Materialliste</a>.</p>
             @endif
         @endcan
     </section>

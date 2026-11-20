@@ -120,4 +120,9 @@ class Ressort extends Model
     {
         return $this->morphMany(Verknuepfung::class, 'bezug')->latest();
     }
+
+    public function material(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Material::class)->orderBy('name');
+    }
 }

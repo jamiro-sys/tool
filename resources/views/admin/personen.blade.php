@@ -28,14 +28,15 @@
                             <form method="POST" action="{{ route('admin.personen.update', $p) }}" x-data x-on:change="$el.submit()">@csrf @method('PATCH')
                                 <select name="rolle" class="feld min-h-[36px] w-auto py-1 text-xs">@foreach (\App\Models\User::ROLLEN as $k => $l)<option value="{{ $k }}" @selected($p->rolle === $k)>{{ $l }}</option>@endforeach</select>
                             </form>
-                            <p class="mt-1 text-xs text-beton">Ansicht: {{ $p->ansicht }}</p>
+                            <p class="mt-1 text-xs text-beton">Ansicht: {{ ucfirst($p->ansicht) }}</p>
                         </td>
                         <td class="hidden md:table-cell"><div class="flex flex-wrap gap-1">@foreach ($p->ressorts as $r)<span class="{{ $r->pivot->rolle === 'leitung' ? 'marke bg-nacht text-white' : 'marke-rahmen' }}">{{ $r->kuerzel }}</span>@endforeach</div></td>
                         <td class="hidden whitespace-nowrap text-xs text-beton sm:table-cell">{{ $p->letzte_anmeldung?->diffForHumans() ?? 'nie' }}</td>
                         <td class="text-right">
-                            <div class="relative inline-block text-left" x-data="{ m: false }">
-                                <button type="button" class="knopf-leise knopf-klein" x-on:click="m = !m" x-on:click.outside="m = false" aria-label="Aktionen"><x-icon name="mehr" class="h-4 w-4" /></button>
-                                <div x-show="m" x-cloak x-transition class="absolute right-0 z-20 mt-1 w-56 border border-nacht/10 bg-white text-sm">
+                            <div class="inline-block text-left" x-data="aktionsMenue">
+                                <button type="button" class="knopf-leise knopf-klein" x-ref="knopf" x-on:click="umschalten()" aria-label="Aktionen für {{ $p->name }}" :aria-expanded="m"><x-icon name="mehr" class="h-4 w-4" /></button>
+                                <template x-teleport="body">
+                                <div x-show="m" x-cloak x-transition.opacity x-on:click.outside="if (! $refs.knopf.contains($event.target)) m = false" x-on:keydown.escape.window="m = false" :style="lage" class="fixed z-50 w-60 border border-nacht/15 bg-white py-1 text-sm">
                                     @if ($p->einladung_token)
                                         <form method="POST" action="{{ route('admin.personen.einladung', $p) }}">@csrf<button class="block w-full px-4 py-2 text-left hover:bg-kreide">Einladung erneut senden</button></form>
                                     @else
@@ -47,6 +48,7 @@
                                         <form method="POST" action="{{ route('admin.personen.update', $p) }}" onsubmit="return confirm('{{ $p->aktiv ? 'Zugang sperren?' : 'Zugang wieder freigeben?' }}')">@csrf @method('PATCH')<input type="hidden" name="aktiv" value="{{ $p->aktiv ? 0 : 1 }}"><button class="block w-full px-4 py-2 text-left hover:bg-kreide">{{ $p->aktiv ? 'Sperren' : 'Freigeben' }}</button></form>
                                     @endif
                                 </div>
+                                </template>
                             </div>
                         </td>
                     </tr>

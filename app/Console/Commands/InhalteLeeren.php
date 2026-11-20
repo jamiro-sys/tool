@@ -10,7 +10,7 @@ class InhalteLeeren extends Command
 {
     protected $signature = 'ok:leeren {--force : Ohne Rueckfrage}';
 
-    protected $description = 'Leert alle Inhalte (Ressorts, Turniere, Hallen, Vorlagen, Ausgaben ...). Personen und Einstellungen bleiben. Vorher wird gesichert.';
+    protected $description = 'Leert alle Inhalte (Ressorts, Turnierarten, Hallen, Vorlagen, Turniere ...). Personen und Einstellungen bleiben. Vorher wird gesichert.';
 
     public function handle(Inhalte $inhalte): int
     {

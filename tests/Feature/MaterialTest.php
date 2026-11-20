@@ -59,10 +59,45 @@ class MaterialTest extends OkTestCase
         $a = $this->ausgabe(-1);
         $person = $this->person('mitglied');
         $material = Material::create(['name' => 'Beamer', 'eigentum' => 'geliehen']);
-        MaterialEinsatz::create(['ausgabe_id' => $a->id, 'material_id' => $material->id, 'rueckgabe_bis' => today()->addDay(), 'verantwortlich_id' => $person->id, 'ausleihe' => 'Schule']);
+        MaterialEinsatz::create(['ausgabe_id' => $a->id, 'material_id' => $material->id, 'rueckgabe_bis' => today()->addDay(), 'verantwortlich_id' => $person->id, 'herkunft' => 'geliehen', 'quelle' => 'Schule']);
 
         $this->artisan('ok:erinnerungen')->assertSuccessful();
         $this->artisan('ok:erinnerungen')->assertSuccessful();
         Notification::assertSentToTimes($person, \App\Notifications\Hinweis::class, 1);
+    }
+
+    public function test_verlauf_zeigt_wer_mitgebracht_hat_und_kauf_pruefen(): void
+    {
+        $luca = $this->person('mitglied');
+        $luca->update(['name' => 'Luca Frei']);
+        $beamer = Material::create(['name' => 'Beamer', 'ressort_id' => \App\Models\Ressort::first()->id, 'zweck' => 'Rangliste im Turnierbüro']);
+        $boxen = Material::create(['name' => 'Lautsprecher']);
+        foreach ([-720, -540, -360] as $i => $tage) {
+            $a = $this->ausgabe($tage);
+            MaterialEinsatz::create(['ausgabe_id' => $a->id, 'material_id' => $beamer->id, 'herkunft' => 'mitgebracht', 'quelle_user_id' => $luca->id]);
+            MaterialEinsatz::create(['ausgabe_id' => $a->id, 'material_id' => $boxen->id, 'herkunft' => 'gemietet', 'quelle' => 'Musik Meier', 'kosten' => 150]);
+        }
+
+        $seite = $this->actingAs($this->person('mitglied'))->get(route('material.index'))->assertOk();
+        $seite->assertSee('Mitgebracht von Luca Frei')->assertSee('Gemietet bei Musik Meier')->assertSee('Kauf prüfen')->assertSee("3x gemietet, zusammen CHF 450.00", false);
+        $this->assertTrue($boxen->load('einsaetze')->mietBilanz()['pruefen']);
+        $this->assertFalse($beamer->load('einsaetze')->mietBilanz()['pruefen']);
+
+        $this->actingAs($this->person('mitglied'))->get(route('material.index', ['q' => 'beamer']))->assertSee('Beamer')->assertDontSee('Lautsprecher');
+        $this->actingAs($this->person('mitglied'))->get(route('ressorts.show', \App\Models\Ressort::first()))->assertSee('Rangliste im Turnierbüro');
+
+        \App\Models\Einstellung::setze('anschaffung_ab', 0);
+        $this->assertFalse($boxen->fresh()->load('einsaetze')->mietBilanz()['pruefen']);
+    }
+
+    public function test_neuer_einsatz_uebernimmt_eigentum_als_herkunft(): void
+    {
+        $a = $this->ausgabe(10);
+        $m = Material::create(['name' => 'Tore', 'eigentum' => 'halle']);
+        $this->actingAs($this->person('mitglied'))->post(route('material.einsatz', $a), ['material_id' => $m->id])->assertSessionHasNoErrors();
+        $this->assertSame('halle', MaterialEinsatz::first()->herkunft);
+        $e = MaterialEinsatz::first();
+        $this->actingAs($this->person('mitglied'))->post(route('material.einsatz', [$a, $e]), ['herkunft' => 'gemietet', 'kosten' => '80', 'quelle' => 'Sport AG'])->assertSessionHasNoErrors();
+        $this->assertSame('Gemietet bei Sport AG', $e->fresh()->herkunftText());
     }
 }

@@ -26,7 +26,7 @@ class User extends Authenticatable
         'kommentar' => 'Neuer Kommentar zu meiner Aufgabe',
         'ressort' => 'Statuswechsel in meinem Ressort',
         'uebergabe' => 'Schritte einer Ressortübergabe',
-        'ausgabe' => 'Neue Ausgabe gestartet oder Rückblick offen',
+        'ausgabe' => 'Neues Turnier gestartet oder Rückblick offen',
         'rundmeldung' => 'Rundmeldungen des OK',
         'woche' => 'Wochenzusammenfassung',
     ];

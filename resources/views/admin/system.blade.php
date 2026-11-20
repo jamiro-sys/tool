@@ -14,7 +14,7 @@
     @endif
     @if (session('vapid'))
         <div class="mb-5 border-l-4 border-gelb bg-white px-4 py-3 text-sm">
-            <p class="label mb-2">Neue VAPID-Schlüssel: in der .env auf dem Server eintragen</p>
+            <p class="label mb-2">Neue Push-Schlüssel: nur die Werte nach dem Gleichzeichen in die .env eintragen</p>
             <pre class="overflow-x-auto bg-kreide p-3 text-xs">VAPID_PUBLIC_KEY={{ session('vapid')['publicKey'] }}
 VAPID_PRIVATE_KEY={{ session('vapid')['privateKey'] }}</pre>
         </div>

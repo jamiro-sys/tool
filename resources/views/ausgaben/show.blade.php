@@ -85,7 +85,7 @@
     @endif
 
     @can('ausgaben-verwalten')
-        <x-modal name="ausgabe" titel="Ausgabe bearbeiten">
+        <x-modal name="ausgabe" titel="Turnier bearbeiten">
             <form method="POST" action="{{ route('ausgaben.update', $ausgabe) }}" class="space-y-4">
                 @csrf @method('PATCH')
                 <div><label class="feld-label" for="a-titel">Titel</label><input id="a-titel" name="titel" class="feld" value="{{ $ausgabe->titel }}"></div>
@@ -101,8 +101,8 @@
                 <div class="flex justify-end"><button class="knopf-rot">Speichern</button></div>
             </form>
             @can('admin')
-                <form method="POST" action="{{ route('ausgaben.destroy', $ausgabe) }}" class="mt-6 border-t border-nacht/10 pt-4" onsubmit="return confirm('Ausgabe mit allen Aufgaben endgültig löschen?')">@csrf @method('DELETE')
-                    <button class="knopf-leise text-beton hover:text-rot"><x-icon name="loeschen" class="h-4 w-4" /> Ausgabe löschen</button>
+                <form method="POST" action="{{ route('ausgaben.destroy', $ausgabe) }}" class="mt-6 border-t border-nacht/10 pt-4" onsubmit="return confirm('Turnier mit allen Aufgaben endgültig löschen?')">@csrf @method('DELETE')
+                    <button class="knopf-leise text-beton hover:text-rot"><x-icon name="loeschen" class="h-4 w-4" /> Turnier löschen</button>
                 </form>
             @endcan
         </x-modal>

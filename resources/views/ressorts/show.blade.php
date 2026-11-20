@@ -36,7 +36,7 @@
             </section>
 
             <section id="aufgaben" class="karte">
-                <div class="karte-kopf"><h2 class="titel text-sm">Offen in {{ $ausgabe?->titel ?? 'der nächsten Ausgabe' }}</h2>
+                <div class="karte-kopf"><h2 class="titel text-sm">Offen {{ $ausgabe ? 'in' : '' }} {{ $ausgabe?->titel ?? 'im nächsten Turnier' }}</h2>
                     @if ($ausgabe)<a href="{{ route('aufgaben.index', [$ausgabe, 'ressort' => $ressort->id]) }}" class="label hover:text-rot">Alle</a>@endif</div>
                 @forelse ($offen as $a)
                     @include('aufgaben._zeile', ['aufgabe' => $a->setRelation('ressort', $ressort)])
@@ -108,7 +108,7 @@
             </section>
 
             <section id="erkenntnisse" class="karte">
-                <div class="karte-kopf"><h2 class="titel text-sm">Erkenntnisse aus früheren Ausgaben</h2></div>
+                <div class="karte-kopf"><h2 class="titel text-sm">Erkenntnisse aus früheren Turnieren</h2></div>
                 <ul class="divide-y divide-nacht/5">
                     @forelse ($erkenntnisse as $e)
                         <li class="px-4 py-3 text-sm">
@@ -162,6 +162,20 @@
                         </div>
                     </form>
                 @endif
+            </section>
+
+            <section id="material" class="karte">
+                <div class="karte-kopf"><h2 class="titel text-sm">Material</h2><a href="{{ route('material.index', ['ressort' => $ressort->id]) }}" class="label hover:text-rot">Alle</a></div>
+                @forelse ($ressort->material->take(8) as $m)
+                    @php $b = $m->mietBilanz(); @endphp
+                    <a href="{{ route('material.index', ['ressort' => $ressort->id, 'q' => $m->name]) }}" class="flex items-center justify-between gap-2 border-b border-nacht/5 px-4 py-2.5 text-sm hover:text-rot">
+                        <span class="min-w-0"><span class="block truncate font-bold">{{ $m->name }}</span>@if ($m->zweck)<span class="block truncate text-xs text-beton">{{ $m->zweck }}</span>@endif</span>
+                        @if ($b['pruefen'])<span class="marke-gelb shrink-0">Kauf prüfen</span>@endif
+                    </a>
+                @empty
+                    <p class="px-4 py-3 text-xs text-beton">Noch kein Material für dieses Ressort.</p>
+                @endforelse
+                @can('schreiben')<a href="{{ route('material.index', ['ressort' => $ressort->id]) }}#neu" class="label flex items-center gap-2 px-4 py-3 text-rot"><x-icon name="plus" class="h-4 w-4" /> Material erfassen</a>@endcan
             </section>
 
             <section id="kontakte" class="karte" x-data="{ neu: false }">
@@ -242,7 +256,7 @@
 
             @if ($aufwandJahre->count())
                 <section class="karte">
-                    <div class="karte-kopf"><h2 class="titel text-sm">Aufwand pro Ausgabe</h2></div>
+                    <div class="karte-kopf"><h2 class="titel text-sm">Aufwand pro Turnier</h2></div>
                     <div class="h-56 p-4"><canvas x-data x-init="diagramm($el, 'balken', { labels: {{ json_encode($aufwandJahre->keys()) }}, reihen: [{ name: 'Geplant', werte: {{ json_encode($aufwandJahre->pluck('geplant')->values()) }}, farbe: '#A9AEB8' }, { name: 'Effektiv', werte: {{ json_encode($aufwandJahre->pluck('effektiv')->values()) }}, farbe: '#B8161C' }] })"></canvas></div>
                 </section>
             @endif

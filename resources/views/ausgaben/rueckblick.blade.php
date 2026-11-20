@@ -1,6 +1,6 @@
 <x-app :titel="'Rückblick '.$ausgabe->titel">
     <x-seitenkopf titel="Rückblick" :ueber="$ausgabe->titel" :zurueck="route('ausgaben.show', $ausgabe)">
-        <x-slot:unter>Was lief gut, was machen wir nächstes Mal anders? Erkenntnisse fliessen direkt in die Vorlagen der nächsten Ausgabe.</x-slot:unter>
+        <x-slot:unter>Was lief gut, was machen wir nächstes Mal anders? Erkenntnisse fliessen direkt in die Vorlagen des nächsten Turniers.</x-slot:unter>
     </x-seitenkopf>
 
     {{-- Ablauf in drei Schritten --}}
@@ -113,7 +113,7 @@
                 @if ($ausgabe->status !== 'abgeschlossen')
                     <form method="POST" action="{{ route('ausgaben.update', $ausgabe) }}">@csrf @method('PATCH')
                         <input type="hidden" name="status" value="abgeschlossen">
-                        <button class="knopf-nacht w-full">Ausgabe abschliessen</button>
+                        <button class="knopf-nacht w-full">Turnier abschliessen</button>
                     </form>
                 @endif
             @endcan
