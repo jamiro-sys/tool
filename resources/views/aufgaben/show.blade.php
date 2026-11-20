@@ -155,6 +155,7 @@
                     <div class="px-4 py-3 text-xs text-beton">Einmalige Aufgabe (keine Vorlage). Im Rückblick kann daraus eine Vorlage werden.</div>
                 @endif
             </section>
+            @include('partials.verknuepfungen', ['bezug' => $aufgabe, 'typ' => 'aufgabe'])
 
             @if ($frueher->count())
                 <section class="karte">
