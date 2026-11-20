@@ -91,6 +91,7 @@
                 <a href="{{ route('profil') }}" class="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-kreide"><x-icon name="person" class="w-4 h-4" /> Profil</a>
                 <a href="{{ route('benachrichtigungen.einstellungen') }}" class="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-kreide"><x-icon name="glocke" class="w-4 h-4" /> Benachrichtigungen</a>
                 <a href="{{ route('neuigkeiten') }}" class="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-kreide"><x-icon name="idee" class="w-4 h-4" /> Neu im Tool</a>
+                <a href="{{ route('styleguide') }}" class="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-kreide"><x-icon name="buch" class="w-4 h-4" /> FCM-Styleguide</a>
                 <form method="POST" action="{{ route('abmelden') }}" class="border-t border-nacht/10">@csrf
                     <button class="flex w-full items-center gap-2 px-4 py-2.5 text-sm hover:bg-kreide"><x-icon name="abmelden" class="w-4 h-4" /> Abmelden</button>
                 </form>
