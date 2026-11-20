@@ -1,6 +1,9 @@
 <x-app :titel="$vorlage->exists ? 'Vorlage bearbeiten' : 'Neue Vorlage'">
     <x-seitenkopf :titel="$vorlage->exists ? $vorlage->titel : 'Neue Vorlage'" ueber="Vorlage" :zurueck="$vorlage->exists ? route('vorlagen.show', $vorlage) : route('vorlagen.index')" />
 
+    @if ($ressorts->isEmpty())
+        <x-ohne-ressort class="mb-6" />
+    @endif
     <form method="POST" action="{{ $vorlage->exists ? route('vorlagen.update', $vorlage) : route('vorlagen.store') }}" class="grid gap-6 lg:grid-cols-3">
         @csrf
         @if ($vorlage->exists) @method('PUT') @endif
@@ -21,7 +24,7 @@
                 <div><label class="feld-label" for="ressort_id">Ressort</label>
                     <select id="ressort_id" name="ressort_id" class="feld" required>@foreach ($ressorts as $r)<option value="{{ $r->id }}" @selected(old('ressort_id', $vorlage->ressort_id) == $r->id)>{{ $r->name }}</option>@endforeach</select></div>
                 <div><label class="feld-label" for="turnier_id">Gilt für</label>
-                    <select id="turnier_id" name="turnier_id" class="feld"><option value="">Beide Turniere</option>@foreach ($turniere as $t)<option value="{{ $t->id }}" @selected(old('turnier_id', $vorlage->turnier_id) == $t->id)>Nur {{ $t->name }}</option>@endforeach</select></div>
+                    <select id="turnier_id" name="turnier_id" class="feld"><option value="">Alle Turniere</option>@foreach ($turniere as $t)<option value="{{ $t->id }}" @selected(old('turnier_id', $vorlage->turnier_id) == $t->id)>Nur {{ $t->name }}</option>@endforeach</select></div>
                 <div x-data="{ t: {{ (int) old('tage_vorher', $vorlage->tage_vorher) }} }">
                     <label class="feld-label" for="tage_vorher">Fällig (Tage vor dem Turnier)</label>
                     <input id="tage_vorher" type="number" name="tage_vorher" required class="feld" x-model.number="t" min="-120" max="400">
