@@ -1,5 +1,8 @@
 <x-app titel="Jahresplan">
     <x-seitenkopf titel="Jahresplan" ueber="Was jedes Jahr kommt">
+        @if ($verwaltbar->isNotEmpty())
+            <x-slot:aktionen><button type="button" class="knopf-nacht" x-data x-on:click="$dispatch('modal-assistent')"><x-icon name="funken" class="h-4 w-4" /> Mit Claude erfassen</button></x-slot:aktionen>
+        @endif
         <x-slot:unter>{{ $anzahl === 1 ? 'Eine Aufgabe kommt' : $anzahl.' Aufgaben kommen' }} bei jedem neuen Turnier automatisch.@if ($verwaltbar->isNotEmpty()) Mit Nein kommt eine Aufgabe nicht mehr, ihr Verlauf bleibt erhalten.@endif</x-slot:unter>
     </x-seitenkopf>
 
@@ -82,5 +85,8 @@
         @empty
             <div class="karte">@if ($gefiltert)<x-leer icon="vorlagen" titel="Nichts gefunden" text="Passe die Filter an." />@else<x-leer icon="vorlagen" titel="Noch nichts im Jahresplan" text="Sobald die Ressortleitungen ihre Aufgaben erfassen, siehst du hier, was jedes Jahr ansteht." />@endif</div>
         @endforelse
+    @endif
+    @if ($verwaltbar->isNotEmpty())
+        @include('assistent._fenster', ['art' => 'jahresplan'])
     @endif
 </x-app>

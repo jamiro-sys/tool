@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AssistentController;
 use App\Http\Controllers\Admin;
 use App\Http\Controllers\AnmeldungController;
 use App\Http\Controllers\AufgabeController;
@@ -78,6 +79,9 @@ Route::middleware(['auth', 'aktiv'])->group(function () {
     Route::get('/aufgaben/{aufgabe}', [AufgabeController::class, 'show'])->name('aufgaben.show');
     Route::patch('/aufgaben/{aufgabe}', [AufgabeController::class, 'update'])->name('aufgaben.update');
     Route::delete('/aufgaben/{aufgabe}', [AufgabeController::class, 'destroy'])->name('aufgaben.destroy');
+    Route::post('/assistent/vorschlag', [AssistentController::class, 'vorschlag'])->middleware('throttle:10,1')->name('assistent.vorschlag');
+    Route::post('/assistent/uebernehmen', [AssistentController::class, 'uebernehmen'])->name('assistent.uebernehmen');
+    Route::post('/assistent/schluessel', [AssistentController::class, 'schluessel'])->name('assistent.schluessel');
     Route::post('/aufgaben/{aufgabe}/naechstes-jahr', [AufgabeController::class, 'naechstesJahr'])->name('aufgaben.naechstes-jahr');
     Route::post('/aufgaben/{aufgabe}/wiederholen', [AufgabeController::class, 'wiederholen'])->name('aufgaben.wiederholen');
     Route::post('/aufgaben/{aufgabe}/status', [AufgabeController::class, 'status'])->name('aufgaben.status');

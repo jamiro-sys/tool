@@ -147,6 +147,7 @@
                 <li>Vorschau: PDF und Bilder öffnen im Tool in einem Vollbildfenster (Kopf Nachtblau, Schliessen Rot), nicht in einem neuen Fenster.</li>
                 <li>Dateiablage: je Ressort ein aufklappbarer Ordner mit Ordner-Symbol in Rot, Unterordner in Nachtblau.</li>
                 <li>Häkchen «Auch im Jahresplan übernehmen» beim Bearbeiten einer jährlichen Aufgabe: gleiche Kachel, standardmässig an; ohne Häkchen gilt die Änderung nur für dieses Turnier.</li>
+                <li>Claude-Assistent: Knopf «Mit Claude erfassen» mit Funken-Symbol (Nachtblau oder Rahmen), Vorschläge als Karten mit Häkchen, Hinweise von Claude gelb links markiert, offene Punkte rot «bitte prüfen».</li>
                 <li>Turnierarten wählen: Häkchen-Kacheln wie bei «Wie oft?», mehrere möglich, alle angehakt heisst für alle. Bei «Jedes Jahr» klappt die Auswahl mit rotem Rand links auf, das aktuelle Turnier ist vorgewählt.</li>
                 <li>Dateien ablegen: Titel und Ressort werden aus dem Dateinamen vorgeschlagen und lassen sich ändern.</li>
                 <li>Animationen dezent und abschaltbar (reduzierte Bewegung wird respektiert).</li>

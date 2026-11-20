@@ -68,6 +68,23 @@ VAPID_PRIVATE_KEY={{ session('vapid')['privateKey'] }}</pre>
             </div>
         </section>
 
+        <section class="karte" id="claude">
+            <div class="karte-kopf"><h2 class="titel text-sm flex items-center gap-2"><x-icon name="funken" class="h-4 w-4 text-rot" /> Claude-Assistent</h2>
+                <span class="{{ $claudeBereit ? 'marke-erledigt' : 'marke-offen' }}">{{ $claudeBereit ? 'bereit' : 'nicht eingerichtet' }}</span></div>
+            <div class="space-y-3 p-4 text-sm">
+                <p class="text-beton">Erfasst Aufgaben aus Notizen, Listen, PDF oder Fotos (Jahresplan und Ressorts). Dafür braucht es einen API-Schlüssel von console.anthropic.com. Die Nutzung wird dort verrechnet.</p>
+                <form method="POST" action="{{ route('assistent.schluessel') }}" class="flex flex-col gap-2 sm:flex-row" autocomplete="off">@csrf
+                    <input type="password" name="schluessel" class="feld" placeholder="{{ $claudeBereit ? 'Neuer Schlüssel (sk-ant-...)' : 'Schlüssel einfügen (sk-ant-...)' }}" aria-label="API-Schlüssel" autocomplete="new-password" required>
+                    <button class="knopf-nacht">Speichern</button>
+                </form>
+                @error('schluessel')<p class="text-xs font-bold text-rot">{{ $message }}</p>@enderror
+                <p class="text-xs text-beton">Wird verschlüsselt gespeichert und nie mehr angezeigt.</p>
+                @if ($claudeBereit)
+                    <form method="POST" action="{{ route('assistent.schluessel') }}" onsubmit="return confirm('Claude-Schlüssel entfernen? Der Assistent ist dann aus.')">@csrf<input type="hidden" name="entfernen" value="1"><button class="label hover:text-rot">Schlüssel entfernen</button></form>
+                @endif
+            </div>
+        </section>
+
         <section class="karte">
             <div class="karte-kopf"><h2 class="titel text-sm">Updates</h2><a href="{{ route('neuigkeiten') }}" class="label hover:text-rot">Alle</a></div>
             <ul class="divide-y divide-nacht/5 text-sm">
