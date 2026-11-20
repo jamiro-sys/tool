@@ -24,7 +24,7 @@
         <aside class="space-y-6">
             <section class="karte p-4">
                 <p class="titel text-sm">Ansicht</p>
-                <p class="mt-1 text-xs text-beton">Einfach: Fokus auf deine Aufgaben. Experte: Dashboards, Vorlagen, Auswertungen und Tastenkürzel.</p>
+                <p class="mt-1 text-xs text-beton">Einfach: Fokus auf deine Aufgaben. Experte: Dashboards, Jahresplan, Auswertungen und Tastenkürzel.</p>
                 <form method="POST" action="{{ route('profil.ansicht') }}" class="mt-3 grid grid-cols-2 gap-2">@csrf
                     <button name="ansicht" value="einfach" class="knopf {{ $user->istExperte() ? 'border border-nacht/20' : 'bg-nacht text-white' }}">Einfach</button>
                     <button name="ansicht" value="experte" class="knopf {{ $user->istExperte() ? 'bg-nacht text-white' : 'border border-nacht/20' }}">Experte</button>
@@ -32,7 +32,7 @@
                 @if ($user->istExperte())
                     <div class="mt-4 border-t border-nacht/10 pt-3 text-xs">
                         <p class="label mb-2">Tastenkürzel</p>
-                        <dl class="grid grid-cols-[40px_1fr] gap-y-1"><dt class="font-bold">/</dt><dd>Suche</dd><dt class="font-bold">n</dt><dd>Neu (Aufgabe, Vorlage, Ausgabe)</dd><dt class="font-bold">e</dt><dd>Bearbeiten</dd></dl>
+                        <dl class="grid grid-cols-[40px_1fr] gap-y-1"><dt class="font-bold">/</dt><dd>Suche</dd><dt class="font-bold">n</dt><dd>Neu (Aufgabe, Turnier)</dd><dt class="font-bold">e</dt><dd>Bearbeiten</dd></dl>
                     </div>
                 @endif
             </section>

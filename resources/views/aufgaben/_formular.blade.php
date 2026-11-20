@@ -46,9 +46,24 @@
         </div>
         <div>
             <label class="feld-label" for="aufwand_geplant">Aufwand geplant</label>
-            <x-aufwand name="aufwand_geplant" id="aufwand_geplant" :wert="old('aufwand_geplant', $a?->aufwand_geplant)" />aufwand_geplant) }}">
+            <x-aufwand name="aufwand_geplant" id="aufwand_geplant" :wert="old('aufwand_geplant', $a?->aufwand_geplant)" />
         </div>
     </div>
+    @if (! $a)
+        @can('vorlagen-verwalten')
+            <fieldset>
+                <legend class="feld-label">Wie oft?</legend>
+                <div class="grid gap-2 sm:grid-cols-2">
+                    @foreach (['einmalig' => ['Nur dieses Turnier', 'Kommt nur jetzt vor, z. B. Musikboxen ausleihen'], 'jedes_jahr' => ['Jedes Jahr', 'Kommt in den Jahresplan und bei jedem neuen Turnier wieder']] as $k => [$t, $txt])
+                        <label class="flex cursor-pointer items-start gap-3 border border-nacht/20 bg-white px-3 py-2.5 has-[:checked]:border-rot has-[:checked]:bg-rot/5">
+                            <input type="radio" name="wiederkehrend" value="{{ $k }}" class="mt-1" @checked(old('wiederkehrend', 'einmalig') === $k)>
+                            <span><span class="block text-sm font-bold">{{ $t }}</span><span class="block text-xs text-beton">{{ $txt }}</span></span>
+                        </label>
+                    @endforeach
+                </div>
+            </fieldset>
+        @endcan
+    @endif
     <div>
         <label class="feld-label" for="beschreibung">Beschreibung</label>
         <textarea id="beschreibung" name="beschreibung" class="feld" placeholder="Worum geht es?">{{ old('beschreibung', $a?->beschreibung) }}</textarea>

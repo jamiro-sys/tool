@@ -8,6 +8,7 @@ use App\Models\Aufgabe;
 use App\Models\Kommentar;
 use App\Models\Ressort;
 use App\Models\User;
+use App\Services\AusgabePlaner;
 use App\Services\Benachrichtiger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -79,11 +80,16 @@ class AufgabeController extends Controller
         $ressort = Ressort::findOrFail($daten['ressort_id']);
         abort_unless(Gate::allows('ressort-mitarbeiten', $ressort) || Gate::allows('ressort-verwalten', $ressort), 403);
 
+        $jedesJahr = $request->input('wiederkehrend') === 'jedes_jahr' && Gate::allows('ressort-verwalten', $ressort);
+        unset($daten['wiederkehrend']);
         $aufgabe = $ausgabe->aufgaben()->create($daten);
         Aktivitaet::protokolliere('aufgabe.erstellt', 'Aufgabe erstellt: '.$aufgabe->titel, $aufgabe);
         $this->meldeZuweisung($aufgabe, null);
+        if ($jedesJahr) {
+            app(AusgabePlaner::class)->inJahresplan($aufgabe);
+        }
 
-        return redirect()->route('aufgaben.show', $aufgabe)->with('erfolg', 'Aufgabe erstellt.');
+        return redirect()->route('aufgaben.show', $aufgabe)->with('erfolg', $jedesJahr ? 'Aufgabe erstellt und in den Jahresplan aufgenommen.' : 'Aufgabe erstellt.');
     }
 
     public function update(Request $request, Aufgabe $aufgabe)
@@ -240,26 +246,27 @@ class AufgabeController extends Controller
         }
     }
 
-    /** Einmalige Aufgabe zur Vorlage machen: kommt ab jetzt bei jedem neuen Turnier. */
-    public function wiederholen(Aufgabe $aufgabe)
+    /** Einmalige Aufgabe in den Jahresplan aufnehmen: kommt ab jetzt bei jedem neuen Turnier. */
+    public function wiederholen(Aufgabe $aufgabe, AusgabePlaner $planer)
     {
         Gate::authorize('ressort-verwalten', $aufgabe->ressort);
         abort_if($aufgabe->vorlage_id, 409);
-        $aufgabe->loadMissing('ausgabe');
-        $vorlage = \App\Models\Vorlage::create([
-            'ressort_id' => $aufgabe->ressort_id,
-            'titel' => $aufgabe->titel,
-            'beschreibung' => $aufgabe->beschreibung,
-            'anleitung' => $aufgabe->anleitung,
-            'checkliste' => collect($aufgabe->checkliste ?? [])->map(fn ($p) => is_array($p) ? ($p['text'] ?? null) : $p)->filter()->values()->all() ?: null,
-            'tage_vorher' => $aufgabe->faellig_am ? (int) $aufgabe->faellig_am->copy()->startOfDay()->diffInDays($aufgabe->ausgabe->datum_von->copy()->startOfDay(), false) : 14,
-            'aufwand_std' => $aufgabe->aufwand_effektiv ?? $aufgabe->aufwand_geplant,
-            'prioritaet' => $aufgabe->prioritaet ?? 'normal',
-            'aktiv_seit' => $aufgabe->ausgabe->saison,
-        ]);
-        $aufgabe->update(['vorlage_id' => $vorlage->id]);
-        Aktivitaet::protokolliere('vorlage.neu', 'Aufgabe «'.$aufgabe->titel.'» wird jedes Turnier wiederholt', $vorlage);
+        $vorlage = $planer->inJahresplan($aufgabe);
 
-        return back()->with('erfolg', 'Die Aufgabe kommt ab jetzt bei jedem neuen Turnier, '.$vorlage->zeitpunktText().'.');
+        return back()->with('erfolg', 'Im Jahresplan: kommt ab jetzt bei jedem neuen Turnier, '.$vorlage->zeitpunktText().'.');
+    }
+
+    /** Rueckblick: kommt die Aufgabe naechstes Jahr wieder? (Ja nimmt sie in den Jahresplan, Nein nimmt sie heraus) */
+    public function naechstesJahr(Request $request, Aufgabe $aufgabe, AusgabePlaner $planer)
+    {
+        Gate::authorize('ressort-verwalten', $aufgabe->ressort);
+        $ja = $request->boolean('wert');
+        if ($ja) {
+            $planer->inJahresplan($aufgabe);
+        } elseif ($aufgabe->vorlage) {
+            $planer->ausJahresplan($aufgabe->vorlage, 'Im Rückblick '.$aufgabe->ausgabe->saison);
+        }
+
+        return response()->json(['wert' => $ja]);
     }
 }

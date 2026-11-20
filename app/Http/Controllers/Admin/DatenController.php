@@ -60,7 +60,7 @@ class DatenController extends Controller
         $request->validate(['datei' => ['required', 'file', 'max:5120']]);
         $paket = json_decode(file_get_contents($request->file('datei')->getRealPath()), true);
         if (($paket['typ'] ?? null) !== 'ok-tool-vorlagen') {
-            return back()->withErrors(['datei' => 'Die Datei ist kein Vorlagenpaket.']);
+            return back()->withErrors(['datei' => 'Die Datei ist kein Jahresplan-Export.']);
         }
 
         $neu = 0;
@@ -89,9 +89,9 @@ class DatenController extends Controller
                 $neu++;
             }
         });
-        Aktivitaet::protokolliere('daten.import', "Vorlagen importiert: {$neu} neu, {$ueber} übersprungen");
+        Aktivitaet::protokolliere('daten.import', "Jahresplan importiert: {$neu} neu, {$ueber} übersprungen");
 
-        return back()->with('erfolg', "{$neu} Vorlagen importiert, {$ueber} bereits vorhanden.");
+        return back()->with('erfolg', "{$neu} Aufgaben in den Jahresplan importiert, {$ueber} bereits vorhanden.");
     }
 
     /** CSV aller Aufgaben einer Ausgabe (fuer Excel). */

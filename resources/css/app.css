@@ -15,7 +15,7 @@
     [x-cloak] { display: none !important; }
     .grid > * { min-width: 0; }
     :focus-visible { @apply outline-none ring-2 ring-rot ring-offset-2 ring-offset-kreide; }
-    input[type="checkbox"] { @apply accent-rot; }
+    input[type="checkbox"], input[type="radio"] { @apply accent-rot; }
 }
 
 @layer components {

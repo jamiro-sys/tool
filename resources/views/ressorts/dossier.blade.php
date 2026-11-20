@@ -39,7 +39,7 @@
         </section>
 
         <section class="mt-8">
-            <h2 class="titel border-b-2 border-rot pb-1 text-lg">3. Wiederkehrende Aufgaben</h2>
+            <h2 class="titel border-b-2 border-rot pb-1 text-lg">3. Jahresplan</h2>
             @foreach ($ressort->vorlagen as $v)
                 <article class="mt-4 border-l-4 border-nacht/15 pl-4" style="break-inside: avoid">
                     <p class="label">{{ $v->zeitpunktText() }} | {{ $v->turnier ? 'nur '.$v->turnier->name : 'alle Turnierarten' }} @if ($v->aufwand_std) | ca. {{ \App\Support\Aufwand::text($v->aufwand_std) }} @endif</p>

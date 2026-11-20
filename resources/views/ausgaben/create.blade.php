@@ -75,6 +75,7 @@
                 </p>
             </div>
 
+            <p class="mb-4 border-l-4 border-gelb bg-white px-4 py-2.5 text-xs text-beton">Alles aus dem Jahresplan ist angehakt. Häkchen weg heisst: dieses Jahr auslassen. Im Jahresplan bleibt die Aufgabe trotzdem.</p>
             @foreach ($vorschlag as $ressortId => $eintraege)
                 <section class="karte mb-5" x-data="{ auf: true }">
                     <button type="button" class="karte-kopf w-full" x-on:click="auf = !auf">
@@ -130,7 +131,7 @@
                 @if ($ressorts->isEmpty())
                     <p class="px-4 py-4 text-sm text-beton">Aufgaben gehören zu einem Ressort. Lege unter Ressorts zuerst eure Ressorts an. Du kannst das Turnier auch jetzt ohne Aufgaben erstellen und sie später ergänzen.</p>
                 @else
-                    <p x-show="zusatz.length === 0" class="px-4 py-4 text-sm text-beton">Neue Aufgaben, die es bisher nicht gab. Sie können im Rückblick zu Vorlagen werden.</p>
+                    <p x-show="zusatz.length === 0" class="px-4 py-4 text-sm text-beton">Neue Aufgaben, die es bisher nicht gab. Sie kommen nur dieses Mal, ausser du nimmst sie später in den Jahresplan.</p>
                 @endif
             </section>
 

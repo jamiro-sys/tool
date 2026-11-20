@@ -4,7 +4,7 @@
     </x-seitenkopf>
 
     <div class="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        @foreach (['neu' => 'Neue Vorlagen', 'angepasst' => 'Angepasst', 'gestrichen' => 'Gestrichen', 'offen' => 'Erkenntnisse offen'] as $k => $l)
+        @foreach (['neu' => 'Neu im Jahresplan', 'angepasst' => 'Angepasst', 'gestrichen' => 'Kommen nicht mehr', 'offen' => 'Erkenntnisse offen'] as $k => $l)
             <div class="karte p-4"><p class="label">{{ $l }}</p><p class="zahl mt-2 text-3xl {{ $k === 'offen' && $wandel[$k] ? 'text-rot' : '' }}" x-data="zaehler({{ $wandel[$k] }})" x-text="wert">{{ $wandel[$k] }}</p></div>
         @endforeach
     </div>

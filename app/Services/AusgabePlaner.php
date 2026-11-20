@@ -211,4 +211,42 @@ class AusgabePlaner
 
         return $geaendert;
     }
+
+    /** Aufgabe in den Jahresplan aufnehmen: kommt ab dem naechsten Turnier wieder. */
+    public function inJahresplan(Aufgabe $aufgabe): Vorlage
+    {
+        if ($aufgabe->vorlage) {
+            if (! $aufgabe->vorlage->aktiv) {
+                $this->aendereVorlage($aufgabe->vorlage, ['aktiv' => true, 'deaktiviert_am' => null, 'deaktiviert_grund' => null], 'Wieder im Jahresplan');
+            }
+
+            return $aufgabe->vorlage;
+        }
+        $aufgabe->loadMissing('ausgabe');
+        $vorlage = Vorlage::create([
+            'ressort_id' => $aufgabe->ressort_id,
+            'titel' => $aufgabe->titel,
+            'beschreibung' => $aufgabe->beschreibung,
+            'anleitung' => $aufgabe->anleitung,
+            'checkliste' => collect($aufgabe->checkliste ?? [])->map(fn ($p) => is_array($p) ? ($p['text'] ?? null) : $p)->filter()->values()->all() ?: null,
+            'tage_vorher' => $aufgabe->faellig_am ? (int) $aufgabe->faellig_am->copy()->startOfDay()->diffInDays($aufgabe->ausgabe->datum_von->copy()->startOfDay(), false) : 14,
+            'aufwand_std' => $aufgabe->aufwand_effektiv ?? $aufgabe->aufwand_geplant,
+            'prioritaet' => $aufgabe->prioritaet ?? 'normal',
+            'aktiv' => true,
+            'aktiv_seit' => $aufgabe->ausgabe->saison,
+        ]);
+        $aufgabe->update(['vorlage_id' => $vorlage->id]);
+        $aufgabe->setRelation('vorlage', $vorlage);
+        Aktivitaet::protokolliere('vorlage.neu', 'Im Jahresplan: '.$aufgabe->titel, $vorlage);
+
+        return $vorlage;
+    }
+
+    /** Aus dem Jahresplan nehmen: kommt bei neuen Turnieren nicht mehr, Verlauf bleibt. */
+    public function ausJahresplan(Vorlage $vorlage, ?string $grund = null): void
+    {
+        if ($vorlage->aktiv) {
+            $this->aendereVorlage($vorlage, ['aktiv' => false, 'deaktiviert_am' => now(), 'deaktiviert_grund' => $grund], 'Aus dem Jahresplan genommen');
+        }
+    }
 }

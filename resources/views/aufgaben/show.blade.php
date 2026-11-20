@@ -148,12 +148,12 @@
                     @endif
                 </div>
                 @if ($aufgabe->vorlage)
-                    <a href="{{ route('vorlagen.show', $aufgabe->vorlage) }}" class="flex items-center justify-between px-4 py-3 text-sm hover:bg-kreide"><span><span class="label block">Wiederkehrend</span><span class="block text-xs text-beton">{{ $aufgabe->vorlage->aktiv ? 'Kommt bei jedem neuen Turnier' : 'Kommt nicht mehr bei neuen Turnieren' }}</span></span><span class="flex items-center gap-1 font-bold">{{ $aufgabe->vorlage->aktiv ? 'Ja' : 'Nein' }} <x-icon name="pfeil" class="h-3.5 w-3.5" /></span></a>
+                    <a href="{{ route('vorlagen.show', $aufgabe->vorlage) }}" class="flex items-center justify-between px-4 py-3 text-sm hover:bg-kreide"><span><span class="label block">Jahresplan</span><span class="block text-xs text-beton">{{ $aufgabe->vorlage->aktiv ? 'Kommt jedes Jahr wieder' : 'Kommt nicht mehr bei neuen Turnieren' }}</span></span><span class="flex items-center gap-1 font-bold">{{ $aufgabe->vorlage->aktiv ? 'Ja' : 'Nein' }} <x-icon name="pfeil" class="h-3.5 w-3.5" /></span></a>
                 @else
                     <div class="px-4 py-3">
-                        <p class="text-xs text-beton">Einmalige Aufgabe. Kommt sie jedes Jahr wieder, wird sie bei jedem neuen Turnier automatisch vorgeschlagen.</p>
+                        <p class="text-xs text-beton">Einmalige Aufgabe. Kommt sie jedes Jahr wieder, nimm sie in den Jahresplan.</p>
                         @can('ressort-verwalten', $aufgabe->ressort)
-                            <form method="POST" action="{{ route('aufgaben.wiederholen', $aufgabe) }}" class="mt-2">@csrf<button class="knopf-rahmen knopf-klein"><x-icon name="wiederholen" class="h-4 w-4" /> Jedes Turnier wiederholen</button></form>
+                            <form method="POST" action="{{ route('aufgaben.wiederholen', $aufgabe) }}" class="mt-2">@csrf<button class="knopf-rahmen knopf-klein"><x-icon name="wiederholen" class="h-4 w-4" /> In den Jahresplan</button></form>
                         @endcan
                     </div>
                 @endif

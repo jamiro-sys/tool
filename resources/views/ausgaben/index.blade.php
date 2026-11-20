@@ -1,6 +1,6 @@
 <x-app titel="Turniere">
     <x-seitenkopf titel="Turniere" ueber="Planung">
-        <x-slot:unter>Jedes Turnier entsteht aus den Vorlagen, mit allen Aufgaben und Fristen.</x-slot:unter>
+        <x-slot:unter>Jedes Turnier entsteht aus dem Jahresplan, mit allen Aufgaben und Fristen.</x-slot:unter>
         <x-slot:aktionen>
             @can('ausgaben-verwalten')
                 <a href="{{ route('ausgaben.create') }}" class="knopf-rot" data-kuerzel="n"><x-icon name="plus" class="h-4 w-4" /> Neues Turnier</a>
@@ -21,7 +21,7 @@
     </div>
 
     @if ($ausgaben->isEmpty())
-        <div class="karte"><x-leer icon="pokal" titel="Noch kein Turnier" text="Lege das erste Turnier an. Der Assistent schlägt alle Aufgaben aus den Vorlagen vor." /></div>
+        <div class="karte"><x-leer icon="pokal" titel="Noch kein Turnier" text="Lege das erste Turnier an. Der Assistent schlägt alle Aufgaben aus dem Jahresplan vor." /></div>
     @else
         <div class="karte overflow-x-auto">
             <table class="tabelle">

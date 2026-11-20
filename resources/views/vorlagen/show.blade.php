@@ -1,11 +1,11 @@
 <x-app :titel="$vorlage->titel">
-    <x-seitenkopf :titel="$vorlage->titel" :ueber="'Vorlage | '.$vorlage->ressort->name" :zurueck="route('vorlagen.index')">
+    <x-seitenkopf :titel="$vorlage->titel" :ueber="'Jahresplan | '.$vorlage->ressort->name" :zurueck="route('vorlagen.index')">
         <x-slot:unter>{{ $vorlage->zeitpunktText() }} | {{ $vorlage->turnier ? 'nur '.$vorlage->turnier->name : 'alle Turnierarten' }} @if ($vorlage->aufwand_std) | ca. {{ \App\Support\Aufwand::text($vorlage->aufwand_std) }} @endif</x-slot:unter>
         <x-slot:aktionen>
             @can('ressort-verwalten', $vorlage->ressort)
                 <a href="{{ route('vorlagen.edit', $vorlage) }}" class="knopf-rahmen" data-kuerzel="e"><x-icon name="stift" class="h-4 w-4" /> Bearbeiten</a>
                 <div class="flex items-center gap-2 border border-nacht/20 bg-white py-1 pl-3 pr-1">
-                    <span class="label">Wiederkehrend</span>
+                    <span class="label">Jedes Jahr</span>
                     <div class="grid grid-cols-2 gap-1 text-[11px] font-bold uppercase tracking-label">
                         @if ($vorlage->aktiv)
                             <span class="bg-rot px-3 py-2 text-white">Ja</span>

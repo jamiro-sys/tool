@@ -134,12 +134,15 @@
                 <div class="space-y-2"><p class="label">Status-Labels</p><div class="flex flex-wrap gap-1.5"><span class="marke-offen">Offen</span><span class="marke-in_arbeit">In Arbeit</span><span class="marke-erledigt">Erledigt</span><span class="marke-gelb">Überfällig</span><span class="marke-rahmen">Kürzel</span></div></div>
                 <div class="space-y-2"><p class="label">Felder</p><input class="feld" placeholder="Eingabefeld" readonly><select class="feld" disabled><option>Auswahl mit eigenem Pfeil</option></select></div>
                 <div class="space-y-2"><p class="label">Zeitaufwand</p><x-aufwand name="muster_aufwand" :wert="1.5" /><p class="text-xs text-beton">Stunden und Minuten (5er Schritte), Anzeige z. B. «1 Std. 30 Min.»</p></div>
-                <div class="space-y-2"><p class="label">Ja/Nein-Schalter</p><div class="inline-grid grid-cols-2 border border-nacht/20 text-[11px] font-bold uppercase tracking-label"><span class="bg-rot px-4 py-2 text-white">Ja</span><span class="px-4 py-2 text-beton">Nein</span></div><p class="text-xs text-beton">Ja Rot, Nein Nachtblau, inaktive Wahl Grau, z. B. «Wiederkehrend» bei Vorlagen</p></div>
+                <div class="space-y-2"><p class="label">Ja/Nein-Schalter</p><div class="inline-grid grid-cols-2 border border-nacht/20 text-[11px] font-bold uppercase tracking-label"><span class="bg-rot px-4 py-2 text-white">Ja</span><span class="px-4 py-2 text-beton">Nein</span></div><p class="text-xs text-beton">Ja Rot, Nein Nachtblau, inaktive Wahl Grau, z. B. «Jedes Jahr» im Jahresplan</p></div>
+                <div class="space-y-2"><p class="label">Zeitpunkt vor dem Turnier</p><x-zeitpunkt name="muster_zeit" :wert="60" /><p class="text-xs text-beton">Tage, Wochen oder Monate (Monat = 30 Tage), Anzeige z. B. «2 Monate vorher»</p></div>
+                <div class="space-y-2"><p class="label">Auswahlkacheln</p><label class="flex items-start gap-3 border border-rot bg-rot/5 px-3 py-2.5"><input type="radio" checked disabled class="mt-1"><span><span class="block text-sm font-bold">Jedes Jahr</span><span class="block text-xs text-beton">Gewählte Kachel mit rotem Rahmen</span></span></label></div>
                 <div class="space-y-2"><p class="label">Karte und Fortschritt</p><div class="karte p-3"><p class="text-sm font-bold">Karte mit feiner Linie, ohne Schatten</p><x-fortschritt :prozent="60" class="mt-2" /></div></div>
             </div>
             <ul class="mt-4 space-y-1 text-xs text-beton">
                 <li>Kalender: Kopf Nachtblau, gewählter Tag Rot, heute gelber Rahmen, eckig.</li>
                 <li>Seitenleiste Nachtblau, aktiver Punkt mit rotem Rand links. Fokus von Feldern: rote Linie unten.</li>
+                <li>Jahresplan: Liste je Ressort, Zeitpunkt links, Ja/Nein rechts. Neue Einträge werden kurz gelb hinterlegt.</li>
                 <li>Dateien ablegen: Titel und Ressort werden aus dem Dateinamen vorgeschlagen und lassen sich ändern.</li>
                 <li>Animationen dezent und abschaltbar (reduzierte Bewegung wird respektiert).</li>
             </ul>

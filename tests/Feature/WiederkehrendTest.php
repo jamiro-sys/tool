@@ -46,7 +46,7 @@ class WiederkehrendTest extends OkTestCase
         $this->actingAs($this->person('mitglied', $r->kuerzel))->post(route('aufgaben.wiederholen', $aufgabe))->assertForbidden();
 
         $leitung = $this->person('mitglied', $r->kuerzel, 'leitung');
-        $this->actingAs($leitung)->get(route('aufgaben.show', $aufgabe))->assertSee('Jedes Turnier wiederholen');
+        $this->actingAs($leitung)->get(route('aufgaben.show', $aufgabe))->assertSee('In den Jahresplan');
         $this->actingAs($leitung)->post(route('aufgaben.wiederholen', $aufgabe))->assertRedirect();
 
         $vorlage = Vorlage::where('titel', 'Beamer reservieren XYZ')->firstOrFail();
@@ -55,7 +55,7 @@ class WiederkehrendTest extends OkTestCase
         $this->assertSame(0.5, $vorlage->aufwand_std);
         $this->assertSame($vorlage->id, $aufgabe->fresh()->vorlage_id);
 
-        $this->actingAs($leitung)->get(route('aufgaben.show', $aufgabe))->assertSee('Wiederkehrend')->assertDontSee('Jedes Turnier wiederholen');
+        $this->actingAs($leitung)->get(route('aufgaben.show', $aufgabe))->assertSee('Kommt jedes Jahr wieder')->assertDontSee('In den Jahresplan</button>', false);
         $this->actingAs($leitung)->post(route('aufgaben.wiederholen', $aufgabe))->assertStatus(409);
     }
 
@@ -63,7 +63,7 @@ class WiederkehrendTest extends OkTestCase
     {
         $admin = $this->person('admin');
         $vorlage = Vorlage::create(['ressort_id' => Ressort::first()->id, 'titel' => 'Halle buchen XYZ', 'tage_vorher' => 90]);
-        $this->actingAs($admin)->get(route('vorlagen.show', $vorlage))->assertOk()->assertSee('Wiederkehrend');
+        $this->actingAs($admin)->get(route('vorlagen.show', $vorlage))->assertOk()->assertSee('Jedes Jahr');
         $this->actingAs($admin)->post(route('vorlagen.aktiv', $vorlage), ['aktiv' => 0, 'grund' => 'Halle fix gebucht'])->assertRedirect();
         $this->assertFalse($vorlage->fresh()->aktiv);
         $this->actingAs($admin)->get(route('vorlagen.show', $vorlage))->assertSee('nicht mehr bei neuen Turnieren');
@@ -83,5 +83,91 @@ class WiederkehrendTest extends OkTestCase
         ])->assertSessionHasNoErrors();
         $this->assertDatabaseHas('dokumente', ['titel' => 'Helfer liste dez']);
         $this->assertDatabaseHas('dokumente', ['titel' => 'Preise-festzelt']);
+    }
+
+    public function test_jahresplan_zeigt_alle_ressorts_und_schnellerfassung(): void
+    {
+        $admin = $this->person('admin');
+        $r = Ressort::orderBy('sortierung')->first();
+        $leer = Ressort::create(['name' => 'Leeres Ressort XYZ', 'kuerzel' => 'LRX', 'sortierung' => 99]);
+        $this->actingAs($admin)->get(route('vorlagen.index'))->assertOk()
+            ->assertSee('Jahresplan')->assertSee('Neu in den Jahresplan')->assertSee('Leeres Ressort XYZ')->assertSee('Noch nichts im Jahresplan');
+
+        $this->actingAs($admin)->post(route('vorlagen.store'), ['schnell' => 1, 'titel' => 'Halle reservieren QQQ', 'ressort_id' => $r->id, 'tage_vorher' => 300, 'prioritaet' => 'normal', 'aufwand_std' => 0.75])
+            ->assertRedirect(route('vorlagen.index'))->assertSessionHas('schnell');
+        $v = Vorlage::where('titel', 'Halle reservieren QQQ')->firstOrFail();
+        $this->assertTrue($v->aktiv);
+        $this->assertSame('10 Monate vorher', $v->zeitpunktText());
+        $this->actingAs($admin)->get(route('vorlagen.index'))->assertSee('Halle reservieren QQQ')->assertSee('10 Monate vorher');
+
+        // Schalter in der Liste per fetch
+        $this->actingAs($admin)->postJson(route('vorlagen.aktiv', $v), ['aktiv' => 0])->assertOk()->assertJson(['wert' => false]);
+        $this->assertFalse($v->fresh()->aktiv);
+        $this->actingAs($admin)->get(route('vorlagen.index', ['status' => 'ja']))->assertDontSee('Halle reservieren QQQ');
+        $this->actingAs($admin)->get(route('vorlagen.index', ['status' => 'nein']))->assertSee('Halle reservieren QQQ');
+
+        // Mitglied ohne Leitung sieht keine Schnellerfassung und darf nicht schalten
+        $m = $this->person('mitglied', $r->kuerzel);
+        $this->actingAs($m)->get(route('vorlagen.index'))->assertOk()->assertDontSee('Neu in den Jahresplan');
+        $this->actingAs($m)->postJson(route('vorlagen.aktiv', $v), ['aktiv' => 1])->assertForbidden();
+    }
+
+    public function test_neue_aufgabe_jedes_jahr_oder_einmalig(): void
+    {
+        $a = $this->turnier();
+        $r = Ressort::first();
+        $leitung = $this->person('mitglied', $r->kuerzel, 'leitung');
+        $this->actingAs($leitung)->get(route('aufgaben.index', $a))->assertSee('Wie oft?')->assertSee('Nur dieses Turnier');
+
+        $this->actingAs($leitung)->post(route('aufgaben.store', $a), ['titel' => 'Musikboxen ausleihen QQQ', 'ressort_id' => $r->id, 'wiederkehrend' => 'einmalig', 'faellig_am' => $a->datum_von->copy()->subDays(7)->format('Y-m-d')])->assertRedirect();
+        $this->assertNull(Aufgabe::where('titel', 'Musikboxen ausleihen QQQ')->value('vorlage_id'));
+
+        $this->actingAs($leitung)->post(route('aufgaben.store', $a), ['titel' => 'Schiris aufbieten QQQ', 'ressort_id' => $r->id, 'wiederkehrend' => 'jedes_jahr', 'faellig_am' => $a->datum_von->copy()->subDays(28)->format('Y-m-d')])->assertRedirect();
+        $aufgabe = Aufgabe::where('titel', 'Schiris aufbieten QQQ')->firstOrFail();
+        $this->assertNotNull($aufgabe->vorlage_id);
+        $this->assertSame(28, $aufgabe->vorlage->tage_vorher);
+        $this->assertSame('4 Wochen vorher', $aufgabe->vorlage->zeitpunktText());
+
+        // Mitglied ohne Leitung: Auswahl nicht sichtbar, jedes_jahr wird ignoriert
+        $m = $this->person('mitglied', $r->kuerzel);
+        $this->actingAs($m)->get(route('aufgaben.index', $a))->assertDontSee('Wie oft?');
+        $this->actingAs($m)->post(route('aufgaben.store', $a), ['titel' => 'Kaffee QQQ', 'ressort_id' => $r->id, 'wiederkehrend' => 'jedes_jahr'])->assertRedirect();
+        $this->assertNull(Aufgabe::where('titel', 'Kaffee QQQ')->value('vorlage_id'));
+    }
+
+    public function test_rueckblick_naechstes_jahr_ja_nein(): void
+    {
+        $a = $this->turnier();
+        $r = Ressort::first();
+        $admin = $this->person('admin');
+        $einmalig = Aufgabe::create(['ausgabe_id' => $a->id, 'ressort_id' => $r->id, 'titel' => 'Beamer leihen QQQ', 'status' => 'erledigt', 'faellig_am' => $a->datum_von->copy()->subDays(14)]);
+        $vorlage = Vorlage::create(['ressort_id' => $r->id, 'titel' => 'Musikboxen QQQ', 'tage_vorher' => 7, 'aktiv' => true]);
+        $wiederkehrend = Aufgabe::create(['ausgabe_id' => $a->id, 'ressort_id' => $r->id, 'titel' => 'Musikboxen QQQ', 'status' => 'erledigt', 'vorlage_id' => $vorlage->id]);
+
+        $this->actingAs($admin)->get(route('ausgaben.rueckblick', $a))->assertOk()->assertSee('Nächstes Jahr');
+
+        // Nein: kommt nicht mehr
+        $this->actingAs($admin)->postJson(route('aufgaben.naechstes-jahr', $wiederkehrend), ['wert' => 0])->assertJson(['wert' => false]);
+        $this->assertFalse($vorlage->fresh()->aktiv);
+        $this->assertStringContainsString('Rückblick', $vorlage->fresh()->deaktiviert_grund);
+
+        // Ja bei einmaliger Aufgabe: in den Jahresplan
+        $this->actingAs($admin)->postJson(route('aufgaben.naechstes-jahr', $einmalig), ['wert' => 1])->assertJson(['wert' => true]);
+        $this->assertSame(14, $einmalig->fresh()->vorlage->tage_vorher);
+
+        // Ja bei herausgenommener Aufgabe: wieder im Jahresplan, keine doppelte Vorlage
+        $this->actingAs($admin)->postJson(route('aufgaben.naechstes-jahr', $wiederkehrend), ['wert' => 1])->assertJson(['wert' => true]);
+        $this->assertTrue($vorlage->fresh()->aktiv);
+        $this->assertSame(1, Vorlage::where('titel', 'Musikboxen QQQ')->count());
+
+        $this->actingAs($this->person('mitglied', $r->kuerzel))->postJson(route('aufgaben.naechstes-jahr', $einmalig), ['wert' => 0])->assertForbidden();
+    }
+
+    public function test_zeitpunkt_feld_rechnet_in_tagen(): void
+    {
+        $html = $this->blade('<x-zeitpunkt :wert="60" />');
+        $html->assertSee('value="2"', false)->assertSee('value="60"', false)->assertSee('Monate');
+        $this->blade('<x-zeitpunkt :wert="21" />')->assertSee('value="3"', false);
+        $this->blade('<x-zeitpunkt :wert="10" />')->assertSee('value="10"', false);
     }
 }

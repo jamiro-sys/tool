@@ -46,7 +46,7 @@
             </section>
 
             <section id="jahreslauf" class="karte">
-                <div class="karte-kopf"><h2 class="titel text-sm">Jahreslauf</h2><a href="{{ route('vorlagen.index', ['ressort' => $ressort->id]) }}" class="label hover:text-rot">Vorlagen verwalten</a></div>
+                <div class="karte-kopf"><h2 class="titel text-sm">Jahreslauf</h2><a href="{{ route('vorlagen.index', ['ressort' => $ressort->id]) }}" class="label hover:text-rot">Jahresplan</a></div>
                 <div class="p-4">
                     @forelse ($kalender as $phase => $vorlagen)
                         <div class="relative border-l-2 border-nacht/15 pb-5 pl-5 last:pb-0">
@@ -61,7 +61,7 @@
                             </ul>
                         </div>
                     @empty
-                        <x-leer icon="vorlagen" titel="Keine Vorlagen" text="Erfasse die wiederkehrenden Aufgaben dieses Ressorts." />
+                        <x-leer icon="vorlagen" titel="Noch nichts im Jahresplan" text="Erfasse die Aufgaben, die in diesem Ressort jedes Jahr kommen." />
                     @endforelse
                 </div>
             </section>
