@@ -16,7 +16,7 @@ class Inhalte
 {
     /** Reihenfolge: abhaengige Tabellen zuerst. */
     public const TABELLEN = [
-        'notifications', 'verknuepfungen', 'kennzahlen', 'versandprotokoll', 'rundmeldungen', 'aktivitaeten',
+        'notifications', 'verknuepfungen', 'kennzahlen', 'kassen', 'einkauf_posten', 'produkte', 'versandprotokoll', 'rundmeldungen', 'aktivitaeten',
         'uebergaben', 'wissen', 'dokumente', 'kontakte', 'erkenntnisse', 'kommentare',
         'aufgaben', 'vorlage_versionen', 'vorlagen', 'ausgaben', 'turniere', 'hallen',
         'ressort_user', 'ressorts',

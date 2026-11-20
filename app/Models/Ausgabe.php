@@ -100,4 +100,20 @@ class Ausgabe extends Model
     {
         return $this->hasMany(Kennzahl::class);
     }
+
+    public function einkauf(): HasMany
+    {
+        return $this->hasMany(EinkaufPosten::class)->orderBy('bezeichnung');
+    }
+
+    public function kassen(): HasMany
+    {
+        return $this->hasMany(Kasse::class)->orderBy('name');
+    }
+
+    /** Letzte fruehere Ausgabe desselben Turniers, als Vergleich und Vorlage. */
+    public function vorherige(): ?self
+    {
+        return static::where('turnier_id', $this->turnier_id)->where('datum_von', '<', $this->datum_von)->orderByDesc('datum_von')->first();
+    }
 }

@@ -92,7 +92,7 @@ class AusgabeController extends Controller
     public function show(Ausgabe $ausgabe)
     {
         $ausgabe->load('turnier', 'halle', 'aufgaben.ressort', 'aufgaben.verantwortlich', 'kennzahlen', 'verknuepfungen');
-        $vorher = Ausgabe::with('kennzahlen')->where('turnier_id', $ausgabe->turnier_id)->where('datum_von', '<', $ausgabe->datum_von)->orderByDesc('datum_von')->first();
+        $vorher = $ausgabe->vorherige()?->load('kennzahlen');
         $ressorts = StartController::ressortFortschritt($ausgabe);
 
         // Burndown: offene Aufgaben je Woche bis zum Turnier

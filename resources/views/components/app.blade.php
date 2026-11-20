@@ -23,6 +23,7 @@
         ['ausgaben', 'Ausgaben', route('ausgaben.index'), 'pokal', request()->routeIs('ausgaben.*')],
         ['ressorts', 'Ressorts', route('ressorts.index'), 'ressorts', request()->routeIs('ressorts.*')],
         ['vorlagen', 'Vorlagen', route('vorlagen.index'), 'vorlagen', request()->routeIs('vorlagen.*')],
+        ['festwirtschaft', 'Festwirtschaft', route('festwirtschaft.index'), 'becher', request()->routeIs('festwirtschaft.*')],
         ['uebergaben', 'Übergaben', route('uebergaben.index'), 'uebergabe', request()->routeIs('uebergaben.*')],
         ['auswertung', 'Auswertung', route('auswertung'), 'auswertung', request()->routeIs('auswertung')],
     ];
