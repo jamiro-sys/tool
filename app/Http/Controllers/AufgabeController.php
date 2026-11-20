@@ -81,15 +81,29 @@ class AufgabeController extends Controller
         abort_unless(Gate::allows('ressort-mitarbeiten', $ressort) || Gate::allows('ressort-verwalten', $ressort), 403);
 
         $jedesJahr = $request->input('wiederkehrend') === 'jedes_jahr' && Gate::allows('ressort-verwalten', $ressort);
+        $turniere = [];
+        if ($jedesJahr) {
+            $turniere = $request->validate([
+                'turniere' => ['required_with:turniere_gesendet', 'array'],
+                'turniere.*' => ['integer', 'exists:turniere,id'],
+            ], ['turniere.required_with' => 'Bitte mindestens ein Turnier anhaken.'])['turniere'] ?? [];
+        }
         unset($daten['wiederkehrend']);
         $aufgabe = $ausgabe->aufgaben()->create($daten);
         Aktivitaet::protokolliere('aufgabe.erstellt', 'Aufgabe erstellt: '.$aufgabe->titel, $aufgabe);
         $this->meldeZuweisung($aufgabe, null);
         if ($jedesJahr) {
-            app(AusgabePlaner::class)->inJahresplan($aufgabe);
+            app(AusgabePlaner::class)->inJahresplan($aufgabe, $turniere);
+        }
+        $meldung = $jedesJahr ? 'Aufgabe erstellt und in den Jahresplan aufgenommen.' : 'Aufgabe erstellt.';
+
+        // Zurueck auf die Seite, von der aus erfasst wurde (nur Pfade dieses Tools)
+        $zurueck = (string) $request->input('zurueck');
+        if (str_starts_with($zurueck, '/') && ! str_starts_with($zurueck, '//')) {
+            return redirect($zurueck)->with('erfolg', $meldung);
         }
 
-        return redirect()->route('aufgaben.show', $aufgabe)->with('erfolg', $jedesJahr ? 'Aufgabe erstellt und in den Jahresplan aufgenommen.' : 'Aufgabe erstellt.');
+        return redirect()->route('aufgaben.show', $aufgabe)->with('erfolg', $meldung);
     }
 
     public function update(Request $request, Aufgabe $aufgabe)

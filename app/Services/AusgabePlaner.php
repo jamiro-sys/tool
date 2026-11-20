@@ -219,7 +219,7 @@ class AusgabePlaner
     }
 
     /** Aufgabe in den Jahresplan aufnehmen: kommt ab dem naechsten Turnier wieder. */
-    public function inJahresplan(Aufgabe $aufgabe): Vorlage
+    public function inJahresplan(Aufgabe $aufgabe, ?array $turniere = null): Vorlage
     {
         if ($aufgabe->vorlage) {
             if (! $aufgabe->vorlage->aktiv) {
@@ -241,6 +241,9 @@ class AusgabePlaner
             'aktiv' => true,
             'aktiv_seit' => $aufgabe->ausgabe->saison,
         ]);
+        if ($turniere) {
+            $vorlage->setzeTurniere($turniere);
+        }
         $aufgabe->update(['vorlage_id' => $vorlage->id]);
         $aufgabe->setRelation('vorlage', $vorlage);
         Aktivitaet::protokolliere('vorlage.neu', 'Im Jahresplan: '.$aufgabe->titel, $vorlage);
