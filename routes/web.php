@@ -56,6 +56,9 @@ Route::middleware(['auth', 'aktiv'])->group(function () {
     Route::get('/dateien', [DateienController::class, 'index'])->name('dateien.index');
     Route::post('/dateien', [DateienController::class, 'speichern'])->name('dateien.speichern');
     Route::patch('/dateien/{dokument}', [DateienController::class, 'aendern'])->name('dateien.aendern');
+    Route::post('/ordner', [DateienController::class, 'ordnerSpeichern'])->name('ordner.speichern');
+    Route::patch('/ordner/{ordner}', [DateienController::class, 'ordnerAendern'])->name('ordner.aendern');
+    Route::delete('/ordner/{ordner}', [DateienController::class, 'ordnerLoeschen'])->name('ordner.loeschen');
 
     // Material und Inventar
     Route::get('/material', [MaterialController::class, 'index'])->name('material.index');

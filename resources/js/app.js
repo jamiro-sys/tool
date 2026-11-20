@@ -4,10 +4,12 @@ import collapse from '@alpinejs/collapse';
 import { diagramm } from './diagramme';
 import { pushVerwaltung } from './push';
 import './datum';
+import { vorschauStore } from './vorschau';
 
 window.Alpine = Alpine;
 window.diagramm = diagramm;
 Alpine.plugin(collapse);
+vorschauStore(Alpine);
 
 const csrf = () => document.querySelector('meta[name="csrf-token"]')?.content;
 
@@ -136,21 +138,24 @@ export function ressortAusDateiname(name, ressorts) {
     return bester ? String(bester.id) : null;
 }
 
-Alpine.data('dateiAblage', (ressorts = [], start = '') => ({
+Alpine.data('dateiAblage', (ressorts = [], start = '', ordner = [], fix = false) => ({
     art: 'datei',
     ueber: false,
     namen: [],
     ressort: start,
+    ordnerWahl: '',
     titel: '',
-    ressortVonHand: start !== '',
+    ressortVonHand: fix || start !== '',
     titelVonHand: false,
     vorgeschlagen: false,
     get titelListe() { return this.namen.map(titelAusDateiname); },
+    get ordnerListe() { return ordner.filter((o) => String(o.ressort_id ?? '') === String(this.ressort ?? '')); },
     gewaehlt() {
         this.namen = [...this.$refs.eingabe.files].map((f) => f.name);
         if (!this.titelVonHand) this.titel = this.namen.length === 1 ? titelAusDateiname(this.namen[0]) : '';
         if (!this.ressortVonHand) {
             const treffer = this.namen.map((n) => ressortAusDateiname(n, ressorts)).find(Boolean);
+            if ((treffer ?? '') !== this.ressort) this.ordnerWahl = '';
             this.ressort = treffer ?? '';
             this.vorgeschlagen = !!treffer;
         }

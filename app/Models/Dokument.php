@@ -9,7 +9,7 @@ class Dokument extends Model
 {
     protected $table = 'dokumente';
 
-    protected $fillable = ['ressort_id', 'aufgabe_id', 'vorlage_id', 'user_id', 'titel', 'typ', 'pfad', 'original_name', 'groesse', 'mime', 'url'];
+    protected $fillable = ['ressort_id', 'ordner_id', 'aufgabe_id', 'vorlage_id', 'user_id', 'titel', 'typ', 'pfad', 'original_name', 'groesse', 'mime', 'url'];
 
     public function user(): BelongsTo
     {
@@ -19,6 +19,35 @@ class Dokument extends Model
     public function ressort(): BelongsTo
     {
         return $this->belongsTo(Ressort::class);
+    }
+
+    public function ordner(): BelongsTo
+    {
+        return $this->belongsTo(Ordner::class);
+    }
+
+    /** 'pdf' oder 'bild', wenn die Datei im Tool angezeigt werden kann, sonst null. */
+    public function vorschauTyp(): ?string
+    {
+        if ($this->typ !== 'datei') {
+            return null;
+        }
+        $mime = (string) $this->mime;
+        $endung = strtolower(pathinfo($this->original_name ?: (string) $this->pfad, PATHINFO_EXTENSION));
+
+        return match (true) {
+            $mime === 'application/pdf' || $endung === 'pdf' => 'pdf',
+            str_starts_with($mime, 'image/') && ! str_contains($mime, 'heic') => 'bild',
+            default => null,
+        };
+    }
+
+    /** Daten fuer das Vorschaufenster im Tool. */
+    public function vorschau(): ?array
+    {
+        $typ = $this->vorschauTyp();
+
+        return $typ ? ['url' => route('dokumente.download', [$this, 'ansehen' => 1]), 'download' => route('dokumente.download', $this), 'titel' => $this->titel, 'typ' => $typ] : null;
     }
 
     public function endung(): string

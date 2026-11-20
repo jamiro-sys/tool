@@ -77,13 +77,15 @@ class Sicherung
         Schema::disableForeignKeyConstraints();
         try {
             DB::transaction(function () use ($tabellen, $vorhanden, &$zeilen) {
-                foreach ($tabellen as $tabelle => $rows) {
-                    if (! in_array($tabelle, $vorhanden, true)) {
-                        continue;
-                    }
+                $ziel = array_values(array_filter(array_keys($tabellen), fn ($t) => in_array($t, $vorhanden, true)));
+                $reihenfolge = $this->nachAbhaengigkeit($ziel);
+                // zuerst alles leeren (abhaengige Tabellen zuerst), dann Eltern vor Kindern einspielen
+                foreach (array_reverse($reihenfolge) as $tabelle) {
                     DB::table($tabelle)->delete();
+                }
+                foreach ($reihenfolge as $tabelle) {
                     $spalten = Schema::getColumnListing($tabelle);
-                    foreach (array_chunk($rows, 200) as $teil) {
+                    foreach (array_chunk($tabellen[$tabelle], 200) as $teil) {
                         $teil = array_map(fn ($r) => array_intersect_key($r, array_flip($spalten)), $teil);
                         DB::table($tabelle)->insert($teil);
                         $zeilen += count($teil);
@@ -95,6 +97,33 @@ class Sicherung
         }
 
         return $zeilen;
+    }
+
+    /** Tabellen so ordnen, dass referenzierte Tabellen vor den abhaengigen kommen. */
+    protected function nachAbhaengigkeit(array $tabellen): array
+    {
+        $eltern = [];
+        foreach ($tabellen as $t) {
+            $eltern[$t] = collect(Schema::getForeignKeys($t))->pluck('foreign_table')
+                ->filter(fn ($f) => $f !== $t && in_array($f, $tabellen, true))->unique()->values()->all();
+        }
+        $sortiert = [];
+        $besucht = [];
+        $besuche = function (string $t) use (&$besuche, &$sortiert, &$besucht, $eltern) {
+            if (isset($besucht[$t])) {
+                return;
+            }
+            $besucht[$t] = true;
+            foreach ($eltern[$t] as $e) {
+                $besuche($e);
+            }
+            $sortiert[] = $t;
+        };
+        foreach ($tabellen as $t) {
+            $besuche($t);
+        }
+
+        return $sortiert;
     }
 
     public function aufraeumen(int $tage): int

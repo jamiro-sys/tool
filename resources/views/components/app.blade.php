@@ -219,6 +219,24 @@
         </template>
     </nav>
 
+    {{-- Vorschau fuer PDF und Bilder --}}
+    <div x-data x-show="$store.vorschau.offen" x-cloak x-transition.opacity class="fixed inset-0 z-[60] flex flex-col bg-nacht/95"
+         x-on:keydown.escape.window="$store.vorschau.offen && $store.vorschau.schliesse()" role="dialog" aria-modal="true" :aria-label="'Vorschau ' + $store.vorschau.titel">
+        <div class="flex items-center gap-2 bg-nacht px-3 py-2 text-white sm:px-5" style="padding-top: max(0.5rem, env(safe-area-inset-top))">
+            <x-icon name="datei" class="h-5 w-5 shrink-0 text-white/60" />
+            <p class="min-w-0 flex-1"><span class="block truncate text-sm font-bold" x-text="$store.vorschau.titel"></span>
+                <span class="block text-[11px] uppercase tracking-label text-white/60" x-text="$store.vorschau.typ === 'pdf' ? ($store.vorschau.seiten ? $store.vorschau.seiten + ($store.vorschau.seiten === 1 ? ' Seite' : ' Seiten') : 'PDF wird geladen') : 'Bild'"></span></p>
+            <a :href="$store.vorschau.download" class="flex h-11 items-center gap-2 border border-white/30 px-3 text-[11px] font-bold uppercase tracking-label hover:bg-white/10"><x-icon name="download" class="h-4 w-4" /><span class="hidden sm:inline">Herunterladen</span></a>
+            <button type="button" class="flex h-11 w-11 items-center justify-center bg-rot hover:bg-rot/90" x-on:click="$store.vorschau.schliesse()" aria-label="Vorschau schliessen"><x-icon name="x" class="h-5 w-5" /></button>
+        </div>
+        <div class="flex-1 overflow-auto overscroll-contain p-2 sm:p-6" x-on:click.self="$store.vorschau.schliesse()">
+            <p x-show="$store.vorschau.laden" class="py-10 text-center text-sm font-bold text-white">PDF wird geladen ...</p>
+            <div x-show="$store.vorschau.fehler" class="mx-auto max-w-md bg-white p-4 text-sm"><p x-text="$store.vorschau.fehler"></p><a :href="$store.vorschau.download" class="knopf-rot mt-3">Herunterladen</a></div>
+            <div x-show="$store.vorschau.typ === 'pdf'" id="vorschau-seiten" class="mx-auto flex max-w-[1100px] flex-col gap-3"></div>
+            <template x-if="$store.vorschau.typ === 'bild' && $store.vorschau.offen"><img :src="$store.vorschau.url" :alt="$store.vorschau.titel" class="mx-auto max-h-full max-w-full bg-white object-contain"></template>
+        </div>
+    </div>
+
     {{-- Rueckmeldungen --}}
     <div class="pointer-events-none fixed inset-x-0 bottom-20 z-50 flex flex-col items-center gap-2 px-4 lg:bottom-6">
         <template x-for="t in $store.toast.liste" :key="t.id">

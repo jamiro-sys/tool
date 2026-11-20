@@ -1,6 +1,6 @@
 <x-app titel="Dateien">
     <x-seitenkopf titel="Dateien" ueber="Gemeinsame Ablage">
-        <x-slot:unter>Alles an einem Ort: Dateien und Links, auf Wunsch einem Ressort zugeteilt. Im Steckbrief des Ressorts erscheinen sie ebenfalls.</x-slot:unter>
+        <x-slot:unter>Alles an einem Ort: je Ressort ein Ordner, darin eigene Unterordner. PDF und Bilder öffnen direkt in der Vorschau.</x-slot:unter>
     </x-seitenkopf>
 
     <a href="{{ route('styleguide') }}" class="karte mb-6 flex items-center gap-4 border-l-4 border-l-rot p-4 hover:border-nacht">
@@ -10,27 +10,7 @@
     </a>
 
     @can('schreiben')
-        <form method="POST" action="{{ route('dateien.speichern') }}" enctype="multipart/form-data" class="karte mb-6 p-4" x-data="dateiAblage(@js($ressorts->map(fn ($r) => ['id' => $r->id, 'name' => $r->name, 'kuerzel' => $r->kuerzel])->values()), @js((string) request('ressort', '')))">@csrf
-            <div class="mb-3 grid grid-cols-2 gap-1 text-[11px] font-bold uppercase tracking-label sm:w-72">
-                <button type="button" class="py-2" :class="art === 'datei' ? 'bg-nacht text-white' : 'border border-nacht/20'" x-on:click="art = 'datei'">Dateien</button>
-                <button type="button" class="py-2" :class="art === 'link' ? 'bg-nacht text-white' : 'border border-nacht/20'" x-on:click="art = 'link'">Link</button>
-            </div>
-            <label x-show="art === 'datei'" class="flex min-h-[132px] cursor-pointer flex-col items-center justify-center gap-2 border-2 border-dashed px-4 py-6 text-center transition-colors"
-                   :class="ueber ? 'border-rot bg-rot/5' : 'border-nacht/20 hover:border-nacht/50'"
-                   x-on:dragover.prevent="ueber = true" x-on:dragleave.prevent="ueber = false" x-on:drop.prevent="ablegen($event)">
-                <x-icon name="upload" class="h-7 w-7 text-beton" />
-                <span class="text-sm font-bold" x-text="namen.length ? namen.length + (namen.length === 1 ? ' Datei gewählt' : ' Dateien gewählt') : 'Dateien hierher ziehen oder antippen'"></span>
-                <span class="max-w-full truncate text-xs text-beton" x-text="namen.length > 1 ? 'Titel: ' + titelListe.join(', ') : (namen.length ? namen[0] : 'Bis 50 MB pro Datei, mehrere auf einmal möglich')"></span>
-                <input type="file" name="dateien[]" multiple class="sr-only" x-ref="eingabe" x-on:change="gewaehlt()">
-            </label>
-            <input x-show="art === 'link'" x-cloak name="url" type="url" class="feld" placeholder="https:// z. B. iCloud, Google Drive, OneDrive" aria-label="Link">
-            <div class="mt-3 grid gap-2 sm:grid-cols-[1fr_1fr_auto] sm:items-start">
-                <div><select name="ressort_id" class="feld" aria-label="Ressort" x-model="ressort" x-on:change="ressortVonHand = true; vorgeschlagen = false"><option value="">Allgemein (kein Ressort)</option>@foreach ($ressorts as $r)<option value="{{ $r->id }}">{{ $r->name }}</option>@endforeach</select>
-                    <p x-show="vorgeschlagen && art === 'datei'" x-cloak class="mt-1 text-xs text-beton">Aus dem Dateinamen vorgeschlagen, bei Bedarf ändern.</p></div>
-                <div><input name="titel" maxlength="200" class="feld" x-model="titel" x-on:input="titelVonHand = titel !== ''" :disabled="art === 'datei' && namen.length > 1" :placeholder="art === 'link' ? 'Titel des Links' : (namen.length > 1 ? 'Titel je Datei aus dem Dateinamen' : 'Titel, wird aus dem Dateinamen vorgeschlagen')" aria-label="Titel"></div>
-                <button class="knopf-rot" :disabled="art === 'datei' && ! namen.length"><x-icon name="upload" class="h-4 w-4" /> Ablegen</button>
-            </div>
-        </form>
+        @include('dateien._hochladen')
     @endcan
 
     <form method="GET" class="mb-5 grid gap-2 sm:grid-cols-[220px_160px_1fr] sm:items-end" x-data x-on:change="$el.submit()">
@@ -41,38 +21,24 @@
         <div><label class="feld-label" for="d-q">Suche</label><input id="d-q" name="q" value="{{ $filter['q'] }}" class="feld" placeholder="Titel oder Dateiname"></div>
     </form>
 
-    <section class="karte">
-        <div class="karte-kopf"><h2 class="titel text-sm">Ablage</h2><span class="label">{{ $dokumente->count() }}{{ $dokumente->count() !== $gesamt ? ' von '.$gesamt : '' }}</span></div>
-        @if ($dokumente->isEmpty())
-            <x-leer icon="datei" :titel="$gesamt ? 'Nichts gefunden' : 'Noch keine Dateien'" :text="$gesamt ? 'Passe die Filter an.' : 'Lege Reglemente, Pläne, Verträge oder Logos ab, damit alle sie finden.'" />
-        @endif
-        <ul class="divide-y divide-nacht/5">
-            @foreach ($dokumente as $d)
-                @php $darf = auth()->user()->can('admin') || $d->user_id === auth()->id() || ($d->ressort && auth()->user()->can('ressort-mitarbeiten', $d->ressort)); @endphp
-                <li class="px-4 py-3" x-data="{ bearbeiten: false }">
-                    <div class="flex items-center gap-3">
-                        <span class="flex h-10 w-12 shrink-0 items-center justify-center text-[10px] font-extrabold uppercase tracking-label {{ $d->typ === 'datei' ? 'bg-nacht text-white' : 'border border-nacht/20 text-nacht' }}">{{ \Illuminate\Support\Str::limit($d->endung(), 4, '') }}</span>
-                        <a href="{{ $d->typ === 'datei' && preg_match('/^(image\/|application\/pdf)/', (string) $d->mime) ? route('dokumente.download', [$d, 'ansehen' => 1]) : $d->link() }}" target="_blank" rel="noopener" class="min-w-0 flex-1 hover:text-rot">
-                            <span class="block truncate text-sm font-bold">{{ $d->titel }}</span>
-                            <span class="block truncate text-xs text-beton">{{ collect([$d->ressort?->name ?? 'Allgemein', $d->groesseText(), $d->user?->name, $d->created_at->format('d.m.Y')])->filter()->implode(' | ') }}</span>
-                        </a>
-                        @if ($d->typ === 'datei')<a href="{{ route('dokumente.download', $d) }}" class="knopf-leise knopf-klein" aria-label="{{ $d->titel }} herunterladen"><x-icon name="download" class="h-4 w-4" /></a>@endif
-                        @can('schreiben')<button type="button" class="knopf-leise knopf-klein" x-on:click="bearbeiten = !bearbeiten" aria-label="{{ $d->titel }} bearbeiten"><x-icon name="stift" class="h-4 w-4" /></button>@endcan
-                    </div>
-                    @can('schreiben')
-                        <div x-show="bearbeiten" x-collapse x-cloak class="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
-                            <form method="POST" action="{{ route('dateien.aendern', $d) }}" class="flex flex-1 flex-col gap-2 sm:flex-row">@csrf @method('PATCH')
-                                <input name="titel" required maxlength="200" class="feld" value="{{ $d->titel }}" aria-label="Titel">
-                                <select name="ressort_id" class="feld sm:w-56" aria-label="Ressort"><option value="">Allgemein</option>@foreach ($ressorts as $r)<option value="{{ $r->id }}" @selected($d->ressort_id === $r->id)>{{ $r->name }}</option>@endforeach</select>
-                                <button class="knopf-rot">Speichern</button>
-                            </form>
-                            @if ($darf)
-                                <form method="POST" action="{{ route('dokumente.loeschen', $d) }}" onsubmit="return confirm('{{ $d->titel }} endgültig löschen?')">@csrf @method('DELETE')<button class="knopf-leise text-beton hover:text-rot"><x-icon name="loeschen" class="h-4 w-4" /> Löschen</button></form>
-                            @endif
-                        </div>
-                    @endcan
-                </li>
-            @endforeach
-        </ul>
-    </section>
+    @php
+        $orte = \App\Models\Ordner::orte($ressorts, $ordner);
+        $nurRessort = $filter['ressort'] === 'allgemein' ? collect() : ($filter['ressort'] ? $ressorts->where('id', (int) $filter['ressort']) : $ressorts);
+        $gruppen = \App\Models\Ordner::gruppen($nurRessort, $ordner, $dokumente, ! $filter['ressort'] || $filter['ressort'] === 'allgemein');
+    @endphp
+    @if ($flach)
+        <section class="karte">
+            <div class="karte-kopf"><h2 class="titel text-sm">Treffer</h2><span class="label">{{ $dokumente->count() }} von {{ $gesamt }}</span></div>
+            @if ($dokumente->isEmpty())
+                <x-leer icon="datei" titel="Nichts gefunden" text="Passe die Suche oder die Filter an." />
+            @else
+                <ul class="divide-y divide-nacht/5">@foreach ($dokumente as $d)@include('dateien._eintrag', ['d' => $d, 'pfad' => true])@endforeach</ul>
+            @endif
+        </section>
+    @elseif ($gesamt === 0 && $ordner->isEmpty())
+        <div class="karte"><x-leer icon="datei" titel="Noch keine Dateien" text="Lege Reglemente, Pläne, Verträge oder Logos ab. Jedes Ressort hat seinen eigenen Ordner, darin kannst du Unterordner anlegen." /></div>
+        @if ($ressorts->isNotEmpty())<div class="mt-4">@include('dateien._ablage', ['gruppen' => $gruppen, 'offen' => false])</div>@endif
+    @else
+        @include('dateien._ablage', ['gruppen' => $gruppen, 'offen' => count($gruppen) === 1])
+    @endif
 </x-app>

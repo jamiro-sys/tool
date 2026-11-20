@@ -44,10 +44,10 @@ class DatenController extends Controller
             'typ' => 'ok-tool-vorlagen',
             'version' => 1,
             'erstellt' => now()->toIso8601String(),
-            'vorlagen' => Vorlage::with('ressort', 'turnier')->get()->map(fn ($v) => [
+            'vorlagen' => Vorlage::with('ressort', 'turniere')->get()->map(fn ($v) => [
                 'ressort' => $v->ressort->name,
                 'ressort_kuerzel' => $v->ressort->kuerzel,
-                'turnier' => $v->turnier?->kurz,
+                'turniere' => $v->turniere->map(fn ($t) => $t->kurz ?: $t->name)->values()->all(),
                 ...$v->only(['titel', 'beschreibung', 'anleitung', 'tage_vorher', 'aufwand_std', 'prioritaet', 'checkliste', 'aktiv']),
             ])->all(),
         ];
@@ -68,15 +68,15 @@ class DatenController extends Controller
         DB::transaction(function () use ($paket, &$neu, &$ueber) {
             foreach ($paket['vorlagen'] as $v) {
                 $ressort = Ressort::firstOrCreate(['name' => $v['ressort']], ['kuerzel' => $v['ressort_kuerzel'] ?? Str::upper(Str::substr($v['ressort'], 0, 3))]);
-                $turnier = filled($v['turnier'] ?? null) ? Turnier::where('kurz', $v['turnier'])->first() : null;
+                $namen = $v['turniere'] ?? (filled($v['turnier'] ?? null) ? [$v['turnier']] : []);
+                $turniere = Turnier::whereIn('kurz', $namen)->orWhereIn('name', $namen)->pluck('id')->all();
                 if (Vorlage::where('ressort_id', $ressort->id)->where('titel', $v['titel'])->exists()) {
                     $ueber++;
 
                     continue;
                 }
-                Vorlage::create([
+                $neueVorlage = Vorlage::create([
                     'ressort_id' => $ressort->id,
-                    'turnier_id' => $turnier?->id,
                     'titel' => $v['titel'],
                     'beschreibung' => $v['beschreibung'] ?? null,
                     'anleitung' => $v['anleitung'] ?? null,
@@ -86,6 +86,7 @@ class DatenController extends Controller
                     'checkliste' => $v['checkliste'] ?? null,
                     'aktiv' => (bool) ($v['aktiv'] ?? true),
                 ]);
+                $neueVorlage->setzeTurniere($turniere);
                 $neu++;
             }
         });

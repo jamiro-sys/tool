@@ -18,10 +18,10 @@ class VorlageController extends Controller
     public function index(Request $request)
     {
         $status = in_array($request->query('status'), ['ja', 'nein'], true) ? $request->query('status') : 'alle';
-        $vorlagen = Vorlage::with(['ressort', 'turnier'])->withCount(['erkenntnisse as offene_erkenntnisse' => fn ($q) => $q->whereNull('umgesetzt_am')])
+        $vorlagen = Vorlage::with(['ressort', 'turniere'])->withCount(['erkenntnisse as offene_erkenntnisse' => fn ($q) => $q->whereNull('umgesetzt_am')])
             ->when($request->query('ressort') === 'meine', fn ($q) => $q->whereIn('ressort_id', $request->user()->ressorts->pluck('id')))
             ->when($request->filled('ressort') && $request->query('ressort') !== 'meine', fn ($q) => $q->where('ressort_id', $request->integer('ressort')))
-            ->when($request->filled('turnier'), fn ($q) => $q->where(fn ($w) => $w->whereNull('turnier_id')->orWhere('turnier_id', $request->integer('turnier'))))
+            ->when($request->filled('turnier'), fn ($q) => $q->where(fn ($w) => $w->whereDoesntHave('turniere')->orWhereHas('turniere', fn ($t) => $t->where('turniere.id', $request->integer('turnier')))))
             ->when($status === 'ja', fn ($q) => $q->where('aktiv', true))
             ->when($status === 'nein', fn ($q) => $q->where('aktiv', false))
             ->when($request->query('nur') === 'ohne_anleitung', fn ($q) => $q->where(fn ($w) => $w->whereNull('anleitung')->orWhere('anleitung', '')))
@@ -58,13 +58,16 @@ class VorlageController extends Controller
     {
         $daten = $this->validiere($request);
         Gate::authorize('ressort-verwalten', Ressort::findOrFail($daten['ressort_id']));
+        $turniere = $daten['turniere'] ?? [];
+        unset($daten['turniere']);
         $vorlage = Vorlage::create($daten + ['aktiv' => true]);
+        $vorlage->setzeTurniere($turniere);
         Aktivitaet::protokolliere('vorlage.erstellt', 'Im Jahresplan: '.$vorlage->titel, $vorlage);
 
         if ($request->boolean('schnell')) {
             return redirect()->route('vorlagen.index', array_filter($request->only(['ressort', 'status'])))
                 ->with('erfolg', '«'.$vorlage->titel.'» ist im Jahresplan.')
-                ->with('schnell', ['ressort_id' => $vorlage->ressort_id, 'tage_vorher' => $vorlage->tage_vorher, 'neu' => $vorlage->id]);
+                ->with('schnell', ['ressort_id' => $vorlage->ressort_id, 'tage_vorher' => $vorlage->tage_vorher, 'neu' => $vorlage->id, 'turniere' => $turniere]);
         }
 
         return redirect()->route('vorlagen.show', $vorlage)->with('erfolg', 'Im Jahresplan gespeichert.');
@@ -72,7 +75,7 @@ class VorlageController extends Controller
 
     public function show(Vorlage $vorlage)
     {
-        $vorlage->load(['ressort', 'turnier', 'versionen.user', 'erkenntnisse.user', 'erkenntnisse.ausgabe', 'aufgaben.ausgabe', 'aufgaben.verantwortlich']);
+        $vorlage->load(['ressort', 'turniere', 'versionen.user', 'erkenntnisse.user', 'erkenntnisse.ausgabe', 'aufgaben.ausgabe', 'aufgaben.verantwortlich']);
 
         return view('vorlagen.show', ['vorlage' => $vorlage]);
     }
@@ -88,6 +91,13 @@ class VorlageController extends Controller
     {
         Gate::authorize('ressort-verwalten', $vorlage->ressort);
         $daten = $this->validiere($request);
+        $vorher = $vorlage->turniere->pluck('id')->sort()->values()->all();
+        $vorlage->setzeTurniere($daten['turniere'] ?? []);
+        unset($daten['turniere']);
+        $nachher = $vorlage->turniere()->pluck('turniere.id')->sort()->values()->all();
+        if ($vorher !== $nachher) {
+            $vorlage->versionen()->create(['user_id' => auth()->id(), 'vorher' => ['turnierarten' => $vorher ? Turnier::whereIn('id', $vorher)->pluck('name')->implode(', ') : 'alle'], 'nachher' => ['turnierarten' => $nachher ? Turnier::whereIn('id', $nachher)->pluck('name')->implode(', ') : 'alle'], 'notiz' => $request->input('notiz')]);
+        }
         $this->planer->aendereVorlage($vorlage, $daten, $request->input('notiz'));
         Aktivitaet::protokolliere('vorlage.geaendert', 'Jahresplan geändert: '.$vorlage->titel, $vorlage);
 
@@ -121,7 +131,8 @@ class VorlageController extends Controller
     {
         $daten = $request->validate([
             'ressort_id' => ['required', 'exists:ressorts,id'],
-            'turnier_id' => ['nullable', 'exists:turniere,id'],
+            'turniere' => ['required_with:turniere_gesendet', 'array'],
+            'turniere.*' => ['integer', 'exists:turniere,id'],
             'titel' => ['required', 'string', 'max:200'],
             'beschreibung' => ['nullable', 'string', 'max:10000'],
             'anleitung' => ['nullable', 'string', 'max:20000'],
@@ -130,7 +141,8 @@ class VorlageController extends Controller
             'prioritaet' => ['required', Rule::in(array_keys(Vorlage::PRIORITAETEN))],
             'checkliste_text' => ['nullable', 'string', 'max:5000'],
             'aktiv_seit' => ['nullable', 'string', 'max:16'],
-        ]);
+        ], ['turniere.required_with' => 'Bitte mindestens eine Turnierart anhaken.']);
+        unset($daten['turniere_gesendet']);
         $daten['checkliste'] = collect(preg_split('/\r?\n/', $daten['checkliste_text'] ?? ''))->map(fn ($z) => trim($z))->filter()->values()->all() ?: null;
         unset($daten['checkliste_text']);
 

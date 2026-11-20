@@ -40,6 +40,11 @@ class Ressort extends Model
         return $this->hasMany(Kontakt::class);
     }
 
+    public function ordner(): HasMany
+    {
+        return $this->hasMany(Ordner::class)->orderBy('sortierung')->orderBy('name');
+    }
+
     public function dokumente(): HasMany
     {
         return $this->hasMany(Dokument::class);
