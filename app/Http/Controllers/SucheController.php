@@ -27,9 +27,9 @@ class SucheController extends Controller
         Ressort::where('name', 'like', $like)->limit(3)->get()
             ->each(fn ($r) => $treffer->push(['typ' => 'Ressort', 'titel' => $r->name, 'info' => 'Steckbrief', 'url' => route('ressorts.show', $r)]));
         Kontakt::with('ressort')->where(fn ($w) => $w->where('name', 'like', $like)->orWhere('firma', 'like', $like))->limit(5)->get()
-            ->each(fn ($k) => $treffer->push(['typ' => 'Kontakt', 'titel' => $k->name, 'info' => $k->firma ?? $k->ressort?->name, 'url' => $k->ressort ? route('ressorts.show', $k->ressort).'#kontakte' : '#']));
+            ->each(fn ($k) => $treffer->push(['typ' => 'Kontakt', 'titel' => $k->name, 'info' => $k->firma ?? $k->ressort?->name, 'url' => $k->ressort ? route('ressorts.show', [$k->ressort, 'tab' => 'kontakte']) : '#']));
         Wissen::with('ressort')->where(fn ($w) => $w->where('titel', 'like', $like)->orWhere('inhalt', 'like', $like))->limit(5)->get()
-            ->each(fn ($w) => $treffer->push(['typ' => 'Wissen', 'titel' => $w->titel, 'info' => $w->ressort->name, 'url' => route('ressorts.show', $w->ressort).'#wissen-'.$w->id]));
+            ->each(fn ($w) => $treffer->push(['typ' => 'Wissen', 'titel' => $w->titel, 'info' => $w->ressort->name, 'url' => route('ressorts.show', [$w->ressort, 'tab' => 'wissen']).'#wissen-'.$w->id]));
 
         return response()->json(['treffer' => $treffer->values()]);
     }

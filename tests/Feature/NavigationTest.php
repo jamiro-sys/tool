@@ -33,4 +33,26 @@ class NavigationTest extends OkTestCase
         config(['services.webpush.public_key' => $echt['publicKey'], 'services.webpush.private_key' => $echt['privateKey']]);
         $this->assertTrue(\App\Channels\WebPushKanal::konfiguriert());
     }
+
+    public function test_ressort_steckbrief_mit_uebersicht_und_reitern(): void
+    {
+        $r = Ressort::first();
+        $r->update(['auftrag' => 'Sorgt fuer QQQ-Auftrag']);
+        $r->kontakte()->create(['name' => 'Hallenwart QQQ']);
+        $r->wissen()->create(['titel' => 'Ablauf QQQ', 'inhalt' => 'Text']);
+        $m = $this->person('mitglied', $r->kuerzel);
+
+        $ueb = $this->actingAs($m)->get(route('ressorts.show', $r))->assertOk();
+        $ueb->assertSee('Übersicht')->assertSee('aria-current="page"', false)->assertSee('Sorgt fuer QQQ-Auftrag')->assertSee('Als Nächstes')->assertSee('Übergabe-Bereitschaft');
+        foreach (['auftrag', 'personen', 'aufgaben', 'jahreslauf', 'kontakte', 'wissen', 'material', 'dateien', 'erkenntnisse'] as $tab) {
+            $ueb->assertSee(route('ressorts.show', [$r, 'tab' => $tab]), false);
+            $this->actingAs($m)->get(route('ressorts.show', [$r, 'tab' => $tab]))->assertOk();
+        }
+        $this->actingAs($m)->get(route('ressorts.show', [$r, 'tab' => 'kontakte']))->assertSee('Hallenwart QQQ')->assertDontSee('Ablauf QQQ');
+        $this->actingAs($m)->get(route('ressorts.show', [$r, 'tab' => 'wissen']))->assertSee('Ablauf QQQ')->assertDontSee('Hallenwart QQQ');
+        $this->actingAs($m)->get(route('ressorts.show', [$r, 'tab' => 'unsinn']))->assertOk()->assertSee('Als Nächstes');
+
+        // Nach dem Speichern zurueck auf den richtigen Reiter
+        $this->actingAs($m)->post(route('kontakte.speichern', $r), ['name' => 'Neu QQQ'])->assertRedirect(route('ressorts.show', [$r, 'tab' => 'kontakte']));
+    }
 }

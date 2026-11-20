@@ -93,10 +93,10 @@ class Ressort extends Model
             $anteil = $mitAnleitung / $aktiv->count();
             $punkte += (int) round(30 * $anteil);
             if ($anteil < 1) {
-                $hinweise[] = ($aktiv->count() - $mitAnleitung).' Vorlage(n) ohne Anleitung';
+                $hinweise[] = ($aktiv->count() - $mitAnleitung).' Aufgabe(n) im Jahresplan ohne Anleitung';
             }
         } else {
-            $hinweise[] = 'Wiederkehrende Aufgaben als Vorlagen erfassen';
+            $hinweise[] = 'Jahresplan des Ressorts erfassen';
         }
 
         if ($this->kontakte->count() > 0) {

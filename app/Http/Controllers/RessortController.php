@@ -22,8 +22,9 @@ class RessortController extends Controller
         return view('ressorts.index', compact('ressorts', 'ausgabe', 'fortschritt'));
     }
 
-    public function show(Ressort $ressort)
+    public function show(Request $request, Ressort $ressort)
     {
+        $tab = in_array($request->query('tab'), ['uebersicht', 'auftrag', 'personen', 'aufgaben', 'jahreslauf', 'kontakte', 'wissen', 'material', 'dateien', 'erkenntnisse'], true) ? $request->query('tab') : 'uebersicht';
         $ressort->load(['mitglieder', 'vorlagen.turnier', 'kontakte', 'dokumente.user', 'wissen.user', 'uebergaben.von', 'uebergaben.an', 'material.einsaetze']);
         $ausgabe = Ausgabe::naechste();
 
@@ -56,6 +57,7 @@ class RessortController extends Controller
             'gruppen' => \App\Models\Auswahlliste::werte('materialgruppe'),
             'standorte' => \App\Models\Auswahlliste::werte('standort'),
             'ressort' => $ressort,
+            'tab' => $tab,
             'ausgabe' => $ausgabe,
             'offen' => $offen,
             'kalender' => $kalender,
