@@ -16,8 +16,11 @@ class UebergabeController extends Controller
 {
     public function __construct(protected Benachrichtiger $benachrichtiger) {}
 
+    /** Stand aller Uebergaben: nur fuer Admins. */
     public function index()
     {
+        \Illuminate\Support\Facades\Gate::authorize('admin');
+
         return view('uebergaben.index', [
             'uebergaben' => Uebergabe::with(['ressort', 'von', 'an'])->latest()->get(),
             'ressorts' => Ressort::with('mitglieder', 'vorlagen', 'kontakte', 'wissen')->orderBy('sortierung')->get(),

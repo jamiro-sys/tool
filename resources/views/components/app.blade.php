@@ -20,19 +20,17 @@
     $nav = [
         ['start', 'Start', route('start'), 'start', request()->routeIs('start')],
         ['aufgaben', 'Aufgaben', $navAusgabe ? route('aufgaben.index', $navAusgabe) : route('ausgaben.index'), 'aufgaben', request()->routeIs('aufgaben.*')],
-        ['ausgaben', 'Ausgaben', route('ausgaben.index'), 'pokal', request()->routeIs('ausgaben.*')],
+        ['ausgaben', 'Turniere', route('ausgaben.index'), 'pokal', request()->routeIs('ausgaben.*', 'festwirtschaft.*', 'material.ausgabe')],
         ['ressorts', 'Ressorts', route('ressorts.index'), 'ressorts', request()->routeIs('ressorts.*')],
-        ['vorlagen', 'Vorlagen', route('vorlagen.index'), 'vorlagen', request()->routeIs('vorlagen.*')],
-        ['festwirtschaft', 'Festwirtschaft', route('festwirtschaft.index'), 'becher', request()->routeIs('festwirtschaft.*')],
-        ['material', 'Material', route('material.index'), 'kiste', request()->routeIs('material.*')],
-        ['uebergaben', 'Übergaben', route('uebergaben.index'), 'uebergabe', request()->routeIs('uebergaben.*')],
-        ['auswertung', 'Auswertung', route('auswertung'), 'auswertung', request()->routeIs('auswertung')],
     ];
-    if ($u && ! $u->istExperte()) {
-        $nav = array_values(array_filter($nav, fn ($n) => ! in_array($n[0], ['auswertung', 'vorlagen'], true)));
-    }
+    $navRessorts ??= collect();
+    $aktivesRessort = request()->route('ressort');
     $admin = [
         ['Personen', route('admin.personen'), 'ressorts', request()->routeIs('admin.personen')],
+        ['Vorlagen', route('vorlagen.index'), 'vorlagen', request()->routeIs('vorlagen.*')],
+        ['Auswertung', route('auswertung'), 'auswertung', request()->routeIs('auswertung')],
+        ['Übergaben', route('uebergaben.index'), 'uebergabe', request()->routeIs('uebergaben.*')],
+        ['Material', route('material.index'), 'kiste', request()->routeIs('material.index')],
         ['System', route('admin.system'), 'server', request()->routeIs('admin.system', 'admin.logs')],
         ['Sicherungen', route('admin.sicherungen'), 'datenbank', request()->routeIs('admin.sicherungen')],
         ['Daten', route('admin.daten'), 'archiv', request()->routeIs('admin.daten')],
@@ -104,7 +102,11 @@
         <aside class="kein-druck sticky top-[76px] hidden h-[calc(100vh-76px)] w-60 shrink-0 flex-col overflow-y-auto bg-nacht py-4 lg:flex">
             <nav class="flex flex-col">
                 @foreach ($nav as [$k, $label, $href, $icon, $aktiv])
-                    <a href="{{ $href }}" class="nav-link {{ $aktiv ? 'aktiv' : '' }}"><x-icon :name="$icon" class="w-[18px] h-[18px]" /> {{ $label }}</a>
+                    @if ($k === 'ressorts')
+                        @include('partials.nav-ressorts')
+                    @else
+                        <a href="{{ $href }}" class="nav-link {{ $aktiv ? 'aktiv' : '' }}"><x-icon :name="$icon" class="w-[18px] h-[18px]" /> {{ $label }}</a>
+                    @endif
                 @endforeach
             </nav>
             @can('admin')
@@ -187,7 +189,11 @@
                     </div>
                     <div class="grid grid-cols-1 py-2">
                         @foreach ($nav as [$k, $label, $href, $icon, $aktiv])
-                            <a href="{{ $href }}" class="nav-link {{ $aktiv ? 'aktiv' : '' }}"><x-icon :name="$icon" class="w-[18px] h-[18px]" /> {{ $label }}</a>
+                            @if ($k === 'ressorts')
+                                @include('partials.nav-ressorts')
+                            @else
+                                <a href="{{ $href }}" class="nav-link {{ $aktiv ? 'aktiv' : '' }}"><x-icon :name="$icon" class="w-[18px] h-[18px]" /> {{ $label }}</a>
+                            @endif
                         @endforeach
                         <a href="{{ route('profil') }}" class="nav-link"><x-icon name="person" class="w-[18px] h-[18px]" /> Profil</a>
                         <a href="{{ route('benachrichtigungen.einstellungen') }}" class="nav-link"><x-icon name="glocke" class="w-[18px] h-[18px]" /> Benachrichtigungen</a>

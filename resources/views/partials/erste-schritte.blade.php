@@ -2,11 +2,11 @@
 @php
     $schritte = [
         ['Hallen erfassen', 'Wo ihr spielt, mit Hallenwart und Adresse.', \App\Models\Halle::exists(), route('admin.einstellungen')],
-        ['Turniere anlegen', 'Z. B. Hallencup Dezember und Februar, je mit Standardhalle.', \App\Models\Turnier::exists(), route('admin.einstellungen')],
+        ['Turnierarten anlegen', 'Z. B. Hallencup Dezember und Februar, je mit Standardhalle.', \App\Models\Turnier::exists(), route('admin.einstellungen')],
         ['Ressorts anlegen', 'Wie ihr die Arbeit im OK aufteilt.', \App\Models\Ressort::exists(), route('ressorts.index')],
         ['Personen einladen', 'Das OK bekommt einen Einladungslink per Mail.', \App\Models\User::count() > 1, route('admin.personen')],
         ['Vorlagen erfassen', 'Wiederkehrende Aufgaben mit Zeitpunkt vor dem Turnier.', \App\Models\Vorlage::exists(), route('vorlagen.create')],
-        ['Erste Ausgabe planen', 'Der Assistent erstellt daraus alle Aufgaben.', \App\Models\Ausgabe::exists(), route('ausgaben.create')],
+        ['Erstes Turnier planen', 'Der Assistent erstellt daraus alle Aufgaben.', \App\Models\Ausgabe::exists(), route('ausgaben.create')],
     ];
     $erledigt = collect($schritte)->where(2, true)->count();
 @endphp

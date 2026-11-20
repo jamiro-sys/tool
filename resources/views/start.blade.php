@@ -34,9 +34,9 @@
 
     @if (! $ausgabe)
         <div class="karte">
-            <x-leer icon="pokal" titel="Keine laufende Ausgabe" text="Sobald die nächste Ausgabe geplant ist, erscheinen hier deine Aufgaben.">
+            <x-leer icon="pokal" titel="Kein laufendes Turnier" text="Sobald das nächste Turnier geplant ist, erscheinen hier deine Aufgaben.">
                 @can('ausgaben-verwalten')
-                    <a href="{{ route('ausgaben.create') }}" class="knopf-rot mt-4"><x-icon name="plus" class="h-4 w-4" /> Neue Ausgabe planen</a>
+                    <a href="{{ route('ausgaben.create') }}" class="knopf-rot mt-4"><x-icon name="plus" class="h-4 w-4" /> Neues Turnier planen</a>
                 @endcan
             </x-leer>
         </div>

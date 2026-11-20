@@ -3,6 +3,7 @@ import Alpine from 'alpinejs';
 import collapse from '@alpinejs/collapse';
 import { diagramm } from './diagramme';
 import { pushVerwaltung } from './push';
+import './datum';
 
 window.Alpine = Alpine;
 window.diagramm = diagramm;
@@ -88,6 +89,22 @@ Alpine.data('checkpunkt', (url, index, erledigt) => ({
             Alpine.store('toast').zeige(e.message, 'fehler');
         }
     },
+}));
+
+/* Aktionsmenue, das ueber allem liegt (wird nicht von Karten mit Scrollbereich abgeschnitten) */
+Alpine.data('aktionsMenue', () => ({
+    m: false,
+    lage: '',
+    umschalten() {
+        if (this.m) { this.m = false; return; }
+        const r = this.$refs.knopf.getBoundingClientRect();
+        const breite = 240;
+        const links = Math.max(8, Math.min(window.innerWidth - breite - 8, r.right - breite));
+        const unten = window.innerHeight - r.bottom;
+        this.lage = unten > 220 ? `top:${r.bottom + 4}px;left:${links}px` : `bottom:${window.innerHeight - r.top + 4}px;left:${links}px`;
+        this.$nextTick(() => { this.m = true; });
+    },
+    init() { window.addEventListener('scroll', () => { this.m = false; }, { passive: true }); },
 }));
 
 /* Haken in der Material-Einsatzliste */

@@ -14,19 +14,28 @@ use Illuminate\Validation\Rule;
 
 class MaterialController extends Controller
 {
+    /** Materialliste aller Ressorts mit Verlauf: wer hat was wann mitgebracht oder gemietet. */
     public function index(Request $request)
     {
-        $material = Material::orderBy('gruppe')->orderBy('name')->get();
-        $filter = $request->query('gruppe');
+        $alle = Material::with(['ressort', 'einsaetze.ausgabe', 'einsaetze.quellePerson'])->orderBy('name')->get();
+        $ressortFilter = $request->query('ressort');
+        $suche = trim((string) $request->query('q'));
+        $liste = $alle
+            ->when($ressortFilter === 'ohne', fn ($c) => $c->whereNull('ressort_id'))
+            ->when($ressortFilter && $ressortFilter !== 'ohne', fn ($c) => $c->where('ressort_id', (int) $ressortFilter))
+            ->when($suche !== '', fn ($c) => $c->filter(fn ($m) => str_contains(mb_strtolower($m->name.' '.$m->zweck.' '.$m->notizen), mb_strtolower($suche))));
 
         return view('material.index', [
-            'material' => $filter ? $material->where('gruppe', $filter) : $material,
-            'filter' => $filter,
-            'alleGruppen' => $material->pluck('gruppe')->filter()->unique()->sort()->values(),
+            'gruppiert' => $liste->groupBy(fn ($m) => $m->ressort?->name ?? 'Ohne Ressort')->sortKeys(),
+            'anzahl' => $alle->count(),
+            'ressortFilter' => $ressortFilter,
+            'suche' => $suche,
+            'ressorts' => \App\Models\Ressort::orderBy('sortierung')->orderBy('name')->get(),
             'gruppen' => Auswahlliste::werte('materialgruppe'),
             'standorte' => Auswahlliste::werte('standort'),
             'ausgaben' => Ausgabe::with('turnier')->orderByDesc('datum_von')->get(),
-            'reparieren' => $material->where('zustand', '!=', 'gut')->count(),
+            'reparieren' => $alle->where('zustand', '!=', 'gut')->count(),
+            'kaufPruefen' => $alle->filter(fn ($m) => $m->mietBilanz()['pruefen'])->count(),
         ]);
     }
 
@@ -36,6 +45,8 @@ class MaterialController extends Controller
         $daten = $request->validate([
             'name' => ['required', 'string', 'max:150'],
             'gruppe' => ['nullable', 'string', 'max:120'],
+            'ressort_id' => ['nullable', 'exists:ressorts,id'],
+            'zweck' => ['nullable', 'string', 'max:255'],
             'menge' => ['nullable', 'numeric', 'min:0', 'max:999999'],
             'einheit' => ['nullable', 'string', 'max:40'],
             'standort' => ['nullable', 'string', 'max:120'],
@@ -80,7 +91,7 @@ class MaterialController extends Controller
     public function ausgabe(Ausgabe $ausgabe)
     {
         $ausgabe->load('turnier');
-        $einsatz = $ausgabe->material()->with('material', 'verantwortlich')->get()->sortBy(fn ($e) => ($e->material->gruppe ?? 'zzz').$e->material->name);
+        $einsatz = $ausgabe->material()->with('material.ressort', 'verantwortlich', 'quellePerson')->get()->sortBy(fn ($e) => ($e->material->gruppe ?? 'zzz').$e->material->name);
         $vorher = $ausgabe->vorherige();
 
         return view('material.ausgabe', [
@@ -88,7 +99,7 @@ class MaterialController extends Controller
             'einsatz' => $einsatz,
             'vorher' => $vorher,
             'vorherAnzahl' => $vorher ? $vorher->material()->count() : 0,
-            'verfuegbar' => Material::whereNotIn('id', $einsatz->pluck('material_id'))->orderBy('name')->get(),
+            'verfuegbar' => Material::with('ressort')->whereNotIn('id', $einsatz->pluck('material_id'))->orderBy('name')->get(),
             'personen' => User::where('aktiv', true)->orderBy('name')->get(),
         ]);
     }
@@ -100,18 +111,24 @@ class MaterialController extends Controller
         $daten = $request->validate([
             'material_id' => [$einsatz?->exists ? 'nullable' : 'required', 'exists:material,id'],
             'menge' => ['nullable', 'numeric', 'min:0', 'max:999999'],
-            'ausleihe' => ['nullable', 'string', 'max:150'],
+            'herkunft' => ['nullable', Rule::in(array_keys(MaterialEinsatz::HERKUNFT))],
+            'quelle_user_id' => ['nullable', 'exists:users,id'],
+            'quelle' => ['nullable', 'string', 'max:150'],
+            'kosten' => ['nullable', 'numeric', 'min:0', 'max:9999999'],
             'rueckgabe_bis' => ['nullable', 'date'],
             'verantwortlich_id' => ['nullable', 'exists:users,id'],
             'notiz' => ['nullable', 'string', 'max:255'],
         ]);
         if ($einsatz && $einsatz->exists) {
             unset($daten['material_id']);
+            $daten['herkunft'] ??= $einsatz->herkunft;
             $daten['menge'] ??= $einsatz->menge;
             $einsatz->update($daten);
         } else {
             $material = Material::findOrFail($daten['material_id']);
             $daten['menge'] ??= $material->menge;
+            $daten['herkunft'] ??= ['verein' => 'verein', 'halle' => 'halle', 'geliehen' => 'geliehen'][$material->eigentum] ?? 'verein';
+            $daten['quelle'] ??= $material->eigentum === 'geliehen' ? $material->eigentuemer : null;
             $ausgabe->material()->firstOrCreate(['material_id' => $material->id], $daten);
         }
 
@@ -148,7 +165,7 @@ class MaterialController extends Controller
         abort_unless($vorher, 404);
         $neu = 0;
         foreach ($vorher->material as $alt) {
-            $e = $ausgabe->material()->firstOrCreate(['material_id' => $alt->material_id], ['menge' => $alt->menge, 'ausleihe' => $alt->ausleihe, 'notiz' => $alt->notiz]);
+            $e = $ausgabe->material()->firstOrCreate(['material_id' => $alt->material_id], ['menge' => $alt->menge, 'herkunft' => $alt->herkunft, 'quelle_user_id' => $alt->quelle_user_id, 'quelle' => $alt->quelle, 'kosten' => $alt->kosten, 'notiz' => $alt->notiz]);
             $neu += $e->wasRecentlyCreated ? 1 : 0;
         }
 

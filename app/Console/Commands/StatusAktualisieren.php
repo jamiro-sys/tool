@@ -11,7 +11,7 @@ class StatusAktualisieren extends Command
 {
     protected $signature = 'ok:status';
 
-    protected $description = 'Setzt den Status der Ausgaben anhand des Turnierdatums.';
+    protected $description = 'Setzt den Status der Turniere anhand des Turnierdatums.';
 
     public function handle(AusgabePlaner $planer, Benachrichtiger $benachrichtiger): int
     {

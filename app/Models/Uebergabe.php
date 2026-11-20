@@ -19,10 +19,10 @@ class Uebergabe extends Model
     public const STANDARD_CHECKLISTE = [
         'Ressort-Steckbrief gemeinsam durchgehen und aktualisieren',
         'Alle Vorlagen haben eine verständliche Anleitung',
-        'Offene Aufgaben der laufenden Ausgabe neu zuteilen',
+        'Offene Aufgaben des laufenden Turniers neu zuteilen',
         'Kontakte informieren und neue Ansprechperson vorstellen',
         'Zugänge, Schlüssel und Unterlagen übergeben',
-        'Erkenntnisse der letzten Ausgaben besprechen',
+        'Erkenntnisse der letzten Turniere besprechen',
         'Eine Aufgabe gemeinsam erledigen (Begleitung)',
         'Übergabegespräch durchgeführt',
     ];

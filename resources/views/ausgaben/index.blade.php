@@ -1,9 +1,9 @@
-<x-app titel="Ausgaben">
-    <x-seitenkopf titel="Ausgaben" ueber="Turniere">
-        <x-slot:unter>Zwei Turniere pro Saison, jedes in seiner Halle. Jede Ausgabe entsteht aus den Vorlagen.</x-slot:unter>
+<x-app titel="Turniere">
+    <x-seitenkopf titel="Turniere" ueber="Planung">
+        <x-slot:unter>Jedes Turnier entsteht aus den Vorlagen, mit allen Aufgaben und Fristen.</x-slot:unter>
         <x-slot:aktionen>
             @can('ausgaben-verwalten')
-                <a href="{{ route('ausgaben.create') }}" class="knopf-rot" data-kuerzel="n"><x-icon name="plus" class="h-4 w-4" /> Neue Ausgabe</a>
+                <a href="{{ route('ausgaben.create') }}" class="knopf-rot" data-kuerzel="n"><x-icon name="plus" class="h-4 w-4" /> Neues Turnier</a>
             @endcan
         </x-slot:aktionen>
     </x-seitenkopf>
@@ -21,11 +21,11 @@
     </div>
 
     @if ($ausgaben->isEmpty())
-        <div class="karte"><x-leer icon="pokal" titel="Noch keine Ausgabe" text="Lege die erste Ausgabe an. Der Assistent schlägt alle Aufgaben aus den Vorlagen vor." /></div>
+        <div class="karte"><x-leer icon="pokal" titel="Noch kein Turnier" text="Lege das erste Turnier an. Der Assistent schlägt alle Aufgaben aus den Vorlagen vor." /></div>
     @else
         <div class="karte overflow-x-auto">
             <table class="tabelle">
-                <thead><tr><th>Ausgabe</th><th>Datum</th><th class="hidden sm:table-cell">Halle</th><th>Status</th><th class="w-40">Fortschritt</th></tr></thead>
+                <thead><tr><th>Turnier</th><th>Datum</th><th class="hidden sm:table-cell">Halle</th><th>Status</th><th class="w-40">Fortschritt</th></tr></thead>
                 <tbody>
                     @foreach ($ausgaben as $a)
                         @php $p = $a->total ? round($a->erledigt / $a->total * 100) : 0; @endphp

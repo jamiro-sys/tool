@@ -37,8 +37,9 @@ return [
 
     'webpush' => [
         'subject' => env('VAPID_SUBJECT', 'mailto:ok@example.ch'),
-        'public_key' => env('VAPID_PUBLIC_KEY'),
-        'private_key' => env('VAPID_PRIVATE_KEY'),
+        // Robust gegen eingefuegte ganze Zeilen ("VAPID_PUBLIC_KEY=..."), Anfuehrungszeichen und Leerzeichen
+        'public_key' => preg_replace('/^\s*VAPID_PUBLIC_KEY\s*=\s*|[\s\'"]+/', '', (string) env('VAPID_PUBLIC_KEY')) ?: null,
+        'private_key' => preg_replace('/^\s*VAPID_PRIVATE_KEY\s*=\s*|[\s\'"]+/', '', (string) env('VAPID_PRIVATE_KEY')) ?: null,
     ],
 
 ];

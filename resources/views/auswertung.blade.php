@@ -1,6 +1,6 @@
 <x-app titel="Auswertung">
     <x-seitenkopf titel="Auswertung" ueber="Zahlen und Trends">
-        <x-slot:unter>Wo steckt die Arbeit? Wie entwickeln sich die Ausgaben? Wie gut sind wir für die Zukunft aufgestellt?</x-slot:unter>
+        <x-slot:unter>Wo steckt die Arbeit? Wie entwickeln sich die Turniere? Wie gut sind wir für die Zukunft aufgestellt?</x-slot:unter>
     </x-seitenkopf>
 
     <div class="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -11,7 +11,7 @@
 
     <div class="grid gap-6 xl:grid-cols-2">
         <section class="karte xl:col-span-2">
-            <div class="karte-kopf"><h2 class="titel text-sm">Aufwand pro Ressort und Ausgabe</h2><span class="label">Stunden, effektiv sonst geplant</span></div>
+            <div class="karte-kopf"><h2 class="titel text-sm">Aufwand pro Ressort und Turnier</h2><span class="label">Stunden, effektiv sonst geplant</span></div>
             <div class="h-80 p-4">
                 @if (count($aufwand['reihen']))
                     <canvas x-data x-init="diagramm($el, 'balken-gestapelt', {{ json_encode($aufwand) }})" aria-label="Aufwand pro Ressort"></canvas>
@@ -22,7 +22,7 @@
         </section>
 
         <section class="karte">
-            <div class="karte-kopf"><h2 class="titel text-sm">Turniere im Vergleich</h2><span class="label">Aufgaben pro Ressort</span></div>
+            <div class="karte-kopf"><h2 class="titel text-sm">Turnierarten im Vergleich</h2><span class="label">Aufgaben pro Ressort</span></div>
             <div class="h-80 p-4"><canvas x-data x-init="diagramm($el, 'balken', { labels: {{ json_encode($ressortNamen) }}, reihen: {{ json_encode(collect($vergleich)->map(fn ($v, $i) => ['name' => $v['name'], 'werte' => $v['werte'], 'farbe' => $i ? '#14213D' : '#B8161C'])->values()) }} })"></canvas></div>
         </section>
 
@@ -53,8 +53,8 @@
 
     @if ($kennzahlen['reihen'])
         <section class="karte mt-6">
-            <div class="karte-kopf"><h2 class="titel text-sm">Kennzahlen im Vergleich</h2><span class="label">eigene Kennzahlen je Ausgabe</span></div>
-            <div class="h-80 p-4"><canvas x-data x-init="diagramm($el, 'balken', {{ json_encode($kennzahlen) }})" aria-label="Kennzahlen je Ausgabe"></canvas></div>
+            <div class="karte-kopf"><h2 class="titel text-sm">Kennzahlen im Vergleich</h2><span class="label">eigene Kennzahlen je Turnier</span></div>
+            <div class="h-80 p-4"><canvas x-data x-init="diagramm($el, 'balken', {{ json_encode($kennzahlen) }})" aria-label="Kennzahlen je Turnier"></canvas></div>
         </section>
     @endif
 </x-app>

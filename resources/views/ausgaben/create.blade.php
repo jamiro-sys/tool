@@ -1,11 +1,11 @@
-<x-app titel="Neue Ausgabe">
-    <x-seitenkopf titel="Neue Ausgabe planen" ueber="Assistent" :zurueck="route('ausgaben.index')">
-        <x-slot:unter>Schritt {{ $vorschlag ? '2' : '1' }} von 2: {{ $vorschlag ? 'Aufgaben prüfen, anpassen oder weglassen.' : 'Turnier und Datum wählen.' }}</x-slot:unter>
+<x-app titel="Neues Turnier">
+    <x-seitenkopf titel="Neues Turnier planen" ueber="Assistent" :zurueck="route('ausgaben.index')">
+        <x-slot:unter>Schritt {{ $vorschlag ? '2' : '1' }} von 2: {{ $vorschlag ? 'Aufgaben prüfen, anpassen oder weglassen.' : 'Turnierart und Datum wählen.' }}</x-slot:unter>
     </x-seitenkopf>
 
     @if ($turniere->isEmpty())
         <section class="karte">
-            <x-leer icon="pokal" titel="Zuerst ein Turnier anlegen" text="Eine Ausgabe gehört immer zu einem Turnier, z. B. dem Hallencup im Dezember. Lege Turniere und Hallen unter Admin > Einstellungen an.">
+            <x-leer icon="pokal" titel="Zuerst eine Turnierart anlegen" text="Ein Turnier gehört immer zu einer Turnierart, z. B. Hallencup Dezember. Lege Turnierarten und Hallen unter Admin > Einstellungen an.">
                 @can('admin')<a href="{{ route('admin.einstellungen') }}" class="knopf-rot mt-4"><x-icon name="einstellungen" class="h-4 w-4" /> Zu den Einstellungen</a>@endcan
             </x-leer>
         </section>
@@ -14,7 +14,7 @@
     <form method="GET" action="{{ route('ausgaben.create') }}" class="karte mb-6 p-4">
         <div class="grid gap-4 md:grid-cols-4">
             <div class="md:col-span-2">
-                <span class="feld-label">Turnier</span>
+                <span class="feld-label">Turnierart</span>
                 <div class="grid gap-2 sm:grid-cols-2">
                     @foreach ($turniere as $t)
                         <label class="flex cursor-pointer items-center gap-3 border p-3 has-[:checked]:border-rot has-[:checked]:bg-rot/5 border-nacht/20">
@@ -119,7 +119,7 @@
                     @if ($ressorts->isNotEmpty())<button type="button" class="knopf-rahmen knopf-klein" x-on:click="zusatz.push({})"><x-icon name="plus" class="h-3.5 w-3.5" /> Hinzufügen</button>@endif</div>
                 <template x-for="(z, i) in zusatz" :key="i">
                     <div class="grid gap-2 border-b border-nacht/5 p-3 sm:grid-cols-[1fr_180px_160px_44px]">
-                        <input :name="`zusatz[${i}][titel]`" class="feld" placeholder="Neue Aufgabe für diese Ausgabe">
+                        <input :name="`zusatz[${i}][titel]`" class="feld" placeholder="Neue Aufgabe für dieses Turnier">
                         <select :name="`zusatz[${i}][ressort_id]`" class="feld">
                             @foreach ($ressorts as $r)<option value="{{ $r->id }}">{{ $r->name }}</option>@endforeach
                         </select>
@@ -128,14 +128,14 @@
                     </div>
                 </template>
                 @if ($ressorts->isEmpty())
-                    <p class="px-4 py-4 text-sm text-beton">Aufgaben gehören zu einem Ressort. Lege unter Ressorts zuerst eure Ressorts an. Du kannst die Ausgabe auch jetzt ohne Aufgaben erstellen und sie später ergänzen.</p>
+                    <p class="px-4 py-4 text-sm text-beton">Aufgaben gehören zu einem Ressort. Lege unter Ressorts zuerst eure Ressorts an. Du kannst das Turnier auch jetzt ohne Aufgaben erstellen und sie später ergänzen.</p>
                 @else
                     <p x-show="zusatz.length === 0" class="px-4 py-4 text-sm text-beton">Neue Aufgaben, die es bisher nicht gab. Sie können im Rückblick zu Vorlagen werden.</p>
                 @endif
             </section>
 
             <div class="sticky bottom-20 z-20 flex justify-end lg:bottom-4">
-                <button class="knopf-rot px-8"><x-icon name="check" class="h-4 w-4" /> Ausgabe erstellen</button>
+                <button class="knopf-rot px-8"><x-icon name="check" class="h-4 w-4" /> Turnier erstellen</button>
             </div>
         </form>
     @endif

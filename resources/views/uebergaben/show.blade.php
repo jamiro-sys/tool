@@ -4,7 +4,7 @@
         $beteiligt = $u->istAdmin() || in_array($u->id, [$uebergabe->von_id, $uebergabe->an_id], true);
         $offenStatus = ! in_array($uebergabe->status, ['abgeschlossen', 'abgebrochen'], true);
     @endphp
-    <x-seitenkopf :titel="$uebergabe->ressort->name" ueber="Übergabe" :zurueck="route('uebergaben.index')">
+    <x-seitenkopf :titel="$uebergabe->ressort->name" ueber="Übergabe" :zurueck="auth()->user()->can('admin') ? route('uebergaben.index') : route('ressorts.show', $uebergabe->ressort)">
         <x-slot:unter>{{ $uebergabe->von?->name ?? 'Unbesetzt' }} übergibt an {{ $uebergabe->an->name }} @if ($uebergabe->termin) bis {{ $uebergabe->termin->format('d.m.Y') }} @endif</x-slot:unter>
         <x-slot:aktionen>
             <a href="{{ route('ressorts.dossier', $uebergabe->ressort) }}" class="knopf-rahmen"><x-icon name="drucker" class="h-4 w-4" /> Dossier</a>

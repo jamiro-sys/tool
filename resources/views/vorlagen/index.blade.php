@@ -1,6 +1,6 @@
 <x-app titel="Vorlagen">
     <x-seitenkopf titel="Vorlagen" ueber="Wiederkehrende Aufgaben">
-        <x-slot:unter>Das Gedächtnis des OK. Aus diesen {{ $anzahl }} Vorlagen entsteht jede neue Ausgabe.</x-slot:unter>
+        <x-slot:unter>Das Gedächtnis des OK. Aus diesen {{ $anzahl }} Vorlagen entsteht jedes neue Turnier.</x-slot:unter>
         <x-slot:aktionen>
             @can('vorlagen-verwalten')
                 <a href="{{ route('vorlagen.create') }}" class="knopf-rot" data-kuerzel="n"><x-icon name="plus" class="h-4 w-4" /> Vorlage</a>
@@ -10,7 +10,7 @@
 
     <form method="GET" class="mb-5 flex flex-wrap items-end gap-2" x-data x-on:change="$el.submit()">
         <select name="ressort" class="feld w-auto" aria-label="Ressort"><option value="">Alle Ressorts</option>@foreach ($ressorts as $r)<option value="{{ $r->id }}" @selected(($filter['ressort'] ?? '') == $r->id)>{{ $r->name }}</option>@endforeach</select>
-        <select name="turnier" class="feld w-auto" aria-label="Turnier"><option value="">Alle Turniere</option>@foreach ($turniere as $t)<option value="{{ $t->id }}" @selected(($filter['turnier'] ?? '') == $t->id)>{{ $t->name }}</option>@endforeach</select>
+        <select name="turnier" class="feld w-auto" aria-label="Turnier"><option value="">Alle Turnierarten</option>@foreach ($turniere as $t)<option value="{{ $t->id }}" @selected(($filter['turnier'] ?? '') == $t->id)>{{ $t->name }}</option>@endforeach</select>
         <select name="status" class="feld w-auto" aria-label="Status"><option value="aktiv" @selected($filter['status'] === 'aktiv')>Aktiv</option><option value="inaktiv" @selected($filter['status'] === 'inaktiv')>Archiviert</option><option value="alle" @selected($filter['status'] === 'alle')>Alle</option></select>
         <label class="flex min-h-[44px] items-center gap-2 border border-nacht/20 bg-white px-3 text-sm"><input type="checkbox" name="nur" value="ohne_anleitung" @checked(($filter['nur'] ?? '') === 'ohne_anleitung')> ohne Anleitung</label>
         <input name="q" value="{{ $filter['q'] ?? '' }}" class="feld w-auto flex-1" placeholder="Suchen" aria-label="Suchen">

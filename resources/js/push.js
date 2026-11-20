@@ -42,7 +42,10 @@ export function pushVerwaltung(publicKey, aboUrl) {
     };
 }
 
-function schluessel(base64) {
+function schluessel(roh0) {
+    // Nur das base64url-Alphabet zulassen; ganze Zeilen oder Leerzeichen entfernen
+    const base64 = String(roh0 || '').replace(/^\s*VAPID_PUBLIC_KEY\s*=\s*/, '').replace(/[^A-Za-z0-9_\-+/]/g, '');
+    if (base64.length < 80) throw new Error('Push ist auf dem Server noch nicht eingerichtet. Ein Admin erzeugt die Schlüssel unter Admin > System.');
     const padding = '='.repeat((4 - (base64.length % 4)) % 4);
     const roh = atob((base64 + padding).replace(/-/g, '+').replace(/_/g, '/'));
     return Uint8Array.from([...roh].map((c) => c.charCodeAt(0)));

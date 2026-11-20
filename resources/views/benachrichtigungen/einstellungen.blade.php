@@ -8,7 +8,7 @@
             @csrf
             <section class="karte overflow-x-auto">
                 <table class="tabelle">
-                    <thead><tr><th>Ereignis</th>@foreach (\App\Models\User::KANAELE as $k => $l)<th class="w-24 text-center">{{ $l }}</th>@endforeach</tr></thead>
+                    <thead><tr><th>Ereignis</th>@foreach (\App\Models\User::KANAELE as $k => $l)<th class="w-16 whitespace-nowrap text-center sm:w-24"><span class="sm:hidden">{{ ['app' => 'App', 'mail' => 'Mail', 'push' => 'Push'][$k] }}</span><span class="hidden sm:inline">{{ $l }}</span></th>@endforeach</tr></thead>
                     <tbody>
                         @foreach (\App\Models\User::EREIGNISSE as $e => $label)
                             @php $aktiv = $user->kanaeleFuer($e); @endphp
@@ -41,7 +41,8 @@
             <section class="karte p-4" x-data="pushVerwaltung(@js(config('services.webpush.public_key')), '{{ route('push.abo') }}')">
                 <p class="titel text-sm">Push auf diesem Gerät</p>
                 @if (! $pushBereit)
-                    <p class="mt-2 text-sm text-beton">Push ist auf dem Server noch nicht eingerichtet. Der Admin erstellt dafür die VAPID-Schlüssel.</p>
+                    <p class="mt-2 text-sm text-beton">Push ist auf dem Server noch nicht eingerichtet.</p>
+                    @can('admin')<a href="{{ route('admin.system') }}" class="knopf-nacht knopf-klein mt-3">Unter System einrichten</a>@else<p class="mt-1 text-xs text-beton">Ein Admin richtet es mit einem Klick unter Admin &gt; System ein.</p>@endcan
                 @else
                     <template x-if="!unterstuetzt"><p class="mt-2 text-sm text-beton">Dieser Browser unterstützt keine Push-Meldungen.</p></template>
                     <template x-if="unterstuetzt">
