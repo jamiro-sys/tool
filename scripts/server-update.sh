@@ -21,15 +21,16 @@ fi
 
 # Webzugriff: Der Dokumentstamm zeigt auf $BASIS. Alles wird nach current/public
 # weitergeleitet, damit shared/ und releases/ nie direkt erreichbar sind.
-if [ ! -f .htaccess ]; then
-    cat > .htaccess <<'HTA'
+cat > .htaccess <<'HTA'
 Options -Indexes
 <IfModule mod_rewrite.c>
     RewriteEngine On
+    # Schraegstrich am Ende hier entfernen, sonst leitet Laravel auf /current/public/... um
+    RewriteCond %{REQUEST_URI} ^(.+)/$
+    RewriteRule ^ %1 [L,R=301]
     RewriteRule ^(.*)$ current/public/$1 [L]
 </IfModule>
 HTA
-fi
 printf 'Require all denied\n' > shared/.htaccess
 
 # Geteilte Daten verbinden. Relative Links, weil SSH (chroot) und Webserver
