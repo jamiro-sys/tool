@@ -27,4 +27,17 @@
             <a href="{{ route('admin.daten.gesamt') }}" class="knopf-nacht mt-4 w-full"><x-icon name="archiv" class="h-4 w-4" /> Archiv herunterladen</a>
         </section>
     </div>
+
+    <section class="karte mt-6 border-rot/40 p-4">
+        <p class="titel text-sm text-rot">Neu beginnen</p>
+        <p class="mt-1 text-sm text-beton">Löscht alle Inhalte: Ressorts, Turniere, Hallen, Vorlagen, Ausgaben, Aufgaben, Kontakte, Wissen und Verlauf. Personen und Einstellungen bleiben erhalten. Vorher wird automatisch eine Sicherung angelegt, die du unter Admin &gt; Sicherungen wieder einspielen kannst.</p>
+        <form method="POST" action="{{ route('admin.daten.leeren') }}" class="mt-4 flex flex-col gap-2 sm:flex-row sm:items-end" onsubmit="return confirm('Wirklich alle Inhalte löschen?')">@csrf
+            <label class="flex-1">
+                <span class="label">Zur Bestätigung LEEREN eintippen</span>
+                <input name="bestaetigung" autocomplete="off" required class="feld mt-1" placeholder="LEEREN">
+            </label>
+            <button class="knopf-rot sm:w-auto"><x-icon name="loeschen" class="h-4 w-4" /> Alle Inhalte leeren</button>
+        </form>
+        @error('bestaetigung')<p class="mt-2 text-sm text-rot">{{ $message }}</p>@enderror
+    </section>
 </x-app>

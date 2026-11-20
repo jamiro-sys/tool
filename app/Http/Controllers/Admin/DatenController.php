@@ -19,6 +19,18 @@ class DatenController extends Controller
         return view('admin.daten', ['ausgaben' => Ausgabe::with('turnier')->orderByDesc('datum_von')->get()]);
     }
 
+    /** Neu beginnen: alle Inhalte leeren, Personen und Einstellungen behalten. */
+    public function leeren(Request $request, \App\Services\Inhalte $inhalte)
+    {
+        $request->validate(['bestaetigung' => ['required', 'in:LEEREN']], ['bestaetigung.in' => 'Bitte genau LEEREN eintippen.']);
+
+        $ergebnis = $inhalte->leeren();
+        Aktivitaet::protokolliere('daten.leeren', 'Alle Inhalte geleert (Sicherung '.$ergebnis['sicherung'].')');
+
+        return redirect()->route('admin.einstellungen')
+            ->with('erfolg', 'Alle Inhalte sind geleert. Eine Sicherung liegt unter Admin > Sicherungen. Lege jetzt Hallen und Turniere an.');
+    }
+
     /** Vorlagenpaket: alle Vorlagen mit Ressortnamen, uebertragbar in eine andere Installation. */
     public function vorlagenExport()
     {
