@@ -22,6 +22,7 @@ class SystemController extends Controller
         $logDatei = storage_path('logs/laravel.log');
 
         return view('admin.system', [
+            'claudeBereit' => app(\App\Services\AufgabenAssistent::class)->bereit(),
             'info' => [
                 'Version' => config('app.version'),
                 'Umgebung' => app()->environment(),

@@ -1,4 +1,4 @@
-@props(['tage' => 14, 'bezug' => 'beginn', 'datum' => null, 'aufgabe' => false, 'von' => null, 'bis' => null, 'id' => null, 'klein' => false, 'zeile' => false])
+@props(['tage' => 14, 'bezug' => 'beginn', 'datum' => null, 'aufgabe' => false, 'von' => null, 'bis' => null, 'id' => null, 'klein' => false, 'zeile' => false, 'prefix' => null])
 {{--
     "Wann" als Abstand zum Turnier: vor Turnierbeginn, am ersten/letzten Turniertag, nach Turnierende.
     Bei Aufgaben zusaetzlich fixes Datum oder ohne Termin. Sendet tage_vorher, bezug (und faellig_am bei fixem Datum).
@@ -15,6 +15,7 @@
     $betrag = $tage === null ? 14 : abs($tage);
     [$zahl, $einheit] = $betrag !== 0 && $betrag % 30 === 0 ? [$betrag / 30, 30] : ($betrag !== 0 && $betrag % 7 === 0 ? [$betrag / 7, 7] : [$betrag ?: 1, 1]);
     $datumWert = $datum instanceof \DateTimeInterface ? $datum->format('Y-m-d') : $datum;
+    $feld = fn (string $n) => $prefix ? $prefix.'['.$n.']' : $n;
     $optionen = ['vor' => 'vor Turnierbeginn', 'erster' => 'am ersten Turniertag', 'letzter' => 'am letzten Turniertag', 'nach' => 'nach Turnierende'] + ($aufgabe ? ['fix' => 'fixes Datum', 'ohne' => 'ohne Termin'] : []);
 @endphp
 <div {{ $attributes->merge(['class' => $zeile ? 'flex flex-wrap items-center gap-1.5' : 'space-y-2']) }}
@@ -31,9 +32,9 @@
             return basis.toLocaleDateString('de-CH', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
         },
      }">
-    <input type="hidden" name="wann_gesendet" value="1">
-    <input type="hidden" name="tage_vorher" :value="tage" value="{{ $tage }}">
-    <input type="hidden" name="bezug" :value="bezug" value="{{ $bezug }}">
+    <input type="hidden" name="{{ $feld('wann_gesendet') }}" value="1">
+    <input type="hidden" name="{{ $feld('tage_vorher') }}" :value="tage" value="{{ $tage }}">
+    <input type="hidden" name="{{ $feld('bezug') }}" :value="bezug" value="{{ $bezug }}">
  <select x-model="modus" class="feld {{ $klein ? 'min-h-[38px] py-1' : '' }} {{ $zeile ? 'w-auto' : '' }}" @if ($id) id="{{ $id }}" @endif aria-label="Wann">
         @foreach ($optionen as $k => $l)<option value="{{ $k }}" @selected($modus === $k)>{{ $l }}</option>@endforeach
     </select>
@@ -44,7 +45,7 @@
         </select>
     </div>
     @if ($aufgabe)
-        <div x-show="modus === 'fix'" x-cloak><input type="date" name="faellig_am" class="feld" value="{{ $datumWert }}" :disabled="modus !== 'fix'" aria-label="Fixes Datum"></div>
+        <div x-show="modus === 'fix'" x-cloak> <input type="date" name="{{ $feld('faellig_am') }}" class="feld" value="{{ $datumWert }}" :disabled="modus !== 'fix'" aria-label="Fixes Datum"></div>
     @endif
     <p x-show="vorschau" x-cloak class="text-xs font-bold text-nacht {{ $zeile ? 'w-full' : '' }}">= <span x-text="vorschau"></span></p>
 </div>
