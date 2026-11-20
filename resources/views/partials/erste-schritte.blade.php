@@ -5,7 +5,7 @@
         ['Turnierarten anlegen', 'Z. B. Hallencup Dezember und Februar, je mit Standardhalle.', \App\Models\Turnier::exists(), route('admin.einstellungen')],
         ['Ressorts anlegen', 'Wie ihr die Arbeit im OK aufteilt.', \App\Models\Ressort::exists(), route('ressorts.index')],
         ['Personen einladen', 'Das OK bekommt einen Einladungslink per Mail.', \App\Models\User::count() > 1, route('admin.personen')],
-        ['Vorlagen erfassen', 'Wiederkehrende Aufgaben mit Zeitpunkt vor dem Turnier.', \App\Models\Vorlage::exists(), route('vorlagen.create')],
+        ['Jahresplan füllen', 'Aufgaben, die jedes Jahr kommen, mit Zeitpunkt vor dem Turnier.', \App\Models\Vorlage::exists(), route('vorlagen.index')],
         ['Erstes Turnier planen', 'Der Assistent erstellt daraus alle Aufgaben.', \App\Models\Ausgabe::exists(), route('ausgaben.create')],
     ];
     $erledigt = collect($schritte)->where(2, true)->count();

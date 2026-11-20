@@ -51,9 +51,9 @@ class ErkenntnisController extends Controller
         $vorlage = $this->planer->uebernehme($erkenntnis, array_filter($aenderungen, fn ($w) => $w !== null));
 
         $meldung = match ($erkenntnis->vorschlag) {
-            'streichen' => 'Vorlage deaktiviert.',
-            'neu' => 'Neue Vorlage angelegt.',
-            'anpassen' => 'Vorlage angepasst.',
+            'streichen' => 'Kommt nicht mehr bei neuen Turnieren.',
+            'neu' => 'In den Jahresplan aufgenommen.',
+            'anpassen' => 'Jahresplan angepasst.',
             default => 'Als erledigt markiert.',
         };
 

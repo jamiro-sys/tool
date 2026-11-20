@@ -1,5 +1,5 @@
-<x-app :titel="$vorlage->exists ? 'Vorlage bearbeiten' : 'Neue Vorlage'">
-    <x-seitenkopf :titel="$vorlage->exists ? $vorlage->titel : 'Neue Vorlage'" ueber="Vorlage" :zurueck="$vorlage->exists ? route('vorlagen.show', $vorlage) : route('vorlagen.index')" />
+<x-app :titel="$vorlage->exists ? 'Im Jahresplan bearbeiten' : 'Neu im Jahresplan'">
+    <x-seitenkopf :titel="$vorlage->exists ? $vorlage->titel : 'Neu im Jahresplan'" ueber="Jahresplan" :zurueck="$vorlage->exists ? route('vorlagen.show', $vorlage) : route('vorlagen.index')" />
 
     @if ($ressorts->isEmpty())
         <x-ohne-ressort class="mb-6" />
@@ -25,11 +25,8 @@
                     <select id="ressort_id" name="ressort_id" class="feld" required>@foreach ($ressorts as $r)<option value="{{ $r->id }}" @selected(old('ressort_id', $vorlage->ressort_id) == $r->id)>{{ $r->name }}</option>@endforeach</select></div>
                 <div><label class="feld-label" for="turnier_id">Gilt für</label>
                     <select id="turnier_id" name="turnier_id" class="feld"><option value="">Alle Turnierarten</option>@foreach ($turniere as $t)<option value="{{ $t->id }}" @selected(old('turnier_id', $vorlage->turnier_id) == $t->id)>Nur {{ $t->name }}</option>@endforeach</select></div>
-                <div x-data="{ t: {{ (int) old('tage_vorher', $vorlage->tage_vorher) }} }">
-                    <label class="feld-label" for="tage_vorher">Fällig (Tage vor dem Turnier)</label>
-                    <input id="tage_vorher" type="number" name="tage_vorher" required class="feld" x-model.number="t" min="-120" max="400">
-                    <p class="mt-1 text-xs text-beton" x-text="t > 0 ? (t % 7 === 0 && t >= 14 ? (t/7) + ' Wochen vorher' : t + ' Tage vorher') : (t === 0 ? 'am Turniertag' : Math.abs(t) + ' Tage nach dem Turnier')"></p>
-                </div>
+                <div><label class="feld-label" for="tage_vorher">Wann (vor dem Turnier)</label><x-zeitpunkt id="tage_vorher" :wert="old('tage_vorher', $vorlage->tage_vorher)" />
+                    <p class="mt-1 text-xs text-beton">Monat = 30 Tage. Fürs Datum nach dem Turnier eine Minuszahl.</p></div>
                 <div><label class="feld-label" for="aufwand_std">Aufwand</label><x-aufwand name="aufwand_std" id="aufwand_std" :wert="old('aufwand_std', $vorlage->aufwand_std)" /></div>
                 <div><label class="feld-label" for="prioritaet">Priorität</label>
                     <select id="prioritaet" name="prioritaet" class="feld">@foreach (\App\Models\Vorlage::PRIORITAETEN as $k => $l)<option value="{{ $k }}" @selected(old('prioritaet', $vorlage->prioritaet) === $k)>{{ $l }}</option>@endforeach</select></div>

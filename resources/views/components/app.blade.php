@@ -29,7 +29,7 @@
     $aktivesRessort = request()->route('ressort');
     $admin = [
         ['Personen', route('admin.personen'), 'ressorts', request()->routeIs('admin.personen')],
-        ['Vorlagen', route('vorlagen.index'), 'vorlagen', request()->routeIs('vorlagen.*')],
+        ['Jahresplan', route('vorlagen.index'), 'vorlagen', request()->routeIs('vorlagen.*')],
         ['Auswertung', route('auswertung'), 'auswertung', request()->routeIs('auswertung')],
         ['Übergaben', route('uebergaben.index'), 'uebergabe', request()->routeIs('uebergaben.*')],
         ['System', route('admin.system'), 'server', request()->routeIs('admin.system', 'admin.logs')],
@@ -60,7 +60,7 @@
                         <div class="flex items-center gap-3 border-b border-nacht/10 px-4">
                             <x-icon name="suche" class="w-5 h-5 text-beton" />
                             <input x-ref="eingabe" x-model="q" x-on:input="tippen()" x-on:keydown.down.prevent="runter()" x-on:keydown.up.prevent="hoch()" x-on:keydown.enter.prevent="waehlen()"
-                                   class="h-14 w-full border-0 text-base focus:outline-none focus:ring-0" placeholder="Aufgaben, Vorlagen, Kontakte, Wissen ...">
+                                   class="h-14 w-full border-0 text-base focus:outline-none focus:ring-0" placeholder="Aufgaben, Jahresplan, Kontakte, Wissen ...">
                         </div>
                         <ul class="max-h-[50vh] overflow-y-auto">
                             <template x-for="(t, i) in treffer" :key="t.url + i">
@@ -138,7 +138,7 @@
                     @if (session('erfolg'))
                         <div class="flex items-center gap-3 border-l-4 border-rot bg-white px-4 py-3 text-sm animate-einblenden" x-data="{ s: true }" x-show="s" x-init="setTimeout(() => s = false, 6000)" x-transition>
                             <x-icon name="check" class="w-4 h-4 text-rot shrink-0" /> <span>{{ session('erfolg') }}</span>
-                            @if (session('vorlage_link'))<a href="{{ session('vorlage_link') }}" class="ml-auto label text-rot">Vorlage ansehen</a>@endif
+                            @if (session('vorlage_link'))<a href="{{ session('vorlage_link') }}" class="ml-auto label text-rot">Im Jahresplan ansehen</a>@endif
                         </div>
                     @endif
                     @if (session('warnung'))

@@ -8,7 +8,7 @@
 
     @if ($ressorts->isEmpty())
         <section class="karte mb-6">
-            <x-leer icon="ressorts" titel="Noch keine Ressorts" text="Ressorts teilen die Arbeit im OK auf, z. B. Spielbetrieb, Festwirtschaft oder Sponsoring. Jede Aufgabe und jede Vorlage gehört zu einem Ressort.">
+            <x-leer icon="ressorts" titel="Noch keine Ressorts" text="Ressorts teilen die Arbeit im OK auf, z. B. Spielbetrieb, Festwirtschaft oder Sponsoring. Jede Aufgabe gehört zu einem Ressort.">
                 @can('admin')<button type="button" class="knopf-rot mt-4" x-data x-on:click="$dispatch('modal-ressort')"><x-icon name="plus" class="h-4 w-4" /> Erstes Ressort anlegen</button>@endcan
             </x-leer>
         </section>

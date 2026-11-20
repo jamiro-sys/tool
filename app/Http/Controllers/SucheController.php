@@ -23,7 +23,7 @@ class SucheController extends Controller
         Aufgabe::with('ausgabe')->where('titel', 'like', $like)->latest('faellig_am')->limit(6)->get()
             ->each(fn ($a) => $treffer->push(['typ' => 'Aufgabe', 'titel' => $a->titel, 'info' => $a->ausgabe->titel, 'url' => route('aufgaben.show', $a)]));
         Vorlage::with('ressort')->where('titel', 'like', $like)->limit(5)->get()
-            ->each(fn ($v) => $treffer->push(['typ' => 'Vorlage', 'titel' => $v->titel, 'info' => $v->ressort->name, 'url' => route('vorlagen.show', $v)]));
+            ->each(fn ($v) => $treffer->push(['typ' => 'Jahresplan', 'titel' => $v->titel, 'info' => $v->ressort->name, 'url' => route('vorlagen.show', $v)]));
         Ressort::where('name', 'like', $like)->limit(3)->get()
             ->each(fn ($r) => $treffer->push(['typ' => 'Ressort', 'titel' => $r->name, 'info' => 'Steckbrief', 'url' => route('ressorts.show', $r)]));
         Kontakt::with('ressort')->where(fn ($w) => $w->where('name', 'like', $like)->orWhere('firma', 'like', $like))->limit(5)->get()

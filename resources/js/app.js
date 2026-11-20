@@ -164,6 +164,24 @@ Alpine.data('dateiAblage', (ressorts = [], start = '') => ({
     },
 }));
 
+/* Jahresplan: Ja/Nein-Schalter (Liste und Rueckblick) */
+Alpine.data('jahresplanSchalter', (url, wert, feld = 'aktiv') => ({
+    wert,
+    async setze(neu) {
+        if (neu === this.wert) return;
+        const alt = this.wert;
+        this.wert = neu;
+        try {
+            const r = await post(url, { [feld]: neu ? 1 : 0, wert: neu ? 1 : 0 });
+            this.wert = r.wert;
+            Alpine.store('toast').zeige(neu ? 'Kommt jedes Jahr.' : 'Kommt nicht mehr bei neuen Turnieren.');
+        } catch (e) {
+            this.wert = alt;
+            Alpine.store('toast').zeige(e.message, 'fehler');
+        }
+    },
+}));
+
 /* Haken in der Material-Einsatzliste */
 Alpine.data('materialHaken', (url, feld, wert) => ({
     wert,

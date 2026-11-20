@@ -4,13 +4,13 @@
     </x-seitenkopf>
     <div class="grid gap-6 lg:grid-cols-3">
         <section class="karte p-4">
-            <p class="titel text-sm">Vorlagenpaket</p>
-            <p class="mt-1 text-xs text-beton">Alle Vorlagen mit Anleitungen als JSON. Zum Teilen mit einem anderen Verein oder als Sicherung des Wissens.</p>
+            <p class="titel text-sm">Jahresplan exportieren</p>
+            <p class="mt-1 text-xs text-beton">Der ganze Jahresplan mit Anleitungen als JSON. Zum Teilen mit einem anderen Verein oder als Sicherung des Wissens.</p>
             <a href="{{ route('admin.daten.vorlagen') }}" class="knopf-nacht mt-4 w-full"><x-icon name="download" class="h-4 w-4" /> Exportieren</a>
             <form method="POST" action="{{ route('admin.daten.vorlagen') }}" enctype="multipart/form-data" class="mt-4 space-y-2 border-t border-nacht/10 pt-4">@csrf
                 <p class="label">Importieren</p>
                 <input type="file" name="datei" accept=".json" required class="feld py-2.5 text-xs">
-                <p class="text-xs text-beton">Bestehende Vorlagen mit gleichem Titel werden übersprungen.</p>
+                <p class="text-xs text-beton">Aufgaben mit gleichem Titel im Jahresplan werden übersprungen.</p>
                 <button class="knopf-rahmen w-full"><x-icon name="upload" class="h-4 w-4" /> Importieren</button>
             </form>
         </section>
@@ -30,7 +30,7 @@
 
     <section class="karte mt-6 border-rot/40 p-4">
         <p class="titel text-sm text-rot">Neu beginnen</p>
-        <p class="mt-1 text-sm text-beton">Löscht alle Inhalte: Ressorts, Turnierarten, Hallen, Vorlagen, Turniere, Aufgaben, Kontakte, Wissen und Verlauf. Personen und Einstellungen bleiben erhalten. Vorher wird automatisch eine Sicherung angelegt, die du unter Admin &gt; Sicherungen wieder einspielen kannst.</p>
+        <p class="mt-1 text-sm text-beton">Löscht alle Inhalte: Ressorts, Turnierarten, Hallen, Jahresplan, Turniere, Aufgaben, Kontakte, Wissen und Verlauf. Personen und Einstellungen bleiben erhalten. Vorher wird automatisch eine Sicherung angelegt, die du unter Admin &gt; Sicherungen wieder einspielen kannst.</p>
         <form method="POST" action="{{ route('admin.daten.leeren') }}" class="mt-4 flex flex-col gap-2 sm:flex-row sm:items-end" onsubmit="return confirm('Wirklich alle Inhalte löschen?')">@csrf
             <label class="flex-1">
                 <span class="label">Zur Bestätigung LEEREN eintippen</span>

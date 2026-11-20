@@ -1,11 +1,11 @@
 <x-app :titel="'Rückblick '.$ausgabe->titel">
     <x-seitenkopf titel="Rückblick" :ueber="$ausgabe->titel" :zurueck="route('ausgaben.show', $ausgabe)">
-        <x-slot:unter>Was lief gut, was machen wir nächstes Mal anders? Erkenntnisse fliessen direkt in die Vorlagen des nächsten Turniers.</x-slot:unter>
+        <x-slot:unter>Was lief gut, was machen wir nächstes Mal anders? Pro Aufgabe entscheidest du, ob sie nächstes Jahr wieder kommt. Erkenntnisse fliessen in den Jahresplan.</x-slot:unter>
     </x-seitenkopf>
 
     {{-- Ablauf in drei Schritten --}}
     <ol class="mb-6 grid gap-3 md:grid-cols-3">
-        @foreach (['Aufwand erfassen' => 'Wie viele Stunden hat jede Aufgabe wirklich gebraucht?', 'Erkenntnisse festhalten' => 'Pro Aufgabe: beibehalten, anpassen oder streichen.', 'In Vorlagen übernehmen' => 'Ressortleitung übernimmt die Vorschläge mit einem Klick.'] as $t => $txt)
+        @foreach (['Aufwand erfassen' => 'Wie lange hat jede Aufgabe wirklich gebraucht?', 'Nächstes Jahr?' => 'Pro Aufgabe Ja oder Nein: kommt sie beim nächsten Turnier wieder?', 'Erkenntnisse festhalten' => 'Was machen wir anders? Mit der Glühbirne direkt in den Jahresplan.'] as $t => $txt)
             <li class="karte flex gap-3 p-4">
                 <span class="zahl flex h-9 w-9 shrink-0 items-center justify-center bg-rot text-lg text-white">{{ $loop->iteration }}</span>
                 <span><span class="block text-sm font-bold uppercase tracking-label">{{ $t }}</span><span class="text-xs text-beton">{{ $txt }}</span></span>
@@ -28,15 +28,25 @@
                     <section class="karte mb-5">
                         <div class="karte-kopf"><h2 class="titel text-sm">{{ $gruppe->first()->ressort->name }}</h2><span class="label">{{ $gruppe->where('status', 'erledigt')->count() }}/{{ $gruppe->count() }} erledigt</span></div>
                         @foreach ($gruppe as $a)
-                            <div class="flex flex-col gap-2 border-b border-nacht/5 px-4 py-3 last:border-0 sm:flex-row sm:items-center" x-data="{ notiz: false }">
-                                <div class="min-w-0 flex-1">
+                            <div class="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-nacht/5 px-4 py-3 last:border-0" x-data="{ notiz: false }">
+                                <div class="min-w-[240px] flex-1">
                                     <a href="{{ route('aufgaben.show', $a) }}" class="text-sm font-bold hover:text-rot">{{ $a->titel }}</a>
                                     <div class="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-beton">
                                         <x-status :status="$a->status" />
                                         <span>{{ $a->verantwortlich?->name ?? 'ohne Person' }}</span>
-                                        @if (! $a->vorlage_id)<span class="marke-gelb">einmalig</span>@endif
                                         @foreach ($a->erkenntnisse as $e)<span class="marke-rahmen" title="{{ $e->text }}">{{ \App\Models\Erkenntnis::VORSCHLAEGE[$e->vorschlag] }}</span>@endforeach
                                     </div>
+                                </div>
+                                <div class="flex flex-wrap items-center gap-2" x-data="jahresplanSchalter(@js(route('aufgaben.naechstes-jahr', $a)), {{ $a->vorlage?->aktiv ? 'true' : 'false' }}, 'wert')">
+                                    <span class="label whitespace-nowrap">Nächstes Jahr</span>
+                                    @can('ressort-verwalten', $a->ressort)
+                                        <div class="grid grid-cols-2 border border-nacht/20 text-[11px] font-bold uppercase tracking-label" role="group" aria-label="Nächstes Jahr wieder: {{ $a->titel }}">
+                                            <button type="button" class="px-3 py-1.5 uppercase" :class="wert ? 'bg-rot text-white' : 'text-beton hover:bg-nacht/5'" x-on:click="setze(true)" :aria-pressed="wert">Ja</button>
+                                            <button type="button" class="px-3 py-1.5 uppercase" :class="wert ? 'text-beton hover:bg-nacht/5' : 'bg-nacht text-white'" x-on:click="setze(false)" :aria-pressed="!wert">Nein</button>
+                                        </div>
+                                    @else
+                                        <span class="text-xs font-bold" x-text="wert ? 'Ja' : 'Nein'"></span>
+                                    @endif
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <span class="text-xs text-beton whitespace-nowrap">Plan {{ \App\Support\Aufwand::text($a->aufwand_geplant, '?') }}</span>
@@ -75,10 +85,10 @@
                                 @can('ressort-verwalten', $e->ressort)
                                     <div class="mt-2 flex flex-wrap gap-2">
                                         @if ($e->vorschlag === 'anpassen' && $e->vorlage)
-                                            <button type="button" class="knopf-rot knopf-klein" x-on:click="auf = !auf">Vorlage anpassen</button>
+                                            <button type="button" class="knopf-rot knopf-klein" x-on:click="auf = !auf">Im Jahresplan anpassen</button>
                                         @else
                                             <form method="POST" action="{{ route('erkenntnisse.uebernehmen', $e) }}">@csrf
-                                                <button class="knopf-rot knopf-klein">{{ ['streichen' => 'Vorlage deaktivieren', 'neu' => 'Als Vorlage anlegen', 'beibehalten' => 'Erledigt', 'anpassen' => 'Übernehmen'][$e->vorschlag] }}</button>
+                                                <button class="knopf-rot knopf-klein">{{ ['streichen' => 'Kommt nicht mehr', 'neu' => 'In den Jahresplan', 'beibehalten' => 'Erledigt', 'anpassen' => 'Übernehmen'][$e->vorschlag] }}</button>
                                             </form>
                                         @endif
                                         <form method="POST" action="{{ route('erkenntnisse.destroy', $e) }}">@csrf @method('DELETE')<button class="knopf-leise knopf-klein">Verwerfen</button></form>
@@ -90,7 +100,7 @@
                                                 <div><label class="feld-label">Aufwand</label><x-aufwand name="aufwand_std" :wert="$e->aufgabe?->aufwand_effektiv ?? $e->vorlage->aufwand_std" klein /></div>
                                             </div>
                                             <div><label class="feld-label">Anleitung</label><textarea name="anleitung" class="feld" rows="5">{{ trim(($e->vorlage->anleitung ?? '')."\n\nHinweis ".$ausgabe->saison.': '.$e->text) }}</textarea></div>
-                                            <button class="knopf-rot knopf-klein">Vorlage speichern</button>
+                                            <button class="knopf-rot knopf-klein">Im Jahresplan speichern</button>
                                         </form>
                                     @endif
                                 @endcan
@@ -105,7 +115,7 @@
             @if ($ohneVorlage->count())
                 <section class="karte border-l-4 border-l-gelb p-4">
                     <p class="titel text-sm">{{ $ohneVorlage->count() }} einmalige Aufgaben</p>
-                    <p class="mt-1 text-xs text-beton">Kommen sie wieder? Dann mit der Glühbirne als "Neue Vorlage" vorschlagen.</p>
+                    <p class="mt-1 text-xs text-beton">Kommen sie nächstes Jahr wieder? Dann bei der Aufgabe auf Ja tippen.</p>
                 </section>
             @endif
 

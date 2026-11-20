@@ -75,6 +75,7 @@ Route::middleware(['auth', 'aktiv'])->group(function () {
     Route::get('/aufgaben/{aufgabe}', [AufgabeController::class, 'show'])->name('aufgaben.show');
     Route::patch('/aufgaben/{aufgabe}', [AufgabeController::class, 'update'])->name('aufgaben.update');
     Route::delete('/aufgaben/{aufgabe}', [AufgabeController::class, 'destroy'])->name('aufgaben.destroy');
+    Route::post('/aufgaben/{aufgabe}/naechstes-jahr', [AufgabeController::class, 'naechstesJahr'])->name('aufgaben.naechstes-jahr');
     Route::post('/aufgaben/{aufgabe}/wiederholen', [AufgabeController::class, 'wiederholen'])->name('aufgaben.wiederholen');
     Route::post('/aufgaben/{aufgabe}/status', [AufgabeController::class, 'status'])->name('aufgaben.status');
     Route::post('/aufgaben/{aufgabe}/checkpunkt', [AufgabeController::class, 'checkpunkt'])->name('aufgaben.checkpunkt');

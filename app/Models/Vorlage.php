@@ -72,13 +72,16 @@ class Vorlage extends Model
             return 'am Turniertag';
         }
         if ($t < 0) {
-            return abs($t).' Tage nach dem Turnier';
+            return abs($t).(abs($t) === 1 ? ' Tag' : ' Tage').' nach dem Turnier';
+        }
+        if ($t % 30 === 0) {
+            return ($t / 30).' '.($t === 30 ? 'Monat' : 'Monate').' vorher';
         }
         if ($t % 7 === 0 && $t >= 14) {
             return ($t / 7).' Wochen vorher';
         }
 
-        return $t.' Tage vorher';
+        return $t.($t === 1 ? ' Tag' : ' Tage').' vorher';
     }
 
     public function offeneErkenntnisse()
