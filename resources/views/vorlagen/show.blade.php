@@ -1,20 +1,27 @@
 <x-app :titel="$vorlage->titel">
     <x-seitenkopf :titel="$vorlage->titel" :ueber="'Vorlage | '.$vorlage->ressort->name" :zurueck="route('vorlagen.index')">
-        <x-slot:unter>{{ $vorlage->zeitpunktText() }} | {{ $vorlage->turnier ? 'nur '.$vorlage->turnier->name : 'alle Turnierarten' }} @if ($vorlage->aufwand_std) | ca. {{ $vorlage->aufwand_std }} Std. @endif</x-slot:unter>
+        <x-slot:unter>{{ $vorlage->zeitpunktText() }} | {{ $vorlage->turnier ? 'nur '.$vorlage->turnier->name : 'alle Turnierarten' }} @if ($vorlage->aufwand_std) | ca. {{ \App\Support\Aufwand::text($vorlage->aufwand_std) }} @endif</x-slot:unter>
         <x-slot:aktionen>
             @can('ressort-verwalten', $vorlage->ressort)
                 <a href="{{ route('vorlagen.edit', $vorlage) }}" class="knopf-rahmen" data-kuerzel="e"><x-icon name="stift" class="h-4 w-4" /> Bearbeiten</a>
-                @if ($vorlage->aktiv)
-                    <button type="button" class="knopf-leise" x-on:click="$dispatch('modal-archivieren')"><x-icon name="archiv" class="h-4 w-4" /> Archivieren</button>
-                @else
-                    <form method="POST" action="{{ route('vorlagen.aktiv', $vorlage) }}">@csrf<input type="hidden" name="aktiv" value="1"><button class="knopf-nacht">Wieder aktivieren</button></form>
-                @endif
+                <div class="flex items-center gap-2 border border-nacht/20 bg-white py-1 pl-3 pr-1">
+                    <span class="label">Wiederkehrend</span>
+                    <div class="grid grid-cols-2 gap-1 text-[11px] font-bold uppercase tracking-label">
+                        @if ($vorlage->aktiv)
+                            <span class="bg-rot px-3 py-2 text-white">Ja</span>
+                            <button type="button" class="px-3 py-2 uppercase text-beton hover:bg-nacht/5 hover:text-nacht" x-on:click="$dispatch('modal-archivieren')">Nein</button>
+                        @else
+                            <form method="POST" action="{{ route('vorlagen.aktiv', $vorlage) }}">@csrf<input type="hidden" name="aktiv" value="1"><button class="w-full px-3 py-2 uppercase text-beton hover:bg-nacht/5 hover:text-nacht">Ja</button></form>
+                            <span class="bg-nacht px-3 py-2 text-white">Nein</span>
+                        @endif
+                    </div>
+                </div>
             @endcan
         </x-slot:aktionen>
     </x-seitenkopf>
 
     @if (! $vorlage->aktiv)
-        <div class="mb-6 border-l-4 border-beton bg-white px-4 py-3 text-sm">Archiviert seit {{ $vorlage->deaktiviert_am?->format('d.m.Y') }}. @if ($vorlage->deaktiviert_grund) Grund: {{ $vorlage->deaktiviert_grund }} @endif</div>
+        <div class="mb-6 border-l-4 border-beton bg-white px-4 py-3 text-sm">Kommt seit {{ $vorlage->deaktiviert_am?->format('d.m.Y') }} nicht mehr bei neuen Turnieren. @if ($vorlage->deaktiviert_grund) Grund: {{ $vorlage->deaktiviert_grund }} @endif</div>
     @endif
 
     <div class="grid gap-6 lg:grid-cols-3">
@@ -41,7 +48,7 @@
                         <thead><tr><th>Turnier</th><th>Verantwortlich</th><th>Status</th><th>Aufwand</th></tr></thead>
                         <tbody>
                             @forelse ($vorlage->aufgaben->sortByDesc(fn ($a) => $a->ausgabe->datum_von) as $a)
-                                <tr><td><a href="{{ route('aufgaben.show', $a) }}" class="font-bold hover:text-rot">{{ $a->ausgabe->titel }}</a></td><td>{{ $a->verantwortlich?->name ?? '' }}</td><td><x-status :status="$a->status" /></td><td>{{ $a->aufwand_effektiv ? $a->aufwand_effektiv.' Std.' : '' }}</td></tr>
+                                <tr><td><a href="{{ route('aufgaben.show', $a) }}" class="font-bold hover:text-rot">{{ $a->ausgabe->titel }}</a></td><td>{{ $a->verantwortlich?->name ?? '' }}</td><td><x-status :status="$a->status" /></td><td>{{ \App\Support\Aufwand::text($a->aufwand_effektiv) }}</td></tr>
                             @empty
                                 <tr><td colspan="4" class="text-beton">Noch nie verwendet.</td></tr>
                             @endforelse
@@ -91,12 +98,12 @@
         </aside>
     </div>
 
-    <x-modal name="archivieren" titel="Vorlage archivieren">
+    <x-modal name="archivieren" titel="Nicht mehr wiederholen">
         <form method="POST" action="{{ route('vorlagen.aktiv', $vorlage) }}" class="space-y-4">@csrf
             <input type="hidden" name="aktiv" value="0">
-            <p class="text-sm">Die Vorlage erscheint nicht mehr in neuen Turnieren. Alles bleibt im Archiv erhalten.</p>
+            <p class="text-sm">Die Aufgabe kommt bei neuen Turnieren nicht mehr. Bereits geplante Turniere und der Verlauf bleiben erhalten, und du kannst sie jederzeit wieder auf «Ja» stellen.</p>
             <div><label class="feld-label" for="grund">Grund</label><input id="grund" name="grund" class="feld" placeholder="z.B. Wird neu von der Halle erledigt"></div>
-            <div class="flex justify-end"><button class="knopf-nacht">Archivieren</button></div>
+            <div class="flex justify-end"><button class="knopf-nacht">Nicht mehr wiederholen</button></div>
         </form>
     </x-modal>
 </x-app>

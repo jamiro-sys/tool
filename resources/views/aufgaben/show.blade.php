@@ -138,21 +138,24 @@
                     <div class="px-4 py-3"><p class="label mb-1">Begleitung</p><x-person :user="$aufgabe->begleitung" gross><span class="text-sm">{{ $aufgabe->begleitung->name }}</span></x-person></div>
                 @endif
                 <div class="flex justify-between px-4 py-3 text-sm"><span class="label">Priorität</span><span>{{ \App\Models\Vorlage::PRIORITAETEN[$aufgabe->prioritaet] }}</span></div>
-                <div class="px-4 py-3" x-data="{ wert: '{{ $aufgabe->aufwand_effektiv }}' }">
-                    <div class="flex justify-between text-sm"><span class="label">Aufwand geplant</span><span>{{ $aufgabe->aufwand_geplant ? $aufgabe->aufwand_geplant.' Std.' : 'offen' }}</span></div>
+                <div class="px-4 py-3">
+                    <div class="flex justify-between text-sm"><span class="label">Aufwand geplant</span><span>{{ \App\Support\Aufwand::text($aufgabe->aufwand_geplant, 'offen') }}</span></div>
                     @if ($darf)
-                        <form method="POST" action="{{ route('aufgaben.update', $aufgabe) }}" class="mt-2 flex items-center gap-2">@csrf @method('PATCH')
-                            <label class="label shrink-0" for="aufwand_effektiv">Effektiv</label>
-                            <input id="aufwand_effektiv" type="number" step="0.5" min="0" name="aufwand_effektiv" x-model="wert" class="feld min-h-[36px] w-20 py-1">
-                            <span class="text-xs text-beton">Std.</span>
-                            <button class="knopf-leise knopf-klein ml-auto">Speichern</button>
+                        <form method="POST" action="{{ route('aufgaben.update', $aufgabe) }}" class="mt-2 space-y-2">@csrf @method('PATCH')
+                            <label class="label block" for="aufwand_effektiv">Effektiv</label>
+                            <div class="flex flex-wrap items-center gap-2"><x-aufwand name="aufwand_effektiv" id="aufwand_effektiv" :wert="$aufgabe->aufwand_effektiv" klein /><button class="knopf-leise knopf-klein ml-auto">Speichern</button></div>
                         </form>
                     @endif
                 </div>
                 @if ($aufgabe->vorlage)
-                    <a href="{{ route('vorlagen.show', $aufgabe->vorlage) }}" class="flex items-center justify-between px-4 py-3 text-sm hover:bg-kreide"><span class="label">Aus Vorlage</span><span class="flex items-center gap-1 font-bold">{{ \Illuminate\Support\Str::limit($aufgabe->vorlage->titel, 28) }} <x-icon name="pfeil" class="h-3.5 w-3.5" /></span></a>
+                    <a href="{{ route('vorlagen.show', $aufgabe->vorlage) }}" class="flex items-center justify-between px-4 py-3 text-sm hover:bg-kreide"><span><span class="label block">Wiederkehrend</span><span class="block text-xs text-beton">{{ $aufgabe->vorlage->aktiv ? 'Kommt bei jedem neuen Turnier' : 'Kommt nicht mehr bei neuen Turnieren' }}</span></span><span class="flex items-center gap-1 font-bold">{{ $aufgabe->vorlage->aktiv ? 'Ja' : 'Nein' }} <x-icon name="pfeil" class="h-3.5 w-3.5" /></span></a>
                 @else
-                    <div class="px-4 py-3 text-xs text-beton">Einmalige Aufgabe (keine Vorlage). Im Rückblick kann daraus eine Vorlage werden.</div>
+                    <div class="px-4 py-3">
+                        <p class="text-xs text-beton">Einmalige Aufgabe. Kommt sie jedes Jahr wieder, wird sie bei jedem neuen Turnier automatisch vorgeschlagen.</p>
+                        @can('ressort-verwalten', $aufgabe->ressort)
+                            <form method="POST" action="{{ route('aufgaben.wiederholen', $aufgabe) }}" class="mt-2">@csrf<button class="knopf-rahmen knopf-klein"><x-icon name="wiederholen" class="h-4 w-4" /> Jedes Turnier wiederholen</button></form>
+                        @endcan
+                    </div>
                 @endif
             </section>
             @include('partials.verknuepfungen', ['bezug' => $aufgabe, 'typ' => 'aufgabe'])
@@ -163,7 +166,7 @@
                     <ul class="divide-y divide-nacht/5">
                         @foreach ($frueher as $f)
                             <li><a href="{{ route('aufgaben.show', $f) }}" class="flex items-center justify-between gap-2 px-4 py-2.5 text-sm hover:bg-kreide">
-                                <span><span class="block font-bold">{{ $f->ausgabe->titel }}</span><span class="text-xs text-beton">{{ $f->verantwortlich?->name ?? 'niemand' }} @if ($f->aufwand_effektiv) | {{ $f->aufwand_effektiv }} Std. @endif</span></span>
+                                <span><span class="block font-bold">{{ $f->ausgabe->titel }}</span><span class="text-xs text-beton">{{ $f->verantwortlich?->name ?? 'niemand' }} @if ($f->aufwand_effektiv) | {{ \App\Support\Aufwand::text($f->aufwand_effektiv) }} @endif</span></span>
                                 <x-status :status="$f->status" />
                             </a></li>
                         @endforeach

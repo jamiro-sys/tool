@@ -11,7 +11,7 @@
     <form method="GET" class="mb-5 flex flex-wrap items-end gap-2" x-data x-on:change="$el.submit()">
         <select name="ressort" class="feld w-auto" aria-label="Ressort"><option value="">Alle Ressorts</option>@foreach ($ressorts as $r)<option value="{{ $r->id }}" @selected(($filter['ressort'] ?? '') == $r->id)>{{ $r->name }}</option>@endforeach</select>
         <select name="turnier" class="feld w-auto" aria-label="Turnier"><option value="">Alle Turnierarten</option>@foreach ($turniere as $t)<option value="{{ $t->id }}" @selected(($filter['turnier'] ?? '') == $t->id)>{{ $t->name }}</option>@endforeach</select>
-        <select name="status" class="feld w-auto" aria-label="Status"><option value="aktiv" @selected($filter['status'] === 'aktiv')>Aktiv</option><option value="inaktiv" @selected($filter['status'] === 'inaktiv')>Archiviert</option><option value="alle" @selected($filter['status'] === 'alle')>Alle</option></select>
+        <select name="status" class="feld w-auto" aria-label="Status"><option value="aktiv" @selected($filter['status'] === 'aktiv')>Wiederkehrend</option><option value="inaktiv" @selected($filter['status'] === 'inaktiv')>Archiviert</option><option value="alle" @selected($filter['status'] === 'alle')>Alle</option></select>
         <label class="flex min-h-[44px] items-center gap-2 border border-nacht/20 bg-white px-3 text-sm"><input type="checkbox" name="nur" value="ohne_anleitung" @checked(($filter['nur'] ?? '') === 'ohne_anleitung')> ohne Anleitung</label>
         <input name="q" value="{{ $filter['q'] ?? '' }}" class="feld w-auto flex-1" placeholder="Suchen" aria-label="Suchen">
     </form>
@@ -29,10 +29,10 @@
                                 @if ($v->turnier)<span class="marke-rahmen">nur {{ $v->turnier->kurz }}</span>@endif
                                 @if (blank($v->anleitung))<span class="marke-gelb">ohne Anleitung</span>@endif
                                 @if ($v->offene_erkenntnisse)<span class="marke bg-nacht text-white"><x-icon name="idee" class="h-3 w-3" /> {{ $v->offene_erkenntnisse }}</span>@endif
-                                @if (! $v->aktiv)<span class="marke-entfaellt">archiviert</span>@endif
+                                @if (! $v->aktiv)<span class="marke-entfaellt">kommt nicht mehr</span>@endif
                             </span>
                         </span>
-                        <span class="hidden text-xs text-beton sm:block">{{ $v->aufwand_std ? $v->aufwand_std.' Std.' : '' }}</span>
+                        <span class="hidden text-xs text-beton sm:block">{{ \App\Support\Aufwand::text($v->aufwand_std) }}</span>
                         <x-icon name="pfeil" class="h-4 w-4 text-beton" />
                     </a>
                 @endforeach

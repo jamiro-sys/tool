@@ -42,7 +42,7 @@
             <h2 class="titel border-b-2 border-rot pb-1 text-lg">3. Wiederkehrende Aufgaben</h2>
             @foreach ($ressort->vorlagen as $v)
                 <article class="mt-4 border-l-4 border-nacht/15 pl-4" style="break-inside: avoid">
-                    <p class="label">{{ $v->zeitpunktText() }} | {{ $v->turnier ? 'nur '.$v->turnier->name : 'alle Turnierarten' }} @if ($v->aufwand_std) | ca. {{ $v->aufwand_std }} Std. @endif</p>
+                    <p class="label">{{ $v->zeitpunktText() }} | {{ $v->turnier ? 'nur '.$v->turnier->name : 'alle Turnierarten' }} @if ($v->aufwand_std) | ca. {{ \App\Support\Aufwand::text($v->aufwand_std) }} @endif</p>
                     <h3 class="mt-0.5 text-base font-bold normal-case">{{ $v->titel }}</h3>
                     @if ($v->beschreibung)<p class="prosa mt-1">{{ $v->beschreibung }}</p>@endif
                     @if ($v->anleitung)<div class="prosa mt-2 bg-kreide p-3">{{ $v->anleitung }}</div>@else<p class="mt-1 text-sm text-beton">[Anleitung fehlt]</p>@endif

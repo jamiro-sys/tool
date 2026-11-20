@@ -39,8 +39,8 @@
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-2">
-                                    <span class="text-xs text-beton whitespace-nowrap">Plan {{ $a->aufwand_geplant ?? '?' }}</span>
-                                    <input type="number" step="0.5" min="0" name="aufwand[{{ $a->id }}]" value="{{ $a->aufwand_effektiv }}" class="feld min-h-[38px] w-20 py-1" placeholder="Std." aria-label="Effektiver Aufwand">
+                                    <span class="text-xs text-beton whitespace-nowrap">Plan {{ \App\Support\Aufwand::text($a->aufwand_geplant, '?') }}</span>
+                                    <x-aufwand :name="'aufwand['.$a->id.']'" :wert="$a->aufwand_effektiv" klein />
                                     <button type="button" class="knopf-rahmen knopf-klein" x-on:click="$dispatch('erkenntnis', { id: {{ $a->id }}, titel: @js($a->titel), vorlage: {{ $a->vorlage_id ? 'true' : 'false' }} })"><x-icon name="idee" class="h-3.5 w-3.5" /></button>
                                 </div>
                             </div>
@@ -87,7 +87,7 @@
                                         <form method="POST" action="{{ route('erkenntnisse.uebernehmen', $e) }}" x-show="auf" x-collapse class="mt-3 space-y-2 border-t border-nacht/10 pt-3">@csrf
                                             <div class="grid grid-cols-2 gap-2">
                                                 <div><label class="feld-label">Tage vorher</label><input type="number" name="tage_vorher" class="feld" value="{{ $e->vorlage->tage_vorher }}"></div>
-                                                <div><label class="feld-label">Aufwand Std.</label><input type="number" step="0.5" name="aufwand_std" class="feld" value="{{ $e->aufgabe?->aufwand_effektiv ?? $e->vorlage->aufwand_std }}"></div>
+                                                <div><label class="feld-label">Aufwand</label><x-aufwand name="aufwand_std" :wert="$e->aufgabe?->aufwand_effektiv ?? $e->vorlage->aufwand_std" klein /></div>
                                             </div>
                                             <div><label class="feld-label">Anleitung</label><textarea name="anleitung" class="feld" rows="5">{{ trim(($e->vorlage->anleitung ?? '')."\n\nHinweis ".$ausgabe->saison.': '.$e->text) }}</textarea></div>
                                             <button class="knopf-rot knopf-klein">Vorlage speichern</button>
