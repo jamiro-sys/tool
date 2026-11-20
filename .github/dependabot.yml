@@ -8,6 +8,10 @@ updates:
     groups:
       laravel:
         patterns: ['laravel/*']
+    ignore:
+      # phpunit 13 braucht PHP 8.4, Server und Tests laufen mit PHP 8.3
+      - dependency-name: phpunit/phpunit
+        update-types: ['version-update:semver-major']
   - package-ecosystem: npm
     directory: /
     schedule:
