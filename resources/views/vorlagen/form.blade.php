@@ -30,7 +30,7 @@
                     <input id="tage_vorher" type="number" name="tage_vorher" required class="feld" x-model.number="t" min="-120" max="400">
                     <p class="mt-1 text-xs text-beton" x-text="t > 0 ? (t % 7 === 0 && t >= 14 ? (t/7) + ' Wochen vorher' : t + ' Tage vorher') : (t === 0 ? 'am Turniertag' : Math.abs(t) + ' Tage nach dem Turnier')"></p>
                 </div>
-                <div><label class="feld-label" for="aufwand_std">Aufwand (Std.)</label><input id="aufwand_std" type="number" step="0.5" min="0" name="aufwand_std" class="feld" value="{{ old('aufwand_std', $vorlage->aufwand_std) }}"></div>
+                <div><label class="feld-label" for="aufwand_std">Aufwand</label><x-aufwand name="aufwand_std" id="aufwand_std" :wert="old('aufwand_std', $vorlage->aufwand_std)" /></div>
                 <div><label class="feld-label" for="prioritaet">Priorität</label>
                     <select id="prioritaet" name="prioritaet" class="feld">@foreach (\App\Models\Vorlage::PRIORITAETEN as $k => $l)<option value="{{ $k }}" @selected(old('prioritaet', $vorlage->prioritaet) === $k)>{{ $l }}</option>@endforeach</select></div>
                 <div><label class="feld-label" for="aktiv_seit">Neu seit Saison</label><input id="aktiv_seit" name="aktiv_seit" class="feld" value="{{ old('aktiv_seit', $vorlage->aktiv_seit) }}" placeholder="2026/27"></div>

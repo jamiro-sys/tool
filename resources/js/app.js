@@ -108,11 +108,53 @@ Alpine.data('aktionsMenue', () => ({
 }));
 
 /* Dateiablage: Ziehen und Ablegen mehrerer Dateien */
-Alpine.data('dateiAblage', () => ({
+/* Titel aus Dateiname: Endung weg, Trennzeichen zu Leerschlag, Kopie-Zusaetze weg */
+export function titelAusDateiname(name) {
+    let t = String(name).replace(/\.[a-z0-9]{1,5}$/i, '');
+    t = t.replace(/[_.]+/g, ' ').replace(/\s+-+\s+|--+/g, ' ');
+    t = t.replace(/\s*\(\d+\)\s*$/, '').replace(/\s+(kopie|copy)(\s*\d+)?$/i, '');
+    t = t.replace(/\s+/g, ' ').trim();
+    return t ? t.charAt(0).toUpperCase() + t.slice(1) : String(name);
+}
+
+const normal = (s) => String(s).toLowerCase()
+    .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
+    .normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+/* Ressort aus Dateiname: ganzer Name, ein Wort ab 4 Zeichen oder das Kuerzel als eigenes Wort */
+export function ressortAusDateiname(name, ressorts) {
+    const n = normal(name);
+    const woerter = n.split(/[^a-z0-9]+/).filter(Boolean);
+    let bester = null, punkte = 0;
+    for (const r of ressorts) {
+        let p = 0;
+        if (n.includes(normal(r.name).replace(/[^a-z0-9]+/g, ''))) p = 3;
+        else if (normal(r.name).split(/[^a-z0-9]+/).some((w) => w.length >= 4 && n.includes(w))) p = 2;
+        else if (r.kuerzel && r.kuerzel.length >= 2 && woerter.includes(normal(r.kuerzel))) p = 1;
+        if (p > punkte) { bester = r; punkte = p; }
+    }
+    return bester ? String(bester.id) : null;
+}
+
+Alpine.data('dateiAblage', (ressorts = [], start = '') => ({
     art: 'datei',
     ueber: false,
     namen: [],
-    gewaehlt() { this.namen = [...this.$refs.eingabe.files].map((f) => f.name); },
+    ressort: start,
+    titel: '',
+    ressortVonHand: start !== '',
+    titelVonHand: false,
+    vorgeschlagen: false,
+    get titelListe() { return this.namen.map(titelAusDateiname); },
+    gewaehlt() {
+        this.namen = [...this.$refs.eingabe.files].map((f) => f.name);
+        if (!this.titelVonHand) this.titel = this.namen.length === 1 ? titelAusDateiname(this.namen[0]) : '';
+        if (!this.ressortVonHand) {
+            const treffer = this.namen.map((n) => ressortAusDateiname(n, ressorts)).find(Boolean);
+            this.ressort = treffer ?? '';
+            this.vorgeschlagen = !!treffer;
+        }
+    },
     ablegen(e) {
         this.ueber = false;
         const dt = new DataTransfer();

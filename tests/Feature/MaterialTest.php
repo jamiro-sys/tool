@@ -126,13 +126,10 @@ class MaterialTest extends OkTestCase
         $this->actingAs($this->person('mitglied'))->get('/festwirtschaft')->assertNotFound();
     }
 
-    public function test_zeitstrahl_zeigt_wochen_heute_und_turnier(): void
+    public function test_zeitstrahl_ist_weg_und_faellt_auf_liste_zurueck(): void
     {
         $a = $this->ausgabe(21);
-        $r = \App\Models\Ressort::first();
-        \App\Models\Aufgabe::create(['ausgabe_id' => $a->id, 'ressort_id' => $r->id, 'titel' => 'Schiris aufbieten', 'faellig_am' => today()->addDays(7), 'status' => 'offen']);
-        \App\Models\Aufgabe::create(['ausgabe_id' => $a->id, 'ressort_id' => $r->id, 'titel' => 'Ohne Datum', 'status' => 'offen']);
         $this->actingAs($this->person('mitglied'))->get(route('aufgaben.index', [$a, 'ansicht' => 'zeitstrahl']))->assertOk()
-            ->assertSee('Wochen bis zum Turnier')->assertSee('Turnierwoche')->assertSee('Diese Woche')->assertSee('Schiris aufbieten')->assertSee('Ohne Termin');
+            ->assertDontSee('Wochen bis zum Turnier')->assertDontSee('ansicht=zeitstrahl', false);
     }
 }

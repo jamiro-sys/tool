@@ -50,7 +50,7 @@ class DateienController extends Controller
         foreach ($request->file('dateien', []) as $datei) {
             $name = $datei->getClientOriginalName();
             Dokument::create($basis + [
-                'titel' => count($request->file('dateien')) === 1 && filled($daten['titel'] ?? null) ? $daten['titel'] : pathinfo($name, PATHINFO_FILENAME),
+                'titel' => count($request->file('dateien')) === 1 && filled($daten['titel'] ?? null) ? $daten['titel'] : \App\Support\Dateiname::titel($name),
                 'typ' => 'datei',
                 'pfad' => $datei->store('dokumente/'.($basis['ressort_id'] ?? 'allgemein'), 'local'),
                 'original_name' => $name,

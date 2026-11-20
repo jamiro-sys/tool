@@ -16,6 +16,7 @@ $pfade = [
     'check' => '<path d="M20 6 9 17l-5-5"/>',
     'x' => '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
     'pfeil' => '<path d="m9 18 6-6-6-6"/>',
+    'wiederholen' => '<path d="M17 2l4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>',
     'zurueck' => '<path d="m15 18-6-6 6-6"/>',
     'uhr' => '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
     'warnung' => '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',

@@ -45,8 +45,8 @@
             </select>
         </div>
         <div>
-            <label class="feld-label" for="aufwand_geplant">Aufwand geplant (Std.)</label>
-            <input id="aufwand_geplant" type="number" step="0.5" min="0" name="aufwand_geplant" class="feld" value="{{ old('aufwand_geplant', $a?->aufwand_geplant) }}">
+            <label class="feld-label" for="aufwand_geplant">Aufwand geplant</label>
+            <x-aufwand name="aufwand_geplant" id="aufwand_geplant" :wert="old('aufwand_geplant', $a?->aufwand_geplant)" />aufwand_geplant) }}">
         </div>
     </div>
     <div>

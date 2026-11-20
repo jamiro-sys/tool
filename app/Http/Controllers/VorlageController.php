@@ -89,7 +89,7 @@ class VorlageController extends Controller
             'deaktiviert_grund' => $aktiv ? null : $request->input('grund'),
         ], $aktiv ? 'Wieder aktiviert' : 'Deaktiviert');
 
-        return back()->with('erfolg', $aktiv ? 'Vorlage ist wieder aktiv.' : 'Vorlage deaktiviert. Sie bleibt im Archiv erhalten.');
+        return back()->with('erfolg', $aktiv ? 'Kommt wieder bei jedem neuen Turnier.' : 'Kommt nicht mehr bei neuen Turnieren. Verlauf und frühere Aufgaben bleiben erhalten.');
     }
 
     protected function verwaltbareRessorts()

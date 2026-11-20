@@ -19,7 +19,7 @@ class AufgabeController extends Controller
 
     public function index(Request $request, Ausgabe $ausgabe)
     {
-        $ansicht = in_array($request->query('ansicht'), ['liste', 'board', 'zeitstrahl'], true) ? $request->query('ansicht') : 'liste';
+        $ansicht = in_array($request->query('ansicht'), ['liste', 'board'], true) ? $request->query('ansicht') : 'liste';
 
         $query = $ausgabe->aufgaben()->with(['ressort', 'verantwortlich', 'begleitung']);
         if ($request->filled('ressort')) {
@@ -238,5 +238,28 @@ class AufgabeController extends Controller
                 route('aufgaben.show', $aufgabe), auth()->user()
             );
         }
+    }
+
+    /** Einmalige Aufgabe zur Vorlage machen: kommt ab jetzt bei jedem neuen Turnier. */
+    public function wiederholen(Aufgabe $aufgabe)
+    {
+        Gate::authorize('ressort-verwalten', $aufgabe->ressort);
+        abort_if($aufgabe->vorlage_id, 409);
+        $aufgabe->loadMissing('ausgabe');
+        $vorlage = \App\Models\Vorlage::create([
+            'ressort_id' => $aufgabe->ressort_id,
+            'titel' => $aufgabe->titel,
+            'beschreibung' => $aufgabe->beschreibung,
+            'anleitung' => $aufgabe->anleitung,
+            'checkliste' => collect($aufgabe->checkliste ?? [])->map(fn ($p) => is_array($p) ? ($p['text'] ?? null) : $p)->filter()->values()->all() ?: null,
+            'tage_vorher' => $aufgabe->faellig_am ? (int) $aufgabe->faellig_am->copy()->startOfDay()->diffInDays($aufgabe->ausgabe->datum_von->copy()->startOfDay(), false) : 14,
+            'aufwand_std' => $aufgabe->aufwand_effektiv ?? $aufgabe->aufwand_geplant,
+            'prioritaet' => $aufgabe->prioritaet ?? 'normal',
+            'aktiv_seit' => $aufgabe->ausgabe->saison,
+        ]);
+        $aufgabe->update(['vorlage_id' => $vorlage->id]);
+        Aktivitaet::protokolliere('vorlage.neu', 'Aufgabe «'.$aufgabe->titel.'» wird jedes Turnier wiederholt', $vorlage);
+
+        return back()->with('erfolg', 'Die Aufgabe kommt ab jetzt bei jedem neuen Turnier, '.$vorlage->zeitpunktText().'.');
     }
 }
