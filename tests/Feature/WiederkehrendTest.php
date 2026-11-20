@@ -170,4 +170,25 @@ class WiederkehrendTest extends OkTestCase
         $this->blade('<x-zeitpunkt :wert="21" />')->assertSee('value="3"', false);
         $this->blade('<x-zeitpunkt :wert="10" />')->assertSee('value="10"', false);
     }
+
+    public function test_jahresplan_fuer_alle_lesbar(): void
+    {
+        [$r1, $r2] = Ressort::orderBy('sortierung')->take(2)->get()->all();
+        Vorlage::create(['ressort_id' => $r1->id, 'titel' => 'Eigene Aufgabe QQQ', 'tage_vorher' => 30]);
+        Vorlage::create(['ressort_id' => $r2->id, 'titel' => 'Fremde Aufgabe QQQ', 'tage_vorher' => 60]);
+        $leer = Ressort::create(['name' => 'Leeres Ressort ZZZ', 'kuerzel' => 'LZZ', 'sortierung' => 99]);
+
+        $m = $this->person('mitglied', $r1->kuerzel);
+        $this->actingAs($m)->get(route('vorlagen.index'))->assertOk()
+            ->assertSee('Eigene Aufgabe QQQ')->assertSee('Fremde Aufgabe QQQ')->assertSee('Änderungen macht die Ressortleitung')
+            ->assertDontSee('Neu in den Jahresplan')->assertDontSee('aria-pressed', false)->assertDontSee('Noch nichts im Jahresplan.');
+        $this->actingAs($m)->get(route('vorlagen.index', ['ressort' => 'meine']))->assertOk()
+            ->assertSee('Eigene Aufgabe QQQ')->assertDontSee('Fremde Aufgabe QQQ');
+
+        $leitung = $this->person('mitglied', $r1->kuerzel, 'leitung');
+        $seite = $this->actingAs($leitung)->get(route('vorlagen.index'))->assertSee('Neu in den Jahresplan')->assertSee('Noch nichts im Jahresplan.');
+        $this->assertStringNotContainsString('<option value="'.$r2->id.'"', explode('id="s-ressort"', $seite->getContent())[1] ? explode('</select>', explode('id="s-ressort"', $seite->getContent())[1])[0] : '');
+
+        $this->actingAs($this->person('lesend'))->get(route('vorlagen.index'))->assertOk()->assertSee('Eigene Aufgabe QQQ');
+    }
 }

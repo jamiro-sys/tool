@@ -19,7 +19,8 @@ class VorlageController extends Controller
     {
         $status = in_array($request->query('status'), ['ja', 'nein'], true) ? $request->query('status') : 'alle';
         $vorlagen = Vorlage::with(['ressort', 'turnier'])->withCount(['erkenntnisse as offene_erkenntnisse' => fn ($q) => $q->whereNull('umgesetzt_am')])
-            ->when($request->filled('ressort'), fn ($q) => $q->where('ressort_id', $request->integer('ressort')))
+            ->when($request->query('ressort') === 'meine', fn ($q) => $q->whereIn('ressort_id', $request->user()->ressorts->pluck('id')))
+            ->when($request->filled('ressort') && $request->query('ressort') !== 'meine', fn ($q) => $q->where('ressort_id', $request->integer('ressort')))
             ->when($request->filled('turnier'), fn ($q) => $q->where(fn ($w) => $w->whereNull('turnier_id')->orWhere('turnier_id', $request->integer('turnier'))))
             ->when($status === 'ja', fn ($q) => $q->where('aktiv', true))
             ->when($status === 'nein', fn ($q) => $q->where('aktiv', false))
@@ -28,14 +29,16 @@ class VorlageController extends Controller
             ->orderByDesc('aktiv')->orderByDesc('tage_vorher')->orderBy('titel')->get();
 
         $ressorts = Ressort::orderBy('sortierung')->orderBy('name')->get();
+        $verwaltbar = $this->verwaltbareRessorts();
         $gefiltert = array_filter($request->only(['ressort', 'turnier', 'q', 'nur'])) !== [] || $status !== 'alle';
 
         return view('vorlagen.index', [
             'vorlagen' => $vorlagen->groupBy('ressort_id'),
             'anzahl' => Vorlage::where('aktiv', true)->count(),
             'ressorts' => $ressorts,
-            'sichtbar' => $gefiltert ? $ressorts->filter(fn ($r) => $vorlagen->contains('ressort_id', $r->id)) : $ressorts,
-            'verwaltbar' => $this->verwaltbareRessorts(),
+            'sichtbar' => $gefiltert || $verwaltbar->isEmpty() ? $ressorts->filter(fn ($r) => $vorlagen->contains('ressort_id', $r->id)) : $ressorts,
+            'verwaltbar' => $verwaltbar,
+            'hatRessorts' => $request->user()->ressorts->isNotEmpty(),
             'turniere' => Turnier::all(),
             'filter' => $request->only(['ressort', 'turnier', 'q', 'nur']) + ['status' => $status],
             'gefiltert' => $gefiltert,

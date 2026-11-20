@@ -141,7 +141,7 @@
             </div>
             <ul class="mt-4 space-y-1 text-xs text-beton">
                 <li>Kalender: Kopf Nachtblau, gewählter Tag Rot, heute gelber Rahmen, eckig.</li>
-                <li>Seitenleiste Nachtblau, aktiver Punkt mit rotem Rand links. Fokus von Feldern: rote Linie unten.</li>
+                <li>Seitenleiste Nachtblau, aktiver Punkt mit rotem Rand links. Für alle: Start, Aufgaben, Jahresplan, Turniere, Ressorts, Material, Dateien. Fokus von Feldern: rote Linie unten.</li>
                 <li>Jahresplan: Liste je Ressort, Zeitpunkt links, Ja/Nein rechts. Neue Einträge werden kurz gelb hinterlegt.</li>
                 <li>Dateien ablegen: Titel und Ressort werden aus dem Dateinamen vorgeschlagen und lassen sich ändern.</li>
                 <li>Animationen dezent und abschaltbar (reduzierte Bewegung wird respektiert).</li>

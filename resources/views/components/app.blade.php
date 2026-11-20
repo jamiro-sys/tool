@@ -20,6 +20,7 @@
     $nav = [
         ['start', 'Start', route('start'), 'start', request()->routeIs('start')],
         ['aufgaben', 'Aufgaben', $navAusgabe ? route('aufgaben.index', $navAusgabe) : route('ausgaben.index'), 'aufgaben', request()->routeIs('aufgaben.*')],
+        ['jahresplan', 'Jahresplan', route('vorlagen.index'), 'vorlagen', request()->routeIs('vorlagen.*')],
         ['ausgaben', 'Turniere', route('ausgaben.index'), 'pokal', request()->routeIs('ausgaben.*', 'material.ausgabe')],
         ['ressorts', 'Ressorts', route('ressorts.index'), 'ressorts', request()->routeIs('ressorts.*')],
         ['material', 'Material', route('material.index'), 'kiste', request()->routeIs('material.index', 'material.drucken')],
@@ -29,7 +30,6 @@
     $aktivesRessort = request()->route('ressort');
     $admin = [
         ['Personen', route('admin.personen'), 'ressorts', request()->routeIs('admin.personen')],
-        ['Jahresplan', route('vorlagen.index'), 'vorlagen', request()->routeIs('vorlagen.*')],
         ['Auswertung', route('auswertung'), 'auswertung', request()->routeIs('auswertung')],
         ['Übergaben', route('uebergaben.index'), 'uebergabe', request()->routeIs('uebergaben.*')],
         ['System', route('admin.system'), 'server', request()->routeIs('admin.system', 'admin.logs')],

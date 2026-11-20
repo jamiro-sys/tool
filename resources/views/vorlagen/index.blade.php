@@ -1,6 +1,6 @@
 <x-app titel="Jahresplan">
     <x-seitenkopf titel="Jahresplan" ueber="Was jedes Jahr kommt">
-        <x-slot:unter>{{ $anzahl === 1 ? 'Eine Aufgabe kommt' : $anzahl.' Aufgaben kommen' }} bei jedem neuen Turnier automatisch. Mit Nein kommt eine Aufgabe nicht mehr, ihr Verlauf bleibt erhalten.</x-slot:unter>
+        <x-slot:unter>{{ $anzahl === 1 ? 'Eine Aufgabe kommt' : $anzahl.' Aufgaben kommen' }} bei jedem neuen Turnier automatisch.@if ($verwaltbar->isNotEmpty()) Mit Nein kommt eine Aufgabe nicht mehr, ihr Verlauf bleibt erhalten.@endif</x-slot:unter>
     </x-seitenkopf>
 
     @if ($ressorts->isEmpty())
@@ -25,11 +25,16 @@
             </form>
         @endif
 
+        @if ($verwaltbar->isEmpty())
+            <p class="mb-5 border-l-4 border-nacht bg-white px-4 py-3 text-sm">Hier siehst du, was jedes Jahr ansteht und wann. Änderungen macht die Ressortleitung.</p>
+        @endif
         <form method="GET" class="mb-5 flex flex-wrap items-end gap-2" x-data x-on:change="$el.submit()">
-            <select name="ressort" class="feld w-auto" aria-label="Ressort"><option value="">Alle Ressorts</option>@foreach ($ressorts as $r)<option value="{{ $r->id }}" @selected(($filter['ressort'] ?? '') == $r->id)>{{ $r->name }}</option>@endforeach</select>
+            <select name="ressort" class="feld w-auto" aria-label="Ressort"><option value="">Alle Ressorts</option>@if ($hatRessorts)<option value="meine" @selected(($filter['ressort'] ?? '') === 'meine')>Meine Ressorts</option>@endif @foreach ($ressorts as $r)<option value="{{ $r->id }}" @selected(($filter['ressort'] ?? '') == $r->id)>{{ $r->name }}</option>@endforeach</select>
             @if ($turniere->count() > 1)<select name="turnier" class="feld w-auto" aria-label="Turnierart"><option value="">Alle Turnierarten</option>@foreach ($turniere as $t)<option value="{{ $t->id }}" @selected(($filter['turnier'] ?? '') == $t->id)>{{ $t->name }}</option>@endforeach</select>@endif
             <select name="status" class="feld w-auto" aria-label="Jedes Jahr"><option value="alle" @selected($filter['status'] === 'alle')>Ja und Nein</option><option value="ja" @selected($filter['status'] === 'ja')>Nur Ja</option><option value="nein" @selected($filter['status'] === 'nein')>Nur Nein</option></select>
+            @if ($verwaltbar->isNotEmpty())
             <label class="flex min-h-[44px] items-center gap-2 border border-nacht/20 bg-white px-3 text-sm"><input type="checkbox" name="nur" value="ohne_anleitung" @checked(($filter['nur'] ?? '') === 'ohne_anleitung')> ohne Anleitung</label>
+            @endif
             <input name="q" value="{{ $filter['q'] ?? '' }}" class="feld w-auto min-w-[160px] flex-1" placeholder="Suchen" aria-label="Suchen">
             @if ($gefiltert)<a href="{{ route('vorlagen.index') }}" class="knopf-leise">Zurücksetzen</a>@endif
         </form>
@@ -72,7 +77,7 @@
                 @endif
             </section>
         @empty
-            <div class="karte"><x-leer icon="vorlagen" titel="Nichts gefunden" text="Passe die Filter an." /></div>
+            <div class="karte">@if ($gefiltert)<x-leer icon="vorlagen" titel="Nichts gefunden" text="Passe die Filter an." />@else<x-leer icon="vorlagen" titel="Noch nichts im Jahresplan" text="Sobald die Ressortleitungen ihre Aufgaben erfassen, siehst du hier, was jedes Jahr ansteht." />@endif</div>
         @endforelse
     @endif
 </x-app>
