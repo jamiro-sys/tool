@@ -10,7 +10,7 @@ class NavigationTest extends OkTestCase
     {
         $seite = $this->actingAs($this->person('mitglied'))->get(route('start'))->assertOk();
         $seite->assertSee('Turniere')->assertSee(Ressort::first()->name)->assertDontSee('Festwirtschaft</a>', false);
-        $seite->assertDontSee(route('uebergaben.index'))->assertDontSee(route('vorlagen.index'));
+        $seite->assertDontSee(route('uebergaben.index'))->assertSee(route('vorlagen.index'))->assertSee('Jahresplan');
 
         $admin = $this->actingAs($this->person('admin'))->get(route('start'))->assertOk();
         $admin->assertSee(route('uebergaben.index'))->assertSee(route('vorlagen.index'))->assertSee(route('auswertung'))->assertSee(route('material.index'));
