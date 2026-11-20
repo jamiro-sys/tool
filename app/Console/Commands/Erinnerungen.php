@@ -47,6 +47,24 @@ class Erinnerungen extends Command
             $anzahl++;
         }
 
+        // Geliehenes Material: am Vortag und am Tag der Rueckgabe erinnern
+        $leihen = \App\Models\MaterialEinsatz::with('material', 'verantwortlich', 'ausgabe')
+            ->where('zurueck', false)->whereNotNull('verantwortlich_id')->whereNotNull('rueckgabe_bis')
+            ->whereDate('rueckgabe_bis', '<=', today()->addDay())->whereDate('rueckgabe_bis', '>=', today())
+            ->where(fn ($q) => $q->whereNull('erinnert_am')->orWhereDate('erinnert_am', '<', today()))
+            ->get();
+        foreach ($leihen as $l) {
+            $benachrichtiger->sende(
+                $l->verantwortlich,
+                'faellig',
+                'Rückgabe: '.$l->material->name,
+                'Zurückgeben bis '.$l->rueckgabe_bis->locale('de_CH')->isoFormat('dd, D. MMMM').($l->ausleihe ? ' an '.$l->ausleihe : '').'.',
+                route('material.ausgabe', $l->ausgabe)
+            );
+            $l->forceFill(['erinnert_am' => now()])->saveQuietly();
+            $anzahl++;
+        }
+
         $this->info("{$anzahl} Erinnerungen versendet.");
 
         return self::SUCCESS;

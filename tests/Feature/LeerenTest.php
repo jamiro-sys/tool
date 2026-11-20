@@ -42,7 +42,7 @@ class LeerenTest extends OkTestCase
         $admin = $this->person('admin');
         $admin->update(['ansicht' => 'experte']);
 
-        foreach (['start', 'suche', 'benachrichtigungen.index', 'festwirtschaft.index', 'festwirtschaft.preisliste', 'ausgaben.index', 'ausgaben.create', 'vorlagen.index', 'vorlagen.create', 'ressorts.index', 'uebergaben.index', 'auswertung', 'admin.einstellungen', 'admin.daten', 'admin.system', 'admin.personen'] as $route) {
+        foreach (['start', 'suche', 'benachrichtigungen.index', 'festwirtschaft.index', 'festwirtschaft.preisliste', 'material.index', 'ausgaben.index', 'ausgaben.create', 'vorlagen.index', 'vorlagen.create', 'ressorts.index', 'uebergaben.index', 'auswertung', 'admin.einstellungen', 'admin.daten', 'admin.system', 'admin.personen'] as $route) {
             $this->actingAs($admin->fresh())->get(route($route))->assertOk();
         }
         $admin->update(['ansicht' => 'einfach']);
