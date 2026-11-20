@@ -137,6 +137,7 @@ Route::middleware(['auth', 'aktiv'])->group(function () {
     Route::post('/profil/passwort', [ProfilController::class, 'passwort'])->name('profil.passwort');
     Route::post('/profil/ansicht', [ProfilController::class, 'ansicht'])->name('profil.ansicht');
     Route::post('/profil/version', [ProfilController::class, 'versionGesehen'])->name('profil.version');
+    Route::view('/styleguide', 'styleguide')->name('styleguide');
     Route::get('/neuigkeiten', [ProfilController::class, 'neuigkeiten'])->name('neuigkeiten');
     Route::post('/imitieren/beenden', [Admin\PersonenController::class, 'imitierenBeenden'])->name('imitieren.beenden');
 

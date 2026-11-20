@@ -3,6 +3,12 @@
         <x-slot:unter>Alles an einem Ort: Dateien und Links, auf Wunsch einem Ressort zugeteilt. Im Steckbrief des Ressorts erscheinen sie ebenfalls.</x-slot:unter>
     </x-seitenkopf>
 
+    <a href="{{ route('styleguide') }}" class="karte mb-6 flex items-center gap-4 border-l-4 border-l-rot p-4 hover:border-nacht">
+        <span class="flex h-12 w-12 shrink-0 items-center justify-center bg-rot text-white"><img src="{{ asset('img/fcm-logo-negativ.svg') }}" alt="" class="h-8"></span>
+        <span class="min-w-0 flex-1"><span class="titel block text-sm">FCM-Styleguide</span><span class="block text-xs text-beton">Farben, Schrift, Logos, Aufbau und Schreibweise. Immer aktuell, als PDF herunterladbar. Stand {{ config('app.version') }}</span></span>
+        <x-icon name="pfeil" class="h-4 w-4 shrink-0" />
+    </a>
+
     @can('schreiben')
         <form method="POST" action="{{ route('dateien.speichern') }}" enctype="multipart/form-data" class="karte mb-6 p-4" x-data="dateiAblage()">@csrf
             <div class="mb-3 grid grid-cols-2 gap-1 text-[11px] font-bold uppercase tracking-label sm:w-72">
