@@ -134,4 +134,29 @@ class WannTest extends OkTestCase
         $row = DB::table('aufgaben')->where('id', $aufgabe->id)->first();
         $this->assertSame([7, 'beginn', '2026-11-28'], [(int) $row->tage_vorher, $row->bezug, substr($row->faellig_am, 0, 10)]);
     }
+
+    public function test_nachher_wird_ab_turnierende_gezaehlt(): void
+    {
+        $a = $this->turnier('2026-12-05', '2026-12-06');
+        $r = Ressort::first();
+        $v = Vorlage::create(['ressort_id' => $r->id, 'titel' => 'Abrechnung QQ', 'tage_vorher' => -14, 'bezug' => 'beginn', 'aktiv' => true]);
+        $nachher = Aufgabe::create(['ausgabe_id' => $a->id, 'ressort_id' => $r->id, 'vorlage_id' => $v->id, 'titel' => 'Abrechnung QQ', 'status' => 'offen', 'faellig_am' => '2026-12-19', 'tage_vorher' => -14, 'bezug' => 'beginn']);
+        $amTag2 = Aufgabe::create(['ausgabe_id' => $a->id, 'ressort_id' => $r->id, 'titel' => 'Abbau QQ', 'status' => 'offen', 'faellig_am' => '2026-12-06', 'tage_vorher' => -1, 'bezug' => 'beginn']);
+        $vorher = Aufgabe::create(['ausgabe_id' => $a->id, 'ressort_id' => $r->id, 'titel' => 'Vorher QQ', 'status' => 'offen', 'faellig_am' => '2026-11-21', 'tage_vorher' => 14, 'bezug' => 'beginn']);
+
+        $migration = require database_path('migrations/2026_11_20_000900_nachher_ab_turnierende.php');
+        $migration->up();
+
+        $nachher->refresh();
+        $this->assertSame([-13, 'ende', '2026-12-19'], [$nachher->tage_vorher, $nachher->bezug, $nachher->faellig_am->toDateString()]);
+        $this->assertSame('13 Tage nach Turnierende', $nachher->wannText());
+        $this->assertSame([0, 'ende', '2026-12-06'], [$amTag2->fresh()->tage_vorher, $amTag2->fresh()->bezug, $amTag2->fresh()->faellig_am->toDateString()]);
+        $this->assertSame('am letzten Turniertag', $amTag2->fresh()->wannText());
+        $this->assertSame([14, 'beginn'], [$vorher->fresh()->tage_vorher, $vorher->fresh()->bezug]);
+        $this->assertSame([-13, 'ende'], [$v->fresh()->tage_vorher, $v->fresh()->bezug]);
+
+        // Datum bleibt gleich, auch beim Neuberechnen
+        $nachher->load('ausgabe')->rechneFaelligkeit();
+        $this->assertSame('2026-12-19', $nachher->faellig_am->toDateString());
+    }
 }
