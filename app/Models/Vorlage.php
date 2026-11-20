@@ -15,7 +15,7 @@ class Vorlage extends Model
     public const PRIORITAETEN = ['tief' => 'Tief', 'normal' => 'Normal', 'hoch' => 'Hoch'];
 
     protected $fillable = [
-        'ressort_id', 'turnier_id', 'titel', 'beschreibung', 'anleitung', 'tage_vorher',
+        'ressort_id', 'turnier_id', 'titel', 'beschreibung', 'anleitung', 'tage_vorher', 'bezug',
         'aufwand_std', 'prioritaet', 'checkliste', 'aktiv', 'aktiv_seit', 'deaktiviert_am', 'deaktiviert_grund',
     ];
 
@@ -84,28 +84,14 @@ class Vorlage extends Model
         $this->unsetRelation('turniere');
     }
 
-    public function faelligkeitFuer(Carbon $turniertag): Carbon
+    public function faelligkeitFuer(Carbon $von, ?Carbon $bis = null): Carbon
     {
-        return $turniertag->copy()->subDays($this->tage_vorher);
+        return \App\Support\Wann::datum($von, $bis, (int) $this->tage_vorher, $this->bezug ?? 'beginn');
     }
 
     public function zeitpunktText(): string
     {
-        $t = $this->tage_vorher;
-        if ($t === 0) {
-            return 'am Turniertag';
-        }
-        if ($t < 0) {
-            return abs($t).(abs($t) === 1 ? ' Tag' : ' Tage').' nach dem Turnier';
-        }
-        if ($t % 30 === 0) {
-            return ($t / 30).' '.($t === 30 ? 'Monat' : 'Monate').' vorher';
-        }
-        if ($t % 7 === 0 && $t >= 14) {
-            return ($t / 7).' Wochen vorher';
-        }
-
-        return $t.($t === 1 ? ' Tag' : ' Tage').' vorher';
+        return \App\Support\Wann::kurz((int) $this->tage_vorher, $this->bezug ?? 'beginn');
     }
 
     public function offeneErkenntnisse()

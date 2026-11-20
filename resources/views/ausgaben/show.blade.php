@@ -92,7 +92,7 @@
                     <div><label class="feld-label" for="a-von">Erster Tag</label><input id="a-von" type="date" name="datum_von" class="feld" value="{{ $ausgabe->datum_von->format('Y-m-d') }}"></div>
                     <div><label class="feld-label" for="a-bis">Letzter Tag</label><input id="a-bis" type="date" name="datum_bis" class="feld" value="{{ $ausgabe->datum_bis?->format('Y-m-d') }}"></div>
                 </div>
-                <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="faelligkeiten_verschieben" value="1" checked> Offene Fälligkeiten mitverschieben, wenn sich das Datum ändert</label>
+                <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="faelligkeiten_verschieben" value="1" checked> Aufgaben mit fixem Datum ebenfalls verschieben (Aufgaben mit Abstand zum Turnier wandern immer mit)</label>
                 <div><label class="feld-label" for="a-status">Status</label>
                     <select id="a-status" name="status" class="feld">@foreach (\App\Models\Ausgabe::STATUS as $k => $l)<option value="{{ $k }}" @selected($ausgabe->status === $k)>{{ $l }}</option>@endforeach</select>
                 </div>

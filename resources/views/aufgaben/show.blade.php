@@ -132,7 +132,8 @@
         {{-- Seitenspalte --}}
         <aside class="space-y-6">
             <section class="karte divide-y divide-nacht/5">
-                <div class="px-4 py-3"><p class="label">Fällig</p><p class="mt-1 text-sm font-bold {{ $aufgabe->istUeberfaellig() ? 'text-rot' : '' }}">{{ $aufgabe->faellig_am?->locale('de_CH')->isoFormat('dd, D. MMMM YYYY') ?? 'ohne Termin' }} <span class="font-normal text-beton">({{ $aufgabe->faelligText() }})</span></p></div>
+                <div class="px-4 py-3"><p class="label">Fällig</p><p class="mt-1 text-sm font-bold {{ $aufgabe->istUeberfaellig() ? 'text-rot' : '' }}">{{ $aufgabe->faellig_am?->locale('de_CH')->isoFormat('dd, D. MMMM YYYY') ?? 'ohne Termin' }} <span class="font-normal text-beton">({{ $aufgabe->faelligText() }})</span></p>
+                    <p class="mt-0.5 text-xs text-beton">{{ $aufgabe->tage_vorher !== null ? $aufgabe->wannText() : ($aufgabe->faellig_am ? 'fixes Datum' : '') }}</p></div>
                 <div class="px-4 py-3"><p class="label mb-1">Verantwortlich</p><x-person :user="$aufgabe->verantwortlich" gross><span class="text-sm font-bold">{{ $aufgabe->verantwortlich?->name ?? 'Noch offen' }}</span></x-person></div>
                 @if ($aufgabe->begleitung)
                     <div class="px-4 py-3"><p class="label mb-1">Begleitung</p><x-person :user="$aufgabe->begleitung" gross><span class="text-sm">{{ $aufgabe->begleitung->name }}</span></x-person></div>

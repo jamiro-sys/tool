@@ -48,7 +48,7 @@ class DatenController extends Controller
                 'ressort' => $v->ressort->name,
                 'ressort_kuerzel' => $v->ressort->kuerzel,
                 'turniere' => $v->turniere->map(fn ($t) => $t->kurz ?: $t->name)->values()->all(),
-                ...$v->only(['titel', 'beschreibung', 'anleitung', 'tage_vorher', 'aufwand_std', 'prioritaet', 'checkliste', 'aktiv']),
+                ...$v->only(['titel', 'beschreibung', 'anleitung', 'tage_vorher', 'bezug', 'aufwand_std', 'prioritaet', 'checkliste', 'aktiv']),
             ])->all(),
         ];
 
@@ -81,6 +81,7 @@ class DatenController extends Controller
                     'beschreibung' => $v['beschreibung'] ?? null,
                     'anleitung' => $v['anleitung'] ?? null,
                     'tage_vorher' => (int) ($v['tage_vorher'] ?? 14),
+                    'bezug' => in_array($v['bezug'] ?? null, \App\Support\Wann::BEZUG, true) ? $v['bezug'] : 'beginn',
                     'aufwand_std' => $v['aufwand_std'] ?? null,
                     'prioritaet' => $v['prioritaet'] ?? 'normal',
                     'checkliste' => $v['checkliste'] ?? null,

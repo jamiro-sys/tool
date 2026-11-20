@@ -67,7 +67,7 @@ class VorlageController extends Controller
         if ($request->boolean('schnell')) {
             return redirect()->route('vorlagen.index', array_filter($request->only(['ressort', 'status'])))
                 ->with('erfolg', '«'.$vorlage->titel.'» ist im Jahresplan.')
-                ->with('schnell', ['ressort_id' => $vorlage->ressort_id, 'tage_vorher' => $vorlage->tage_vorher, 'neu' => $vorlage->id, 'turniere' => $turniere]);
+                ->with('schnell', ['ressort_id' => $vorlage->ressort_id, 'tage_vorher' => $vorlage->tage_vorher, 'neu' => $vorlage->id, 'turniere' => $turniere, 'bezug' => $vorlage->bezug]);
         }
 
         return redirect()->route('vorlagen.show', $vorlage)->with('erfolg', 'Im Jahresplan gespeichert.');
@@ -136,13 +136,15 @@ class VorlageController extends Controller
             'titel' => ['required', 'string', 'max:200'],
             'beschreibung' => ['nullable', 'string', 'max:10000'],
             'anleitung' => ['nullable', 'string', 'max:20000'],
-            'tage_vorher' => ['required', 'integer', 'min:-120', 'max:730'],
+            'tage_vorher' => ['required', 'integer', 'min:-365', 'max:730'],
+            'bezug' => ['nullable', Rule::in(\App\Support\Wann::BEZUG)],
             'aufwand_std' => ['nullable', 'numeric', 'min:0', 'max:999'],
             'prioritaet' => ['required', Rule::in(array_keys(Vorlage::PRIORITAETEN))],
             'checkliste_text' => ['nullable', 'string', 'max:5000'],
             'aktiv_seit' => ['nullable', 'string', 'max:16'],
         ], ['turniere.required_with' => 'Bitte mindestens eine Turnierart anhaken.']);
         unset($daten['turniere_gesendet']);
+        $daten['bezug'] = $daten['bezug'] ?? 'beginn';
         $daten['checkliste'] = collect(preg_split('/\r?\n/', $daten['checkliste_text'] ?? ''))->map(fn ($z) => trim($z))->filter()->values()->all() ?: null;
         unset($daten['checkliste_text']);
 
