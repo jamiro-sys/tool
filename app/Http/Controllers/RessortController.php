@@ -25,7 +25,7 @@ class RessortController extends Controller
     public function show(Request $request, Ressort $ressort)
     {
         $tab = in_array($request->query('tab'), ['uebersicht', 'auftrag', 'personen', 'aufgaben', 'jahreslauf', 'kontakte', 'wissen', 'material', 'dateien', 'erkenntnisse'], true) ? $request->query('tab') : 'uebersicht';
-        $ressort->load(['mitglieder', 'vorlagen.turnier', 'kontakte', 'dokumente.user', 'wissen.user', 'uebergaben.von', 'uebergaben.an', 'material.einsaetze']);
+        $ressort->load(['mitglieder', 'vorlagen.turniere', 'kontakte', 'dokumente.user', 'dokumente.ordner', 'wissen.user', 'uebergaben.von', 'uebergaben.an', 'material.einsaetze']);
         $ausgabe = Ausgabe::naechste();
 
         $offen = $ausgabe ? $ressort->aufgaben()->with('verantwortlich')->where('ausgabe_id', $ausgabe->id)->offen()->orderBy('faellig_am')->get() : collect();
@@ -58,6 +58,7 @@ class RessortController extends Controller
             'standorte' => \App\Models\Auswahlliste::werte('standort'),
             'ressort' => $ressort,
             'tab' => $tab,
+            'alleOrdner' => \App\Models\Ordner::orderBy('sortierung')->orderBy('name')->get(),
             'ausgabe' => $ausgabe,
             'offen' => $offen,
             'kalender' => $kalender,
@@ -70,7 +71,7 @@ class RessortController extends Controller
 
     public function dossier(Ressort $ressort)
     {
-        $ressort->load(['mitglieder', 'vorlagen' => fn ($q) => $q->where('aktiv', true)->orderByDesc('tage_vorher'), 'vorlagen.turnier', 'kontakte', 'dokumente', 'wissen']);
+        $ressort->load(['mitglieder', 'vorlagen' => fn ($q) => $q->where('aktiv', true)->orderByDesc('tage_vorher'), 'vorlagen.turniere', 'kontakte', 'dokumente', 'wissen']);
         $erkenntnisse = $ressort->erkenntnisse()->with('ausgabe', 'vorlage')->latest()->limit(40)->get();
         $offen = Aufgabe::where('ressort_id', $ressort->id)->offen()->whereHas('ausgabe', fn ($q) => $q->where('status', '!=', 'abgeschlossen'))->with('ausgabe', 'verantwortlich')->orderBy('faellig_am')->get();
 

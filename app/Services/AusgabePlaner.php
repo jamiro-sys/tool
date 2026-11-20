@@ -28,7 +28,7 @@ class AusgabePlaner
             ? Aufgabe::where('ausgabe_id', $letzte->id)->whereNotNull('vorlage_id')->get()->keyBy('vorlage_id')
             : collect();
 
-        return Vorlage::with(['ressort.mitglieder', 'erkenntnisse' => fn ($q) => $q->whereNull('umgesetzt_am')->with('user')])
+        return Vorlage::with(['ressort.mitglieder', 'turniere', 'erkenntnisse' => fn ($q) => $q->whereNull('umgesetzt_am')->with('user')])
             ->where('aktiv', true)
             ->get()
             ->filter(fn (Vorlage $v) => $v->giltFuer($turnier))
@@ -135,7 +135,6 @@ class AusgabePlaner
                     $aufgabe = $erkenntnis->aufgabe;
                     $vorlage = Vorlage::create([
                         'ressort_id' => $erkenntnis->ressort_id,
-                        'turnier_id' => $aenderungen['turnier_id'] ?? null,
                         'titel' => $aenderungen['titel'] ?? $aufgabe?->titel ?? mb_substr($erkenntnis->text, 0, 120),
                         'beschreibung' => $aufgabe?->beschreibung,
                         'anleitung' => $aenderungen['anleitung'] ?? $erkenntnis->text,
@@ -143,6 +142,9 @@ class AusgabePlaner
                         'aufwand_std' => $aufgabe?->aufwand_effektiv,
                         'aktiv_seit' => $erkenntnis->ausgabe?->saison,
                     ]);
+                    if (filled($aenderungen['turnier_id'] ?? null)) {
+                        $vorlage->setzeTurniere([$aenderungen['turnier_id']]);
+                    }
                     if ($aufgabe) {
                         $aufgabe->update(['vorlage_id' => $vorlage->id]);
                     }
@@ -151,6 +153,10 @@ class AusgabePlaner
 
                 case 'anpassen':
                     if ($vorlage && $aenderungen) {
+                        if (array_key_exists('turnier_id', $aenderungen)) {
+                            $vorlage->setzeTurniere([$aenderungen['turnier_id']]);
+                            unset($aenderungen['turnier_id']);
+                        }
                         $this->aendereVorlage($vorlage, $aenderungen, 'Angepasst aufgrund Erkenntnis');
                     } elseif ($vorlage) {
                         $zusatz = "\n\nHinweis aus ".($erkenntnis->ausgabe?->titel ?? 'Rückblick').': '.$erkenntnis->text;

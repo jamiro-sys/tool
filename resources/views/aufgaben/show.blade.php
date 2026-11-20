@@ -179,7 +179,7 @@
                     <div class="karte-kopf"><h2 class="titel text-xs">Dokumente</h2></div>
                     <ul class="divide-y divide-nacht/5">
                         @foreach ($aufgabe->dokumente as $d)
-                            <li><a href="{{ $d->link() }}" target="_blank" rel="noopener" class="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-kreide"><x-icon :name="$d->typ === 'datei' ? 'datei' : 'link'" class="h-4 w-4 text-beton" /> {{ $d->titel }}</a></li>
+                            <li><x-datei-link :d="$d" class="flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-kreide"><x-icon :name="$d->typ === 'datei' ? 'datei' : 'link'" class="h-4 w-4 text-beton" /> {{ $d->titel }}</x-datei-link></li>
                         @endforeach
                     </ul>
                 </section>

@@ -82,9 +82,8 @@ class GrundSeeder extends Seeder
         ];
 
         foreach ($vorlagen as [$res, $titel, $tage, $std, $turnier, $anleitung, $liste]) {
-            Vorlage::create([
+            $vorlage = Vorlage::create([
                 'ressort_id' => $r[$res]->id,
-                'turnier_id' => $turnier === 'DEZ' ? $dez->id : ($turnier === 'FEB' ? $feb->id : null),
                 'titel' => $titel,
                 'tage_vorher' => $tage,
                 'aufwand_std' => $std,
@@ -92,6 +91,9 @@ class GrundSeeder extends Seeder
                 'checkliste' => $liste,
                 'prioritaet' => in_array($titel, ['Turnierdaten festlegen und Halle reservieren', 'Schiedsrichter aufbieten', 'Bewilligungen bei der Gemeinde einholen'], true) ? 'hoch' : 'normal',
             ]);
+            if ($turnier) {
+                $vorlage->setzeTurniere([$turnier === 'DEZ' ? $dez->id : $feb->id]);
+            }
         }
     }
 }

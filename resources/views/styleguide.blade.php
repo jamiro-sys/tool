@@ -144,6 +144,9 @@
                 <li>Seitenleiste Nachtblau, aktiver Punkt mit rotem Rand links. Für alle: Start, Aufgaben, Jahresplan, Turniere, Ressorts, Material, Dateien. Fokus von Feldern: rote Linie unten.</li>
                 <li>Reiter (z. B. im Ressort-Steckbrief): Übersicht zuerst, aktiver Reiter mit roter Linie unten und roter Zahl, auf dem Handy seitlich wischbar.</li>
                 <li>Jahresplan: Liste je Ressort, Zeitpunkt links, Ja/Nein rechts. Neue Einträge werden kurz gelb hinterlegt.</li>
+                <li>Vorschau: PDF und Bilder öffnen im Tool in einem Vollbildfenster (Kopf Nachtblau, Schliessen Rot), nicht in einem neuen Fenster.</li>
+                <li>Dateiablage: je Ressort ein aufklappbarer Ordner mit Ordner-Symbol in Rot, Unterordner in Nachtblau.</li>
+                <li>Turnierarten wählen: Häkchen-Kacheln wie bei «Wie oft?», mehrere möglich, alle angehakt heisst für alle.</li>
                 <li>Dateien ablegen: Titel und Ressort werden aus dem Dateinamen vorgeschlagen und lassen sich ändern.</li>
                 <li>Animationen dezent und abschaltbar (reduzierte Bewegung wird respektiert).</li>
             </ul>

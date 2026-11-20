@@ -17,8 +17,8 @@ class Inhalte
     /** Reihenfolge: abhaengige Tabellen zuerst. */
     public const TABELLEN = [
         'notifications', 'verknuepfungen', 'kennzahlen', 'kassen', 'einkauf_posten', 'produkte', 'material_einsatz', 'material', 'versandprotokoll', 'rundmeldungen', 'aktivitaeten',
-        'uebergaben', 'wissen', 'dokumente', 'kontakte', 'erkenntnisse', 'kommentare',
-        'aufgaben', 'vorlage_versionen', 'vorlagen', 'ausgaben', 'turniere', 'hallen',
+        'uebergaben', 'wissen', 'dokumente', 'ordner', 'kontakte', 'erkenntnisse', 'kommentare',
+        'aufgaben', 'vorlage_versionen', 'turnier_vorlage', 'vorlagen', 'ausgaben', 'turniere', 'hallen',
         'ressort_user', 'ressorts',
     ];
 

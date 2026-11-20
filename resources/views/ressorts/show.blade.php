@@ -138,7 +138,7 @@
                     <div class="karte-kopf"><h2 class="titel text-sm">Neueste Dateien</h2><a href="{{ route('ressorts.show', [$ressort, 'tab' => 'dateien']) }}" class="label hover:text-rot">Alle</a></div>
                     <ul class="divide-y divide-nacht/5">
                         @forelse ($ressort->dokumente->sortByDesc('created_at')->take(4) as $d)
-                            <li class="flex items-center gap-2 px-4 py-2.5 text-sm"><x-icon :name="$d->typ === 'datei' ? 'datei' : 'link'" class="h-4 w-4 shrink-0 text-beton" /><a href="{{ $d->link() }}" target="_blank" rel="noopener" class="min-w-0 flex-1 truncate hover:text-rot">{{ $d->titel }}</a></li>
+                            <li class="flex items-center gap-2 px-4 py-2.5 text-sm"><x-icon :name="$d->typ === 'datei' ? 'datei' : 'link'" class="h-4 w-4 shrink-0 text-beton" /><x-datei-link :d="$d" class="min-w-0 flex-1 truncate hover:text-rot">{{ $d->titel }}</x-datei-link></li>
                         @empty
                             <li class="px-4 py-4 text-sm text-beton">Noch keine Dateien.</li>
                         @endforelse
@@ -215,7 +215,7 @@
                             <ul class="mt-1.5 space-y-1">
                                 @foreach ($vorlagen as $v)
                                     <li><a href="{{ route('vorlagen.show', $v) }}" class="flex items-center gap-2 text-sm hover:text-rot">{{ $v->titel }}
-                                        @if ($v->turnier)<span class="marke-rahmen">{{ $v->turnier->kurz }}</span>@endif
+                                        @foreach ($v->turniere as $t)<span class="marke-rahmen">{{ $t->kurz ?: $t->name }}</span>@endforeach
                                         @if (blank($v->anleitung))<span class="marke-gelb">ohne Anleitung</span>@endif</a></li>
                                 @endforeach
                             </ul>
@@ -339,36 +339,12 @@
             </section>
                     @break
                 @case('dateien')
-<section id="dokumente" class="karte" x-data="{ neu: false, art: 'link' }">
-                <div class="karte-kopf"><h2 class="titel text-sm"><a href="{{ route('dateien.index', ['ressort' => $ressort->id]) }}" class="hover:text-rot">Dateien</a></h2>
-                    @if ($mitarbeiten)<button type="button" class="knopf-rahmen knopf-klein" x-on:click="neu = !neu"><x-icon name="plus" class="h-3.5 w-3.5" /></button>@endif</div>
-                @if ($mitarbeiten)
-                    <form x-show="neu" x-collapse method="POST" action="{{ route('dokumente.speichern', $ressort) }}" enctype="multipart/form-data" class="space-y-2 border-b border-nacht/10 p-4">@csrf
-                        <input name="titel" required class="feld" placeholder="Titel">
-                        <div class="grid grid-cols-2 gap-1 text-[11px] font-bold uppercase tracking-label">
-                            <button type="button" class="py-2" :class="art === 'link' ? 'bg-nacht text-white' : 'border border-nacht/20'" x-on:click="art = 'link'">Link</button>
-                            <button type="button" class="py-2" :class="art === 'datei' ? 'bg-nacht text-white' : 'border border-nacht/20'" x-on:click="art = 'datei'">Datei</button>
-                        </div>
-                        <input x-show="art === 'link'" name="url" type="url" class="feld" placeholder="https://... (z.B. iCloud, Google Drive)">
-                        <input x-show="art === 'datei'" name="datei" type="file" class="feld">
-                        <button class="knopf-rot knopf-klein">Ablegen</button>
-                    </form>
-                @endif
-                <ul class="divide-y divide-nacht/5">
-                    @forelse ($ressort->dokumente as $d)
-                        <li class="flex items-center gap-2 px-4 py-2.5 text-sm">
-                            <x-icon :name="$d->typ === 'datei' ? 'datei' : 'link'" class="h-4 w-4 shrink-0 text-beton" />
-                            <a href="{{ $d->link() }}" target="_blank" rel="noopener" class="min-w-0 flex-1 truncate hover:text-rot">{{ $d->titel }}</a>
-                            @if ($mitarbeiten)
-                                <form method="POST" action="{{ route('dokumente.loeschen', $d) }}" onsubmit="return confirm('Dokument entfernen?')">@csrf @method('DELETE')<button class="text-beton hover:text-rot" aria-label="Entfernen"><x-icon name="x" class="h-4 w-4" /></button></form>
-                            @endif
-                        </li>
-                    @empty
-                        <li class="px-4 py-5 text-sm text-beton">Noch keine Dateien.</li>
-                    @endforelse
-                </ul>
-                <a href="{{ route('dateien.index', ['ressort' => $ressort->id]) }}" class="label flex items-center gap-2 border-t border-nacht/5 px-4 py-3 hover:text-rot">In der Dateiablage öffnen <x-icon name="pfeil" class="h-3.5 w-3.5" /></a>
-            </section>
+@if ($mitarbeiten)
+                        @include('dateien._hochladen', ['ressorts' => $ressorts, 'ordner' => $alleOrdner->where('ressort_id', $ressort->id), 'vorRessort' => $ressort->id])
+                    @endif
+                    @php $orte = \App\Models\Ordner::orte($ressorts, $alleOrdner); @endphp
+                    @include('dateien._ablage', ['gruppen' => \App\Models\Ordner::gruppen([$ressort], $alleOrdner, $ressort->dokumente, false), 'offen' => true])
+                    <a href="{{ route('dateien.index', ['ressort' => $ressort->id]) }}" class="label mt-3 inline-flex items-center gap-2 hover:text-rot">In der Dateiablage öffnen <x-icon name="pfeil" class="h-3.5 w-3.5" /></a>
                     @break
                 @case('erkenntnisse')
 <section id="erkenntnisse" class="karte">

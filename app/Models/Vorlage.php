@@ -5,6 +5,7 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Vorlage extends Model
@@ -38,6 +39,12 @@ class Vorlage extends Model
         return $this->belongsTo(Turnier::class);
     }
 
+    /** Turnierarten, fuer die die Aufgabe gilt; leer heisst: fuer alle. */
+    public function turniere(): BelongsToMany
+    {
+        return $this->belongsToMany(Turnier::class, 'turnier_vorlage');
+    }
+
     public function aufgaben(): HasMany
     {
         return $this->hasMany(Aufgabe::class);
@@ -57,7 +64,24 @@ class Vorlage extends Model
     {
         $id = $turnier instanceof Turnier ? $turnier->id : $turnier;
 
-        return $this->turnier_id === null || $this->turnier_id === $id;
+        $ids = $this->turniere->pluck('id');
+
+        return $ids->isEmpty() || $ids->contains($id);
+    }
+
+    /** Kurzname der Turnierarten, wenn die Aufgabe nicht fuer alle gilt. */
+    public function turnierartText(): ?string
+    {
+        return $this->turniere->isEmpty() ? null : $this->turniere->map(fn ($t) => $t->kurz ?: $t->name)->implode(', ');
+    }
+
+    /** Speichert die Auswahl; alle angehakt heisst: fuer alle (auch spaeter neue) Turnierarten. */
+    public function setzeTurniere(?array $ids): void
+    {
+        $ids = collect($ids ?? [])->map(fn ($i) => (int) $i)->filter()->unique()->values();
+        $alle = Turnier::pluck('id');
+        $this->turniere()->sync($ids->isEmpty() || $alle->diff($ids)->isEmpty() ? [] : $ids->all());
+        $this->unsetRelation('turniere');
     }
 
     public function faelligkeitFuer(Carbon $turniertag): Carbon
