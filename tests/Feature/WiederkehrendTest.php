@@ -191,4 +191,36 @@ class WiederkehrendTest extends OkTestCase
 
         $this->actingAs($this->person('lesend'))->get(route('vorlagen.index'))->assertOk()->assertSee('Eigene Aufgabe QQQ');
     }
+
+    public function test_aufgabe_aus_ressort_erfassen_und_turnierarten_waehlen(): void
+    {
+        $a = $this->turnier();
+        $r = Ressort::first();
+        $dez = Turnier::where('kurz', 'DEZ')->first();
+        $feb = Turnier::where('kurz', 'FEB')->first();
+        $leitung = $this->person('mitglied', $r->kuerzel, 'leitung');
+
+        // Knopf im Ressort, Formular mit vorgewaehltem Ressort und Turnierwahl (aktuelles Turnier angehakt)
+        $seite = $this->actingAs($leitung)->get(route('ressorts.show', [$r, 'tab' => 'aufgaben']))->assertOk();
+        $seite->assertSee("modal-neue-aufgabe", false)->assertSee('Bei welchen Turnieren?')->assertSee(route('aufgaben.store', $a), false);
+        $this->assertMatchesRegularExpression('/value="'.$a->turnier_id.'" checked/', $seite->getContent());
+
+        $zurueck = route('ressorts.show', [$r, 'tab' => 'aufgaben'], false);
+        $this->actingAs($leitung)->post(route('aufgaben.store', $a), ['titel' => 'Beide QQQ', 'ressort_id' => $r->id, 'wiederkehrend' => 'jedes_jahr', 'turniere_gesendet' => 1, 'turniere' => [$dez->id, $feb->id], 'zurueck' => $zurueck])
+            ->assertRedirect($zurueck);
+        $this->assertCount(0, Aufgabe::where('titel', 'Beide QQQ')->first()->vorlage->turniere, 'beide angehakt = alle');
+
+        $this->actingAs($leitung)->post(route('aufgaben.store', $a), ['titel' => 'Nur Feb QQQ', 'ressort_id' => $r->id, 'wiederkehrend' => 'jedes_jahr', 'turniere_gesendet' => 1, 'turniere' => [$feb->id]]);
+        $this->assertSame([$feb->id], Aufgabe::where('titel', 'Nur Feb QQQ')->first()->vorlage->turniere->pluck('id')->all());
+
+        $this->actingAs($leitung)->post(route('aufgaben.store', $a), ['titel' => 'Ohne QQQ', 'ressort_id' => $r->id, 'wiederkehrend' => 'jedes_jahr', 'turniere_gesendet' => 1])->assertSessionHasErrors('turniere');
+        $this->assertNull(Aufgabe::where('titel', 'Ohne QQQ')->first());
+
+        // Fremde Ruecksprung-Adressen werden ignoriert
+        $this->actingAs($leitung)->post(route('aufgaben.store', $a), ['titel' => 'Weg QQQ', 'ressort_id' => $r->id, 'zurueck' => '//boese.example'])
+            ->assertRedirect(route('aufgaben.show', Aufgabe::where('titel', 'Weg QQQ')->first()));
+
+        // Lesende sehen keinen Knopf
+        $this->actingAs($this->person('lesend'))->get(route('ressorts.show', [$r, 'tab' => 'aufgaben']))->assertDontSee('modal-neue-aufgabe', false);
+    }
 }

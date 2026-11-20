@@ -105,7 +105,7 @@
     @endif
 
     @can('schreiben')
-        <x-modal name="neue-aufgabe" titel="Neue Aufgabe">
+        <x-modal name="neue-aufgabe" titel="Neue Aufgabe" :auf="$errors->any() && old('titel') !== null">
             @if ($ressorts->isEmpty())
                 <x-ohne-ressort />
             @else
