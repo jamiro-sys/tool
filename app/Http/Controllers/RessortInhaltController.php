@@ -31,7 +31,7 @@ class RessortInhaltController extends Controller
             $ressort->kontakte()->create($daten);
         }
 
-        return redirect(route('ressorts.show', $ressort).'#kontakte')->with('erfolg', 'Kontakt gespeichert.');
+        return redirect(route('ressorts.show', [$ressort, 'tab' => 'kontakte']))->with('erfolg', 'Kontakt gespeichert.');
     }
 
     public function kontaktLoeschen(Ressort $ressort, Kontakt $kontakt)
@@ -40,7 +40,7 @@ class RessortInhaltController extends Controller
         abort_unless($kontakt->ressort_id === $ressort->id, 404);
         $kontakt->delete();
 
-        return redirect(route('ressorts.show', $ressort).'#kontakte')->with('erfolg', 'Kontakt entfernt.');
+        return redirect(route('ressorts.show', [$ressort, 'tab' => 'kontakte']))->with('erfolg', 'Kontakt entfernt.');
     }
 
     public function wissenSpeichern(Request $request, Ressort $ressort, ?Wissen $wissen = null)
@@ -57,7 +57,7 @@ class RessortInhaltController extends Controller
             $ressort->wissen()->create($daten + ['user_id' => $request->user()->id, 'sortierung' => $ressort->wissen()->count()]);
         }
 
-        return redirect(route('ressorts.show', $ressort).'#wissen')->with('erfolg', 'Wissensseite gespeichert.');
+        return redirect(route('ressorts.show', [$ressort, 'tab' => 'wissen']))->with('erfolg', 'Wissensseite gespeichert.');
     }
 
     public function wissenLoeschen(Ressort $ressort, Wissen $wissen)
@@ -66,7 +66,7 @@ class RessortInhaltController extends Controller
         abort_unless($wissen->ressort_id === $ressort->id, 404);
         $wissen->delete();
 
-        return redirect(route('ressorts.show', $ressort).'#wissen')->with('erfolg', 'Wissensseite entfernt.');
+        return redirect(route('ressorts.show', [$ressort, 'tab' => 'wissen']))->with('erfolg', 'Wissensseite entfernt.');
     }
 
     public function dokumentSpeichern(Request $request, Ressort $ressort)

@@ -84,7 +84,7 @@ class MaterialTest extends OkTestCase
         $this->assertFalse($beamer->load('einsaetze')->mietBilanz()['pruefen']);
 
         $this->actingAs($this->person('mitglied'))->get(route('material.index', ['q' => 'beamer']))->assertSee('Beamer')->assertDontSee('Lautsprecher');
-        $this->actingAs($this->person('mitglied'))->get(route('ressorts.show', \App\Models\Ressort::first()))->assertSee('Rangliste im Turnierbüro');
+        $this->actingAs($this->person('mitglied'))->get(route('ressorts.show', [\App\Models\Ressort::first(), 'tab' => 'material']))->assertSee('Rangliste im Turnierbüro');
 
         \App\Models\Einstellung::setze('anschaffung_ab', 0);
         $this->assertFalse($boxen->fresh()->load('einsaetze')->mietBilanz()['pruefen']);
@@ -110,7 +110,7 @@ class MaterialTest extends OkTestCase
         $this->actingAs($m)->post(route('material.speichern'), ['name' => 'Beamer', 'ressort_id' => $ressort->id, 'zweck' => 'Anzeige Spielstand', 'gruppe' => 'Technik', 'zustand' => 'gut', 'eigentum' => 'verein'])->assertSessionHasNoErrors();
         Material::create(['name' => 'Festbank', 'gruppe' => 'Mobiliar', 'eigentum' => 'halle']);
 
-        $this->actingAs($m)->get(route('ressorts.show', $ressort))->assertSee('Beamer')->assertSee('Anzeige Spielstand');
+        $this->actingAs($m)->get(route('ressorts.show', [$ressort, 'tab' => 'material']))->assertSee('Beamer')->assertSee('Anzeige Spielstand');
         $this->actingAs($m)->get(route('material.index', ['gruppe' => 'Technik']))->assertSee('Anzeige Spielstand')->assertDontSee('Festbank');
         $this->actingAs($m)->get(route('material.index', ['eigentum' => 'halle']))->assertSee('Festbank')->assertDontSee('Anzeige Spielstand');
         $this->actingAs($m)->get(route('material.drucken', ['ressort' => $ressort->id]))->assertOk()->assertSee('Beamer')->assertDontSee('Festbank')->assertSee($ressort->name);
