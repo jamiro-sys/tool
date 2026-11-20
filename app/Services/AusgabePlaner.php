@@ -8,6 +8,7 @@ use App\Models\Aufgabe;
 use App\Models\Erkenntnis;
 use App\Models\Turnier;
 use App\Models\Vorlage;
+use App\Support\Wann;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -21,7 +22,7 @@ class AusgabePlaner
      * Vorschlag fuer den Assistenten: alle aktiven Vorlagen, die fuer das Turnier gelten,
      * mit den offenen Erkenntnissen und der verantwortlichen Person der letzten Ausgabe.
      */
-    public function vorschlag(Turnier $turnier, Carbon $datum): Collection
+    public function vorschlag(Turnier $turnier, Carbon $datum, ?Carbon $bis = null): Collection
     {
         $letzte = Ausgabe::where('turnier_id', $turnier->id)->orderByDesc('datum_von')->first();
         $letzteAufgaben = $letzte
@@ -32,13 +33,13 @@ class AusgabePlaner
             ->where('aktiv', true)
             ->get()
             ->filter(fn (Vorlage $v) => $v->giltFuer($turnier))
-            ->map(function (Vorlage $v) use ($datum, $letzteAufgaben) {
+            ->map(function (Vorlage $v) use ($datum, $bis, $letzteAufgaben) {
                 $vorher = $letzteAufgaben->get($v->id);
                 $vorschlagPerson = $vorher?->verantwortlich_id ?? $v->ressort->leitung()?->id;
 
                 return [
                     'vorlage' => $v,
-                    'faellig_am' => $v->faelligkeitFuer($datum),
+                    'faellig_am' => $v->faelligkeitFuer($datum, $bis ?? $datum->copy()->addDay()),
                     'verantwortlich_id' => $vorschlagPerson,
                     'aufwand_vorjahr' => $vorher?->aufwand_effektiv,
                     'erkenntnisse' => $v->erkenntnisse,
@@ -76,6 +77,11 @@ class AusgabePlaner
                     continue;
                 }
 
+                // Abstand aus dem Jahresplan; wurde das Datum im Assistenten geaendert, gilt der Abstand zu diesem Datum
+                $berechnet = Wann::fuer($ausgabe, (int) $vorlage->tage_vorher, $vorlage->bezug ?? 'beginn');
+                $vorschlag = $vorlage->faelligkeitFuer($datum, $datum->copy()->addDay());
+                $gewaehlt = filled($wahl['faellig_am'] ?? null) ? Carbon::parse($wahl['faellig_am']) : null;
+                $eigenes = $gewaehlt && ! $gewaehlt->isSameDay($berechnet) && ! $gewaehlt->isSameDay($vorschlag);
                 Aufgabe::create([
                     'ausgabe_id' => $ausgabe->id,
                     'vorlage_id' => $vorlage->id,
@@ -84,7 +90,9 @@ class AusgabePlaner
                     'titel' => filled($wahl['titel'] ?? null) ? $wahl['titel'] : $vorlage->titel,
                     'beschreibung' => $vorlage->beschreibung,
                     'anleitung' => $vorlage->anleitung,
-                    'faellig_am' => filled($wahl['faellig_am'] ?? null) ? $wahl['faellig_am'] : $vorlage->faelligkeitFuer($datum),
+                    'faellig_am' => $eigenes ? $gewaehlt : $berechnet,
+                    'tage_vorher' => $eigenes ? Wann::ausDatum($ausgabe, $gewaehlt) : (int) $vorlage->tage_vorher,
+                    'bezug' => $eigenes ? 'beginn' : ($vorlage->bezug ?? 'beginn'),
                     'prioritaet' => $vorlage->prioritaet,
                     'aufwand_geplant' => $vorlage->aufwand_std,
                     'checkliste' => collect($vorlage->checkliste ?? [])->map(fn ($p) => ['text' => is_array($p) ? $p['text'] : $p, 'erledigt' => false])->values()->all() ?: null,
@@ -101,6 +109,7 @@ class AusgabePlaner
                     'ressort_id' => $neu['ressort_id'],
                     'titel' => $neu['titel'],
                     'faellig_am' => $neu['faellig_am'] ?? null,
+                    'tage_vorher' => filled($neu['faellig_am'] ?? null) ? Wann::ausDatum($ausgabe, Carbon::parse($neu['faellig_am'])) : null,
                     'verantwortlich_id' => $neu['verantwortlich_id'] ?? null,
                 ]);
                 $anzahl++;
@@ -138,7 +147,8 @@ class AusgabePlaner
                         'titel' => $aenderungen['titel'] ?? $aufgabe?->titel ?? mb_substr($erkenntnis->text, 0, 120),
                         'beschreibung' => $aufgabe?->beschreibung,
                         'anleitung' => $aenderungen['anleitung'] ?? $erkenntnis->text,
-                        'tage_vorher' => $aenderungen['tage_vorher'] ?? ($aufgabe && $aufgabe->faellig_am ? (int) $aufgabe->faellig_am->diffInDays($aufgabe->ausgabe->datum_von, false) : 14),
+                        'tage_vorher' => $aenderungen['tage_vorher'] ?? $aufgabe?->tage_vorher ?? ($aufgabe && $aufgabe->faellig_am ? Wann::ausDatum($aufgabe->ausgabe, $aufgabe->faellig_am) : 14),
+                        'bezug' => $aenderungen['bezug'] ?? ($aufgabe?->tage_vorher !== null ? ($aufgabe->bezug ?? 'beginn') : 'beginn'),
                         'aufwand_std' => $aufgabe?->aufwand_effektiv,
                         'aktiv_seit' => $erkenntnis->ausgabe?->saison,
                     ]);
@@ -238,7 +248,8 @@ class AusgabePlaner
             'beschreibung' => $aufgabe->beschreibung,
             'anleitung' => $aufgabe->anleitung,
             'checkliste' => collect($aufgabe->checkliste ?? [])->map(fn ($p) => is_array($p) ? ($p['text'] ?? null) : $p)->filter()->values()->all() ?: null,
-            'tage_vorher' => $aufgabe->faellig_am ? (int) $aufgabe->faellig_am->copy()->startOfDay()->diffInDays($aufgabe->ausgabe->datum_von->copy()->startOfDay(), false) : 14,
+            'tage_vorher' => $aufgabe->tage_vorher ?? ($aufgabe->faellig_am ? Wann::ausDatum($aufgabe->ausgabe, $aufgabe->faellig_am) : 14),
+            'bezug' => $aufgabe->tage_vorher !== null ? ($aufgabe->bezug ?? 'beginn') : 'beginn',
             'aufwand_std' => $aufgabe->aufwand_effektiv ?? $aufgabe->aufwand_geplant,
             'prioritaet' => $aufgabe->prioritaet ?? 'normal',
             'aktiv' => true,

@@ -29,8 +29,8 @@
                         <p class="mt-1 text-xs text-beton">Anhaken, bei welchen Turnieren die Aufgabe kommt. Mehrere möglich.</p>
                         @error('turniere')<p class="mt-1 text-xs font-bold text-rot">{{ $message }}</p>@enderror</div>
                 @endif
-                <div><label class="feld-label" for="tage_vorher">Wann (vor dem Turnier)</label><x-zeitpunkt id="tage_vorher" :wert="old('tage_vorher', $vorlage->tage_vorher)" />
-                    <p class="mt-1 text-xs text-beton">Monat = 30 Tage. Fürs Datum nach dem Turnier eine Minuszahl.</p></div>
+                <div><label class="feld-label" for="tage_vorher">Wann</label><x-wann id="tage_vorher" :tage="old('tage_vorher', $vorlage->tage_vorher ?? 14)" :bezug="old('bezug', $vorlage->bezug ?? 'beginn')" />
+                    <p class="mt-1 text-xs text-beton">Vorher zählt ab dem ersten Turniertag, nachher ab dem letzten. Monat = 30 Tage.</p></div>
                 <div><label class="feld-label" for="aufwand_std">Aufwand</label><x-aufwand name="aufwand_std" id="aufwand_std" :wert="old('aufwand_std', $vorlage->aufwand_std)" /></div>
                 <div><label class="feld-label" for="prioritaet">Priorität</label>
                     <select id="prioritaet" name="prioritaet" class="feld">@foreach (\App\Models\Vorlage::PRIORITAETEN as $k => $l)<option value="{{ $k }}" @selected(old('prioritaet', $vorlage->prioritaet) === $k)>{{ $l }}</option>@endforeach</select></div>

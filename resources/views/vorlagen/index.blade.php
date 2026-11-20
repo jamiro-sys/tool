@@ -17,7 +17,7 @@
                         <input id="s-titel" name="titel" required maxlength="200" class="feld" placeholder="z. B. Halle reservieren" value="{{ old('titel') }}" @if ($schnell || $errors->any()) autofocus @endif></div>
                     <div class="w-full sm:w-56"><label class="feld-label" for="s-ressort">Ressort</label>
                         <select id="s-ressort" name="ressort_id" required class="feld">@foreach ($verwaltbar as $r)<option value="{{ $r->id }}" @selected(old('ressort_id', $schnell['ressort_id'] ?? $filter['ressort'] ?? null) == $r->id)>{{ $r->name }}</option>@endforeach</select></div>
-                    <div><label class="feld-label" for="s-zeit">Wann</label><x-zeitpunkt id="s-zeit" :wert="old('tage_vorher', $schnell['tage_vorher'] ?? 30)" /></div>
+                    <div><label class="feld-label" for="s-zeit">Wann</label><x-wann id="s-zeit" zeile :tage="old('tage_vorher', $schnell['tage_vorher'] ?? 30)" :bezug="old('bezug', $schnell['bezug'] ?? 'beginn')" /></div>
                     <div><label class="feld-label" for="s-aufwand">Aufwand</label><x-aufwand name="aufwand_std" id="s-aufwand" :wert="old('aufwand_std')" /></div>
                     @if ($turniere->count() > 1)
                         <div><p class="feld-label">Gilt für</p><x-turnierarten :turniere="$turniere" :gewaehlt="old('turniere', $schnell['turniere'] ?? [])" klein /></div>

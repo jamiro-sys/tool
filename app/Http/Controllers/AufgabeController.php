@@ -9,6 +9,7 @@ use App\Models\Kommentar;
 use App\Models\Ressort;
 use App\Models\User;
 use App\Services\AusgabePlaner;
+use App\Support\Wann;
 use App\Services\Benachrichtiger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -83,6 +84,7 @@ class AufgabeController extends Controller
         $jedesJahr = $request->input('wiederkehrend') === 'jedes_jahr' && Gate::allows('ressort-verwalten', $ressort);
         $turniere = $jedesJahr ? $this->turnierWahl($request) : [];
         unset($daten['wiederkehrend']);
+        $this->wannAnwenden($request, $daten, $ausgabe);
         $aufgabe = $ausgabe->aufgaben()->create($daten);
         Aktivitaet::protokolliere('aufgabe.erstellt', 'Aufgabe erstellt: '.$aufgabe->titel, $aufgabe);
         $this->meldeZuweisung($aufgabe, null);
@@ -115,9 +117,15 @@ class AufgabeController extends Controller
             unset($daten['checkliste_text']);
         }
 
+        $this->wannAnwenden($request, $daten, $aufgabe->ausgabe);
+        $warImPlan = (bool) $aufgabe->vorlage?->aktiv;
+        $aufgabe->update($daten);
+        $this->setzeErledigt($aufgabe);
+
         // Wie oft? Jahresplan anpassen (nur Ressortleitung/Admin)
         $hinweis = null;
-        if ($request->filled('wiederkehrend') && Gate::allows('ressort-verwalten', $aufgabe->ressort)) {
+        $darfPlan = Gate::allows('ressort-verwalten', $aufgabe->ressort);
+        if ($request->filled('wiederkehrend') && $darfPlan) {
             $planer = app(AusgabePlaner::class);
             if ($request->input('wiederkehrend') === 'jedes_jahr') {
                 $planer->inJahresplan($aufgabe, $this->turnierWahl($request));
@@ -128,8 +136,25 @@ class AufgabeController extends Controller
             }
         }
 
-        $aufgabe->update($daten);
-        $this->setzeErledigt($aufgabe);
+        // Aenderungen auch im Jahresplan uebernehmen (Haekchen, nur wenn die Aufgabe schon jedes Jahr kam)
+        if ($warImPlan && $darfPlan && $request->boolean('jahresplan_mit') && $request->input('wiederkehrend', 'jedes_jahr') === 'jedes_jahr') {
+            $aufgabe->refresh();
+            $neu = array_filter([
+                'titel' => array_key_exists('titel', $daten) ? $aufgabe->titel : null,
+                'beschreibung' => array_key_exists('beschreibung', $daten) ? $aufgabe->beschreibung : null,
+                'aufwand_std' => array_key_exists('aufwand_geplant', $daten) ? $aufgabe->aufwand_geplant : null,
+                'prioritaet' => array_key_exists('prioritaet', $daten) ? $aufgabe->prioritaet : null,
+            ], fn ($w) => $w !== null);
+            if ($request->has('wann_gesendet') && $aufgabe->faellig_am) {
+                $neu['tage_vorher'] = $aufgabe->tage_vorher ?? Wann::ausDatum($aufgabe->ausgabe, $aufgabe->faellig_am);
+                $neu['bezug'] = $aufgabe->tage_vorher !== null ? $aufgabe->bezug : 'beginn';
+            }
+            if ($neu) {
+                app(AusgabePlaner::class)->aendereVorlage($aufgabe->vorlage, $neu, 'Von Aufgabe übernommen ('.$aufgabe->ausgabe->titel.')');
+                $hinweis = ($hinweis ?? '').' Auch im Jahresplan übernommen.';
+            }
+        }
+
         Aktivitaet::protokolliere('aufgabe.geaendert', 'Aufgabe geändert: '.$aufgabe->titel, $aufgabe);
         $this->meldeZuweisung($aufgabe, $vorher);
 
@@ -232,6 +257,8 @@ class AufgabeController extends Controller
             'beschreibung' => ['nullable', 'string', 'max:10000'],
             'anleitung' => ['nullable', 'string', 'max:20000'],
             'faellig_am' => ['nullable', 'date'],
+            'tage_vorher' => ['nullable', 'integer', 'min:-365', 'max:730'],
+            'bezug' => ['nullable', Rule::in(Wann::BEZUG)],
             'verantwortlich_id' => ['nullable', 'exists:users,id'],
             'begleitung_id' => ['nullable', 'exists:users,id'],
             'status' => ['sometimes', Rule::in(array_keys(Aufgabe::STATUS))],
@@ -240,6 +267,29 @@ class AufgabeController extends Controller
             'aufwand_effektiv' => ['nullable', 'numeric', 'min:0', 'max:999'],
             'checkliste_text' => ['nullable', 'string', 'max:5000'],
         ]);
+    }
+
+    /** Faelligkeit aus "Wann": Abstand zum Turnier ergibt das Datum; ohne Abstand gilt das fixe Datum (oder keines). */
+    protected function wannAnwenden(Request $request, array &$daten, Ausgabe $ausgabe): void
+    {
+        if (! $request->has('wann_gesendet')) {
+            unset($daten['tage_vorher'], $daten['bezug']);
+            // Datum aus einem anderen Formular: Abstand zum Turnierbeginn daraus ableiten
+            if (array_key_exists('faellig_am', $daten)) {
+                $daten['tage_vorher'] = $daten['faellig_am'] ? Wann::ausDatum($ausgabe, \Carbon\Carbon::parse($daten['faellig_am'])) : null;
+                $daten['bezug'] = 'beginn';
+            }
+
+            return;
+        }
+        $tage = $daten['tage_vorher'] ?? null;
+        $daten['bezug'] = $daten['bezug'] ?? 'beginn';
+        if ($tage !== null) {
+            $daten['faellig_am'] = Wann::fuer($ausgabe, (int) $tage, $daten['bezug']);
+        } else {
+            $daten['tage_vorher'] = null;
+            $daten['faellig_am'] = $daten['faellig_am'] ?? null;
+        }
     }
 
     /** Gewaehlte Turnierarten bei "Jedes Jahr"; wurden Haekchen angezeigt, muss mindestens eines gesetzt sein. */

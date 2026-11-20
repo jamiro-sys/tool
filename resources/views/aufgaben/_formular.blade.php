@@ -15,8 +15,13 @@
             </select>
         </div>
         <div>
-            <label class="feld-label" for="faellig_am">Fällig am</label>
-            <input id="faellig_am" type="date" name="faellig_am" class="feld" value="{{ old('faellig_am', $a?->faellig_am?->format('Y-m-d')) }}">
+            @php $wannAusgabe = $a?->ausgabe ?? ($ausgabe ?? null); @endphp
+            <label class="feld-label" for="wann">Wann</label>
+            <x-wann id="wann" aufgabe
+                :tage="old('wann_gesendet') ? old('tage_vorher') : ($a ? $a->tage_vorher : 14)"
+                :bezug="old('bezug', $a?->bezug ?? 'beginn')"
+                :datum="old('faellig_am', $a?->faellig_am)"
+                :von="$wannAusgabe?->datum_von" :bis="$wannAusgabe?->datum_bis" />
         </div>
         <div>
             <label class="feld-label" for="verantwortlich_id">Verantwortlich</label>
@@ -51,6 +56,14 @@
     </div>
     @if ($a ? auth()->user()->can('ressort-verwalten', $a->ressort) : auth()->user()->can('vorlagen-verwalten'))
         @include('aufgaben._wie_oft', ['a' => $a])
+    @endif
+    @if ($a && $a->vorlage?->aktiv && auth()->user()->can('ressort-verwalten', $a->ressort))
+        <label class="flex cursor-pointer items-start gap-3 border border-nacht/20 bg-white px-3 py-2.5 has-[:checked]:border-rot has-[:checked]:bg-rot/5">
+            <input type="hidden" name="jahresplan_mit" value="0">
+            <input type="checkbox" name="jahresplan_mit" value="1" class="mt-1 h-4 w-4" @checked(old('jahresplan_mit', '1') === '1')>
+            <span><span class="block text-sm font-bold">Auch im Jahresplan übernehmen</span>
+                <span class="block text-xs text-beton">Titel, Beschreibung, Wann, Aufwand und Priorität gelten dann auch für die kommenden Jahre. Ohne Häkchen ist es eine Ausnahme nur für dieses Turnier.</span></span>
+        </label>
     @endif
     <div>
         <label class="feld-label" for="beschreibung">Beschreibung</label>

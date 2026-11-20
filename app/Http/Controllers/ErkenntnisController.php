@@ -43,7 +43,8 @@ class ErkenntnisController extends Controller
         Gate::authorize('ressort-verwalten', $erkenntnis->ressort);
         $aenderungen = $request->validate([
             'titel' => ['nullable', 'string', 'max:200'],
-            'tage_vorher' => ['nullable', 'integer', 'min:-120', 'max:400'],
+            'tage_vorher' => ['nullable', 'integer', 'min:-365', 'max:730'],
+            'bezug' => ['nullable', \Illuminate\Validation\Rule::in(\App\Support\Wann::BEZUG)],
             'anleitung' => ['nullable', 'string', 'max:20000'],
             'aufwand_std' => ['nullable', 'numeric', 'min:0', 'max:999'],
             'turnier_id' => ['nullable', 'exists:turniere,id'],

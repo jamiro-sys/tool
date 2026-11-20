@@ -95,8 +95,8 @@
                                     </div>
                                     @if ($e->vorschlag === 'anpassen' && $e->vorlage)
                                         <form method="POST" action="{{ route('erkenntnisse.uebernehmen', $e) }}" x-show="auf" x-collapse class="mt-3 space-y-2 border-t border-nacht/10 pt-3">@csrf
-                                            <div class="grid grid-cols-2 gap-2">
-                                                <div><label class="feld-label">Tage vorher</label><input type="number" name="tage_vorher" class="feld" value="{{ $e->vorlage->tage_vorher }}"></div>
+                                            <div class="grid gap-2 sm:grid-cols-2">
+                                                <div><label class="feld-label">Wann</label><x-wann :tage="$e->vorlage->tage_vorher" :bezug="$e->vorlage->bezug" klein /></div>
                                                 <div><label class="feld-label">Aufwand</label><x-aufwand name="aufwand_std" :wert="$e->aufgabe?->aufwand_effektiv ?? $e->vorlage->aufwand_std" klein /></div>
                                             </div>
                                             <div><label class="feld-label">Anleitung</label><textarea name="anleitung" class="feld" rows="5">{{ trim(($e->vorlage->anleitung ?? '')."\n\nHinweis ".$ausgabe->saison.': '.$e->text) }}</textarea></div>

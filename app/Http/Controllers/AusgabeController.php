@@ -41,7 +41,8 @@ class AusgabeController extends Controller
         $datum = null;
         if ($turnier && $request->filled('datum_von')) {
             $datum = Carbon::parse($request->query('datum_von'));
-            $vorschlag = $this->planer->vorschlag($turnier, $datum)->groupBy(fn ($e) => $e['vorlage']->ressort_id);
+            $bis = $request->filled('datum_bis') ? Carbon::parse($request->query('datum_bis')) : null;
+            $vorschlag = $this->planer->vorschlag($turnier, $datum, $bis)->groupBy(fn ($e) => $e['vorlage']->ressort_id);
         }
 
         return view('ausgaben.create', [
@@ -142,11 +143,22 @@ class AusgabeController extends Controller
         ]);
 
         $altesDatum = $ausgabe->datum_von->copy();
+        $altesEnde = $ausgabe->datum_bis?->copy();
         $ausgabe->update(collect($daten)->except('faelligkeiten_verschieben')->all());
+        $ausgabe->refresh();
 
+        // Aufgaben mit Abstand zum Turnier wandern immer mit
+        if (! $altesDatum->isSameDay($ausgabe->datum_von) || $altesEnde?->toDateString() !== $ausgabe->datum_bis?->toDateString()) {
+            foreach ($ausgabe->aufgaben()->offen()->whereNotNull('tage_vorher')->get() as $a) {
+                $a->setRelation('ausgabe', $ausgabe);
+                $a->rechneFaelligkeit();
+                $a->save();
+            }
+        }
+        // Aufgaben mit fixem Datum nur auf Wunsch
         if (($daten['faelligkeiten_verschieben'] ?? false) && ! $altesDatum->isSameDay($ausgabe->datum_von)) {
             $differenz = (int) $altesDatum->diffInDays($ausgabe->datum_von, false);
-            foreach ($ausgabe->aufgaben()->offen()->whereNotNull('faellig_am')->get() as $a) {
+            foreach ($ausgabe->aufgaben()->offen()->whereNull('tage_vorher')->whereNotNull('faellig_am')->get() as $a) {
                 $a->update(['faellig_am' => $a->faellig_am->addDays($differenz)]);
             }
         }

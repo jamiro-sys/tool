@@ -20,7 +20,7 @@ class Aufgabe extends Model
 
     protected $fillable = [
         'ausgabe_id', 'vorlage_id', 'ressort_id', 'verantwortlich_id', 'begleitung_id', 'titel',
-        'beschreibung', 'anleitung', 'faellig_am', 'status', 'prioritaet', 'aufwand_geplant',
+        'beschreibung', 'anleitung', 'faellig_am', 'tage_vorher', 'bezug', 'status', 'prioritaet', 'aufwand_geplant',
         'aufwand_effektiv', 'checkliste', 'erledigt_am', 'erledigt_von', 'erinnert_am',
     ];
 
@@ -28,6 +28,7 @@ class Aufgabe extends Model
     {
         return [
             'faellig_am' => 'date',
+            'tage_vorher' => 'integer',
             'erledigt_am' => 'datetime',
             'erinnert_am' => 'datetime',
             'checkliste' => 'array',
@@ -130,5 +131,19 @@ class Aufgabe extends Model
     public function verknuepfungen(): \Illuminate\Database\Eloquent\Relations\MorphMany
     {
         return $this->morphMany(Verknuepfung::class, 'bezug')->latest();
+    }
+
+    /** "14 Tage vor Turnierbeginn" bzw. leer bei fixem Datum. */
+    public function wannText(): string
+    {
+        return \App\Support\Wann::text($this->tage_vorher, $this->bezug);
+    }
+
+    /** Datum aus dem Abstand neu berechnen (nach Aenderung des Turnierdatums). */
+    public function rechneFaelligkeit(): void
+    {
+        if ($this->tage_vorher !== null) {
+            $this->faellig_am = \App\Support\Wann::fuer($this->ausgabe, $this->tage_vorher, $this->bezug ?? 'beginn');
+        }
     }
 }

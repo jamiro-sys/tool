@@ -163,12 +163,12 @@ class WiederkehrendTest extends OkTestCase
         $this->actingAs($this->person('mitglied', $r->kuerzel))->postJson(route('aufgaben.naechstes-jahr', $einmalig), ['wert' => 0])->assertForbidden();
     }
 
-    public function test_zeitpunkt_feld_rechnet_in_tagen(): void
+    public function test_wann_feld_zeigt_abstand(): void
     {
-        $html = $this->blade('<x-zeitpunkt :wert="60" />');
-        $html->assertSee('value="2"', false)->assertSee('value="60"', false)->assertSee('Monate');
-        $this->blade('<x-zeitpunkt :wert="21" />')->assertSee('value="3"', false);
-        $this->blade('<x-zeitpunkt :wert="10" />')->assertSee('value="10"', false);
+        $this->blade('<x-wann :tage="60" />')->assertSee('value="2"', false)->assertSee('value="60"', false)->assertSee('Monate')->assertSee('vor Turnierbeginn');
+        $this->blade('<x-wann :tage="21" />')->assertSee('value="3"', false);
+        $this->blade('<x-wann :tage="-3" bezug="ende" />')->assertSee('value="-3"', false)->assertSee('value="ende"', false);
+        $this->blade('<x-wann :tage="null" aufgabe datum="2026-12-01" />')->assertSee('fixes Datum')->assertSee('value="2026-12-01"', false);
     }
 
     public function test_jahresplan_fuer_alle_lesbar(): void
