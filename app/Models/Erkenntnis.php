@@ -11,9 +11,9 @@ class Erkenntnis extends Model
 
     public const VORSCHLAEGE = [
         'beibehalten' => 'So beibehalten',
-        'anpassen' => 'Vorlage anpassen',
+        'anpassen' => 'Im Jahresplan anpassen',
         'streichen' => 'Aufgabe streichen',
-        'neu' => 'Neue Vorlage',
+        'neu' => 'Neu in den Jahresplan',
     ];
 
     protected $fillable = ['ressort_id', 'ausgabe_id', 'aufgabe_id', 'vorlage_id', 'user_id', 'text', 'vorschlag', 'umgesetzt_am', 'umgesetzt_von'];

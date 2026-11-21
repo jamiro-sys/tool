@@ -9,7 +9,7 @@
                 <a href="{{ route('ausgaben.rueckblick', $ausgabe) }}" class="knopf-rot"><x-icon name="idee" class="h-4 w-4" /> Rückblick</a>
             @endif
             @can('ausgaben-verwalten')
-                <button type="button" class="knopf-rahmen" x-on:click="$dispatch('modal-ausgabe')"><x-icon name="stift" class="h-4 w-4" /></button>
+                <button type="button" class="knopf-rahmen" x-on:click="$dispatch('modal-ausgabe')" aria-label="Turnier bearbeiten"><x-icon name="stift" class="h-4 w-4" /></button>
             @endcan
         </x-slot:aktionen>
     </x-seitenkopf>
@@ -65,11 +65,11 @@
         </section>
 
         <section class="karte">
-            <div class="karte-kopf"><h2 class="titel text-sm">Nächste 14 Tage</h2></div>
+            <div class="karte-kopf"><h2 class="titel text-sm">Überfällig und nächste 14 Tage</h2></div>
             @forelse ($bald as $a)
                 @include('aufgaben._zeile', ['aufgabe' => $a])
             @empty
-                <x-leer icon="kalender" titel="Ruhige Tage" text="In den nächsten zwei Wochen ist nichts fällig." />
+                <x-leer icon="kalender" titel="Ruhige Tage" text="Nichts überfällig und in den nächsten zwei Wochen nichts fällig." />
             @endforelse
         </section>
     </div>

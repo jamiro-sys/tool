@@ -16,7 +16,7 @@
                     <p class="mb-2 text-xs text-beton">Schreib so, dass jemand Neues die Aufgabe ohne Rückfrage erledigen kann: Wen kontaktieren? Wo liegen Unterlagen? Worauf achten?</p>
                     <textarea id="anleitung" name="anleitung" class="feld" rows="10">{{ old('anleitung', $vorlage->anleitung) }}</textarea>
                 </div>
-                <div><label class="feld-label" for="checkliste_text">Checkliste (eine Zeile pro Punkt)</label><textarea id="checkliste_text" name="checkliste_text" class="feld" rows="5">{{ old('checkliste_text', collect($vorlage->checkliste ?? [])->implode("\n")) }}</textarea></div>
+                <div><label class="feld-label" for="checkliste_text">Checkliste (eine Zeile pro Punkt)</label><textarea id="checkliste_text" name="checkliste_text" class="feld" rows="5">{{ old('checkliste_text', collect($vorlage->checkliste ?? [])->map(fn ($p) => is_array($p) ? ($p['text'] ?? '') : $p)->implode("\n")) }}</textarea></div>
             </div>
         </div>
         <div class="space-y-4">
@@ -26,7 +26,7 @@
                 @if ($turniere->isNotEmpty())
                     <div><p class="feld-label">Gilt für</p>
                         <x-turnierarten :turniere="$turniere" :gewaehlt="old('turniere', $vorlage->exists ? $vorlage->turniere->pluck('id')->all() : [])" class="flex-col" />
-                        <p class="mt-1 text-xs text-beton">Anhaken, bei welchen Turnieren die Aufgabe kommt. Mehrere möglich.</p>
+                        <p class="mt-1 text-xs text-beton">Anhaken, bei welchen Turnierarten die Aufgabe kommt. Mehrere möglich.</p>
                         @error('turniere')<p class="mt-1 text-xs font-bold text-rot">{{ $message }}</p>@enderror</div>
                 @endif
                 <div><label class="feld-label" for="tage_vorher">Wann</label><x-wann id="tage_vorher" :tage="old('tage_vorher', $vorlage->tage_vorher ?? 14)" :bezug="old('bezug', $vorlage->bezug ?? 'beginn')" />

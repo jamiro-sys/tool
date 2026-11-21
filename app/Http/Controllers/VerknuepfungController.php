@@ -24,6 +24,7 @@ class VerknuepfungController extends Controller
             'werkzeug' => ['nullable', Rule::in(array_keys(Verknuepfung::WERKZEUGE))],
         ]);
         $bezug = (Verknuepfung::BEZUEGE[$daten['bezug_typ']])::findOrFail($daten['bezug_id']);
+        $this->darfBezug($bezug);
         $link = $bezug->verknuepfungen()->create($daten);
         Aktivitaet::protokolliere('link.neu', 'Link «'.$link->titel.'» hinzugefügt', $bezug);
 
@@ -33,9 +34,22 @@ class VerknuepfungController extends Controller
     public function loeschen(Verknuepfung $verknuepfung)
     {
         Gate::authorize('schreiben');
+        if ($verknuepfung->bezug) {
+            $this->darfBezug($verknuepfung->bezug);
+        }
         $verknuepfung->delete();
 
         return back()->with('erfolg', 'Link entfernt.');
+    }
+
+    /** Links am Ressort: wer dort mitarbeitet; an einer Aufgabe: wer sie bearbeiten darf; am Turnier: alle mit Schreibrecht. */
+    protected function darfBezug($bezug): void
+    {
+        if ($bezug instanceof \App\Models\Ressort) {
+            abort_unless(Gate::allows('ressort-mitarbeiten', $bezug) || Gate::allows('ressort-verwalten', $bezug), 403);
+        } elseif ($bezug instanceof \App\Models\Aufgabe) {
+            Gate::authorize('aufgabe-bearbeiten', $bezug);
+        }
     }
 
     public function kennzahlen(Request $request, Ausgabe $ausgabe)

@@ -202,7 +202,7 @@ class WiederkehrendTest extends OkTestCase
 
         // Knopf im Ressort, Formular mit vorgewaehltem Ressort und Turnierwahl (aktuelles Turnier angehakt)
         $seite = $this->actingAs($leitung)->get(route('ressorts.show', [$r, 'tab' => 'aufgaben']))->assertOk();
-        $seite->assertSee("modal-neue-aufgabe", false)->assertSee('Bei welchen Turnieren?')->assertSee(route('aufgaben.store', $a), false);
+        $seite->assertSee("modal-neue-aufgabe", false)->assertSee('Bei welchen Turnierarten?')->assertSee(route('aufgaben.store', $a), false);
         $this->assertMatchesRegularExpression('/value="'.$a->turnier_id.'" checked/', $seite->getContent());
 
         $zurueck = route('ressorts.show', [$r, 'tab' => 'aufgaben'], false);

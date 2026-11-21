@@ -109,7 +109,6 @@ Route::middleware(['auth', 'aktiv'])->group(function () {
     Route::get('/ressorts/{ressort}', [RessortController::class, 'show'])->name('ressorts.show');
     Route::get('/ressorts/{ressort}/dossier', [RessortController::class, 'dossier'])->name('ressorts.dossier');
     Route::patch('/ressorts/{ressort}', [RessortController::class, 'update'])->name('ressorts.update');
-    Route::delete('/ressorts/{ressort}', [RessortController::class, 'destroy'])->name('ressorts.destroy');
     Route::post('/ressorts/{ressort}/mitglieder', [RessortController::class, 'mitglied'])->name('ressorts.mitglied');
     Route::post('/ressorts/{ressort}/kontakte/{kontakt?}', [RessortInhaltController::class, 'kontaktSpeichern'])->name('kontakte.speichern');
     Route::delete('/ressorts/{ressort}/kontakte/{kontakt}', [RessortInhaltController::class, 'kontaktLoeschen'])->name('kontakte.loeschen');

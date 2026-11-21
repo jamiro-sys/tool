@@ -124,20 +124,16 @@ class RessortController extends Controller
         if ($daten['rolle'] === 'entfernen') {
             $ressort->mitglieder()->detach($daten['user_id']);
         } else {
-            $ressort->mitglieder()->syncWithoutDetaching([$daten['user_id'] => ['rolle' => $daten['rolle'], 'seit' => now()]]);
-            $ressort->mitglieder()->updateExistingPivot($daten['user_id'], ['rolle' => $daten['rolle']]);
+            // Neue Mitglieder bekommen "seit heute", bestehende behalten ihr Eintrittsdatum
+            if ($ressort->mitglieder()->where('users.id', $daten['user_id'])->exists()) {
+                $ressort->mitglieder()->updateExistingPivot($daten['user_id'], ['rolle' => $daten['rolle']]);
+            } else {
+                $ressort->mitglieder()->attach($daten['user_id'], ['rolle' => $daten['rolle'], 'seit' => now()]);
+            }
         }
         $person = User::find($daten['user_id']);
         Aktivitaet::protokolliere('ressort.mitglied', $ressort->name.': '.$person->name.' '.$daten['rolle'], $ressort);
 
         return back()->with('erfolg', 'Mitglieder aktualisiert.');
-    }
-
-    public function destroy(Ressort $ressort)
-    {
-        Gate::authorize('admin');
-        $ressort->delete();
-
-        return redirect()->route('ressorts.index')->with('erfolg', 'Ressort gelöscht.');
     }
 }

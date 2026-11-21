@@ -113,11 +113,10 @@ Nach dem ersten erfolgreichen Update per SSH:
 ```bash
 cd ~/ok-tool/current
 php artisan key:generate --force
-php artisan db:seed --force
 php artisan ok:admin deine@adresse.ch "Vorname Nachname"
 ```
 
-`key:generate` schreibt in `shared/.env`. `db:seed` legt Ressorts, die zwei Turniere, zwei Hallen und typische Vorlagen an (in Produktion ohne Demodaten). `ok:admin` gibt einen Einladungslink aus, über den du dein Passwort setzt.
+`key:generate` schreibt in `shared/.env`. Das Tool startet leer: Ressorts, Turnierarten, Hallen und den Jahresplan legt das OK selbst an (Admin > Einstellungen, Ressorts, Jahresplan). `ok:admin` gibt einen Einladungslink aus, über den du dein Passwort setzt.
 
 ## 5. Cronjob
 

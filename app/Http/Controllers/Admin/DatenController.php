@@ -34,7 +34,7 @@ class DatenController extends Controller
         Aktivitaet::protokolliere('daten.leeren', 'Alle Inhalte geleert (Sicherung '.$ergebnis['sicherung'].')');
 
         return redirect()->route('admin.einstellungen')
-            ->with('erfolg', 'Alle Inhalte sind geleert. Eine Sicherung liegt unter Admin > Sicherungen. Lege jetzt Hallen und Turniere an.');
+            ->with('erfolg', 'Alle Inhalte sind geleert. Eine Sicherung liegt unter Admin > Sicherungen. Lege jetzt Hallen und Turnierarten an.');
     }
 
     /** Vorlagenpaket: alle Vorlagen mit Ressortnamen, uebertragbar in eine andere Installation. */
@@ -65,11 +65,18 @@ class DatenController extends Controller
 
         $neu = 0;
         $ueber = 0;
-        DB::transaction(function () use ($paket, &$neu, &$ueber) {
+        $unbekannt = [];
+        DB::transaction(function () use ($paket, &$neu, &$ueber, &$unbekannt) {
             foreach ($paket['vorlagen'] as $v) {
                 $ressort = Ressort::firstOrCreate(['name' => $v['ressort']], ['kuerzel' => $v['ressort_kuerzel'] ?? Str::upper(Str::substr($v['ressort'], 0, 3))]);
                 $namen = $v['turniere'] ?? (filled($v['turnier'] ?? null) ? [$v['turnier']] : []);
-                $turniere = Turnier::whereIn('kurz', $namen)->orWhereIn('name', $namen)->pluck('id')->all();
+                $gefunden = Turnier::whereIn('kurz', $namen)->orWhereIn('name', $namen)->get();
+                $turniere = $gefunden->pluck('id')->all();
+                foreach ($namen as $n) {
+                    if (! $gefunden->contains(fn ($t) => $t->kurz === $n || $t->name === $n)) {
+                        $unbekannt[$n] = true;
+                    }
+                }
                 if (Vorlage::where('ressort_id', $ressort->id)->where('titel', $v['titel'])->exists()) {
                     $ueber++;
 
@@ -84,7 +91,7 @@ class DatenController extends Controller
                     'bezug' => in_array($v['bezug'] ?? null, \App\Support\Wann::BEZUG, true) ? $v['bezug'] : 'beginn',
                     'aufwand_std' => $v['aufwand_std'] ?? null,
                     'prioritaet' => $v['prioritaet'] ?? 'normal',
-                    'checkliste' => $v['checkliste'] ?? null,
+                    'checkliste' => collect($v['checkliste'] ?? [])->map(fn ($p) => is_array($p) ? ($p['text'] ?? null) : $p)->filter()->values()->all() ?: null,
                     'aktiv' => (bool) ($v['aktiv'] ?? true),
                 ]);
                 $neueVorlage->setzeTurniere($turniere);
@@ -93,7 +100,9 @@ class DatenController extends Controller
         });
         Aktivitaet::protokolliere('daten.import', "Jahresplan importiert: {$neu} neu, {$ueber} übersprungen");
 
-        return back()->with('erfolg', "{$neu} Aufgaben in den Jahresplan importiert, {$ueber} bereits vorhanden.");
+        $hinweis = $unbekannt ? ' Turnierarten nicht gefunden: '.implode(', ', array_keys($unbekannt)).'. Diese Einträge gelten vorerst für alle Turnierarten, bitte im Jahresplan prüfen.' : '';
+
+        return back()->with('erfolg', "{$neu} Aufgaben in den Jahresplan importiert, {$ueber} bereits vorhanden.".$hinweis);
     }
 
     /** CSV aller Aufgaben einer Ausgabe (fuer Excel). */

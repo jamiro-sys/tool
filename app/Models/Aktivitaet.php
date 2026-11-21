@@ -12,6 +12,21 @@ class Aktivitaet extends Model
 
     protected $fillable = ['user_id', 'aktion', 'subjekt_type', 'subjekt_id', 'beschreibung', 'daten', 'ip'];
 
+    /** Lesbare Namen der Bereiche (erster Teil von "aktion"). */
+    public const BEREICHE = [
+        'anmeldung' => 'Anmeldung', 'assistent' => 'Claude-Assistent', 'aufgabe' => 'Aufgaben', 'ausgabe' => 'Turniere',
+        'dateien' => 'Dateien', 'daten' => 'Daten', 'einladung' => 'Einladungen', 'einstellungen' => 'Einstellungen',
+        'erkenntnis' => 'Rückblick', 'link' => 'Links', 'person' => 'Personen', 'ressort' => 'Ressorts',
+        'sicherung' => 'Sicherungen', 'system' => 'System', 'uebergabe' => 'Übergaben', 'vorlage' => 'Jahresplan',
+    ];
+
+    public static function bereich(string $aktion): string
+    {
+        $k = strtok($aktion, '.');
+
+        return self::BEREICHE[$k] ?? ucfirst($k);
+    }
+
     protected function casts(): array
     {
         return ['daten' => 'array'];

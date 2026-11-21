@@ -1,6 +1,5 @@
 <?php
 
-use Carbon\Carbon;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -21,14 +20,7 @@ return new class extends Migration
         });
 
         // Bestehende Aufgaben mit Datum werden relativ zum Turnierbeginn (Datum bleibt gleich)
-        $beginn = DB::table('ausgaben')->pluck('datum_von', 'id');
-        DB::table('aufgaben')->whereNotNull('faellig_am')->orderBy('id')->select(['id', 'ausgabe_id', 'faellig_am'])->each(function ($a) use ($beginn) {
-            if (! isset($beginn[$a->ausgabe_id])) {
-                return;
-            }
-            $tage = (int) Carbon::parse($a->faellig_am)->startOfDay()->diffInDays(Carbon::parse($beginn[$a->ausgabe_id])->startOfDay(), false);
-            DB::table('aufgaben')->where('id', $a->id)->update(['tage_vorher' => $tage, 'bezug' => 'beginn']);
-        });
+        \App\Support\Datenpflege::faelligkeitRelativ();
     }
 
     public function down(): void

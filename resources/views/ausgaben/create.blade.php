@@ -75,6 +75,9 @@
                 </p>
             </div>
 
+            @if ($alle->isEmpty())
+                <div class="karte mb-5"><x-leer icon="vorlagen" titel="Noch nichts im Jahresplan" text="Für diese Turnierart steht nichts im Jahresplan. Du kannst das Turnier trotzdem erstellen und Aufgaben unten oder später ergänzen." /></div>
+            @endif
             <p class="mb-4 border-l-4 border-gelb bg-white px-4 py-2.5 text-xs text-beton">Alles aus dem Jahresplan ist angehakt. Häkchen weg heisst: dieses Jahr auslassen. Im Jahresplan bleibt die Aufgabe trotzdem.</p>
             @foreach ($vorschlag as $ressortId => $eintraege)
                 <section class="karte mb-5" x-data="{ auf: true }">
@@ -120,8 +123,8 @@
                     @if ($ressorts->isNotEmpty())<button type="button" class="knopf-rahmen knopf-klein" x-on:click="zusatz.push({})"><x-icon name="plus" class="h-3.5 w-3.5" /> Hinzufügen</button>@endif</div>
                 <template x-for="(z, i) in zusatz" :key="i">
                     <div class="grid gap-2 border-b border-nacht/5 p-3 sm:grid-cols-[1fr_180px_160px_44px]">
-                        <input :name="`zusatz[${i}][titel]`" class="feld" placeholder="Neue Aufgabe für dieses Turnier">
-                        <select :name="`zusatz[${i}][ressort_id]`" class="feld">
+                        <input :name="`zusatz[${i}][titel]`" class="feld" placeholder="Neue Aufgabe für dieses Turnier" aria-label="Neue Aufgabe für dieses Turnier">
+                        <select :name="`zusatz[${i}][ressort_id]`" class="feld" aria-label="Ressort">
                             @foreach ($ressorts as $r)<option value="{{ $r->id }}">{{ $r->name }}</option>@endforeach
                         </select>
                         <input type="date" :name="`zusatz[${i}][faellig_am]`" class="feld">

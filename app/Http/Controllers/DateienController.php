@@ -37,6 +37,7 @@ class DateienController extends Controller
             'filter' => $filter,
             'ressorts' => $ressorts,
             'ordner' => $ordner,
+            'ablageRessorts' => $ressorts->filter(fn ($r) => $request->user()->darfAblegen($r))->values(),
             'flach' => $filter['q'] !== '' || $filter['art'] !== null,
             'gesamt' => Dokument::count(),
         ]);
@@ -61,6 +62,7 @@ class DateienController extends Controller
         ]);
 
         $ressortId = isset($daten['ressort_id']) ? (int) $daten['ressort_id'] : null;
+        $this->darfOrt($ressortId);
         $ordner = $this->ordnerFuer($ressortId, $daten['ordner_id'] ?? null, $daten['neuer_ordner'] ?? null);
         $basis = ['ressort_id' => $ressortId, 'ordner_id' => $ordner?->id, 'user_id' => $request->user()->id];
         $anzahl = 0;
@@ -95,7 +97,12 @@ class DateienController extends Controller
             'ort' => ['nullable', 'string', 'regex:/^(r|o):\d+$/'],
             'ressort_id' => ['nullable', 'exists:ressorts,id'],
         ]);
+        // Nur wer am bisherigen Ort mitarbeitet (oder die Datei abgelegt hat) und am neuen Ort mitarbeitet
+        if ($dokument->user_id !== $request->user()->id) {
+            $this->darfOrt($dokument->ressort_id);
+        }
         [$ressortId, $ordnerId] = $this->ortAufloesen($daten['ort'] ?? null, $daten['ressort_id'] ?? null);
+        $this->darfOrt($ressortId);
         $dokument->update(['titel' => $daten['titel'], 'ressort_id' => $ressortId, 'ordner_id' => $ordnerId]);
 
         return back()->with('erfolg', 'Gespeichert.');
@@ -108,14 +115,16 @@ class DateienController extends Controller
             'ressort_id' => ['nullable', 'exists:ressorts,id'],
             'name' => ['required', 'string', 'max:120'],
         ]);
-        $ordner = $this->ordnerFuer(isset($daten['ressort_id']) ? (int) $daten['ressort_id'] : null, 'neu', $daten['name']);
+        $ressortId = isset($daten['ressort_id']) ? (int) $daten['ressort_id'] : null;
+        $this->darfOrt($ressortId);
+        $ordner = $this->ordnerFuer($ressortId, 'neu', $daten['name']);
 
         return back()->with('erfolg', 'Ordner «'.$ordner->pfad().'» ist bereit.');
     }
 
     public function ordnerAendern(Request $request, Ordner $ordner)
     {
-        Gate::authorize('schreiben');
+        $this->darfOrt($ordner->ressort_id);
         $daten = $request->validate(['name' => ['required', 'string', 'max:120', Rule::unique('ordner')->where('ressort_id', $ordner->ressort_id)->ignore($ordner->id)]],
             ['name.unique' => 'Diesen Ordner gibt es hier schon.']);
         $ordner->update(['name' => trim($daten['name'])]);
@@ -125,12 +134,19 @@ class DateienController extends Controller
 
     public function ordnerLoeschen(Ordner $ordner)
     {
-        Gate::authorize('schreiben');
+        $this->darfOrt($ordner->ressort_id);
         $anzahl = $ordner->dokumente()->update(['ordner_id' => null]);
         $ort = $ordner->ressort?->name ?? 'Allgemein';
         $ordner->delete();
 
         return back()->with('erfolg', 'Ordner gelöscht.'.($anzahl ? ' '.$anzahl.' '.($anzahl === 1 ? 'Eintrag liegt' : 'Einträge liegen').' jetzt direkt in '.$ort.'.' : ''));
+    }
+
+    /** Allgemein: alle mit Schreibrecht; Ressort: wer dort mitarbeitet oder es leitet (Admin immer). */
+    protected function darfOrt(?int $ressortId): void
+    {
+        Gate::authorize('schreiben');
+        abort_unless(auth()->user()->darfAblegen($ressortId), 403, 'Hier kannst du nur in Ressorts ablegen, in denen du mitarbeitest.');
     }
 
     /** Bestehenden Unterordner pruefen oder neuen anlegen; muss zum Ressort passen. */

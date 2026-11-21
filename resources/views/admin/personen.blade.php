@@ -25,8 +25,8 @@
                                     @if (! $p->aktiv)<span class="marke-entfaellt mt-1">gesperrt</span>@endif</div></div>
                         </td>
                         <td>
-                            <form method="POST" action="{{ route('admin.personen.update', $p) }}" x-data x-on:change="$el.submit()">@csrf @method('PATCH')
-                                <select name="rolle" class="feld min-h-[36px] w-auto py-1 text-xs">@foreach (\App\Models\User::ROLLEN as $k => $l)<option value="{{ $k }}" @selected($p->rolle === $k)>{{ $l }}</option>@endforeach</select>
+                            <form method="POST" action="{{ route('admin.personen.update', $p) }}" x-data="{ alt: @js($p->rolle) }" x-on:change="confirm(@js($p->name) + ': Rolle wirklich ändern?') ? $el.submit() : ($event.target.value = alt)">@csrf @method('PATCH')
+                                <select name="rolle" class="feld min-h-[36px] w-auto py-1 text-xs" aria-label="Rolle von {{ $p->name }}">@foreach (\App\Models\User::ROLLEN as $k => $l)<option value="{{ $k }}" @selected($p->rolle === $k)>{{ $l }}</option>@endforeach</select>
                             </form>
                             <p class="mt-1 text-xs text-beton">Ansicht: {{ ucfirst($p->ansicht) }}</p>
                         </td>

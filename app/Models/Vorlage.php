@@ -14,6 +14,35 @@ class Vorlage extends Model
 
     public const PRIORITAETEN = ['tief' => 'Tief', 'normal' => 'Normal', 'hoch' => 'Hoch'];
 
+    /** Lesbare Feldnamen fuer den Verlauf. */
+    public const FELDNAMEN = [
+        'titel' => 'Titel', 'beschreibung' => 'Beschreibung', 'anleitung' => 'Anleitung', 'checkliste' => 'Checkliste',
+        'tage_vorher' => 'Wann', 'bezug' => 'Bezug', 'aufwand_std' => 'Aufwand', 'prioritaet' => 'Priorität',
+        'aktiv' => 'Jedes Jahr', 'aktiv_seit' => 'Im Jahresplan seit', 'deaktiviert_am' => 'Herausgenommen am',
+        'deaktiviert_grund' => 'Grund', 'ressort_id' => 'Ressort', 'turnierarten' => 'Turnierarten', 'turnier_id' => 'Turnierart',
+    ];
+
+    /** Wert eines Feldes im Verlauf lesbar machen. */
+    public static function verlaufWert(string $feld, mixed $wert): string
+    {
+        if ($wert === null || $wert === '') {
+            return 'leer';
+        }
+
+        return match ($feld) {
+            'tage_vorher' => \App\Support\Wann::text((int) $wert, 'beginn'),
+            'bezug' => $wert === 'ende' ? 'ab Turnierende' : 'ab Turnierbeginn',
+            'aufwand_std' => \App\Support\Aufwand::text((float) $wert),
+            'prioritaet' => self::PRIORITAETEN[$wert] ?? (string) $wert,
+            'aktiv' => $wert ? 'Ja' : 'Nein',
+            'ressort_id' => Ressort::find($wert)?->name ?? 'gelöscht',
+            'turnier_id' => Turnier::find($wert)?->name ?? 'alle',
+            'deaktiviert_am' => \Carbon\Carbon::parse($wert)->format('d.m.Y'),
+            'checkliste' => collect(is_array($wert) ? $wert : [$wert])->map(fn ($p) => is_array($p) ? ($p['text'] ?? '') : $p)->implode(' | '),
+            default => is_array($wert) ? implode(', ', $wert) : (string) $wert,
+        };
+    }
+
     protected $fillable = [
         'ressort_id', 'turnier_id', 'titel', 'beschreibung', 'anleitung', 'tage_vorher', 'bezug',
         'aufwand_std', 'prioritaet', 'checkliste', 'aktiv', 'aktiv_seit', 'deaktiviert_am', 'deaktiviert_grund',

@@ -24,6 +24,6 @@
     <label class="sm:col-span-2"><span class="feld-label">Foto (optional)</span><input type="file" name="foto" accept="image/*" class="feld py-2.5 text-xs"></label>
     <div class="flex justify-end sm:col-span-2"><button class="knopf-rot knopf-klein">Speichern</button></div>
 </form>
-@if ($m)
-    <form method="POST" action="{{ route('material.loeschen', $m) }}" class="mt-2" onsubmit="return confirm('Material entfernen? Es verschwindet auch aus allen Einsatzlisten.')">@csrf @method('DELETE')<button class="knopf-leise knopf-klein text-beton hover:text-rot"><x-icon name="loeschen" class="h-4 w-4" /> Entfernen</button></form>
+@if ($m && ($m->einsaetze()->doesntExist() || auth()->user()->can('admin') || ($m->ressort && auth()->user()->can('ressort-verwalten', $m->ressort))))
+    <form method="POST" action="{{ route('material.loeschen', $m) }}" class="mt-2" onsubmit="return confirm('Material löschen? Es verschwindet auch aus allen Einsatzlisten früherer Turniere.')">@csrf @method('DELETE')<button class="knopf-leise knopf-klein text-beton hover:text-rot"><x-icon name="loeschen" class="h-4 w-4" /> Löschen</button></form>
 @endif

@@ -39,7 +39,7 @@
             <section class="karte p-4">
                 <p class="titel text-sm">Meine Ressorts</p>
                 <ul class="mt-2 space-y-1 text-sm">
-                    @forelse ($user->ressorts as $r)<li><a href="{{ route('ressorts.show', $r) }}" class="hover:text-rot">{{ $r->name }}</a> <span class="text-xs text-beton">({{ $r->pivot->rolle }})</span></li>@empty<li class="text-beton">Noch keinem Ressort zugeordnet.</li>@endforelse
+                    @forelse ($user->ressorts as $r)<li><a href="{{ route('ressorts.show', $r) }}" class="hover:text-rot">{{ $r->name }}</a> <span class="text-xs text-beton">({{ ['leitung' => 'Leitung', 'mitglied' => 'Mitglied', 'nachfolge' => 'Nachfolge in Einarbeitung'][$r->pivot->rolle] ?? $r->pivot->rolle }})</span></li>@empty<li class="text-beton">Noch keinem Ressort zugeordnet.</li>@endforelse
                 </ul>
             </section>
         </aside>

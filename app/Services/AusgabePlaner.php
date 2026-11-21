@@ -115,7 +115,7 @@ class AusgabePlaner
                 $anzahl++;
             }
 
-            Aktivitaet::protokolliere('ausgabe.erstellt', "Ausgabe {$ausgabe->titel} mit {$anzahl} Aufgaben erstellt", $ausgabe);
+            Aktivitaet::protokolliere('ausgabe.erstellt', "Turnier {$ausgabe->titel} mit {$anzahl} ".($anzahl === 1 ? 'Aufgabe' : 'Aufgaben').' erstellt', $ausgabe);
 
             return $ausgabe;
         });
@@ -141,6 +141,14 @@ class AusgabePlaner
                     break;
 
                 case 'neu':
+                    // Gibt es den Eintrag schon, nicht doppelt anlegen: wieder aufnehmen bzw. Hinweis ergaenzen
+                    if ($vorlage) {
+                        $this->aendereVorlage($vorlage, $vorlage->aktiv
+                            ? ['anleitung' => trim(($vorlage->anleitung ?? '')."\n\nHinweis aus ".($erkenntnis->ausgabe?->titel ?? 'Rückblick').': '.$erkenntnis->text)]
+                            : ['aktiv' => true, 'deaktiviert_am' => null, 'deaktiviert_grund' => null],
+                            $vorlage->aktiv ? 'Hinweis ergänzt' : 'Wieder im Jahresplan aufgrund Erkenntnis');
+                        break;
+                    }
                     $aufgabe = $erkenntnis->aufgabe;
                     $vorlage = Vorlage::create([
                         'ressort_id' => $erkenntnis->ressort_id,

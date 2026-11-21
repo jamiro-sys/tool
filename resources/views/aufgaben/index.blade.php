@@ -55,7 +55,13 @@
     </form>
 
     @if ($aufgaben->isEmpty())
-        <div class="karte"><x-leer icon="filter" titel="Keine Aufgaben gefunden" text="Passe die Filter an oder erstelle eine neue Aufgabe." /></div>
+        <div class="karte">
+            @if (array_filter($filter))
+                <x-leer icon="filter" titel="Keine Aufgaben gefunden" text="Passe die Filter an oder setze sie zurück." />
+            @else
+                <x-leer icon="aufgaben" titel="Noch keine Aufgaben" text="Erfasse die erste Aufgabe mit «+ Aufgabe» oder nimm Aufgaben aus dem Jahresplan." />
+            @endif
+        </div>
     @elseif ($ansicht === 'liste')
         @foreach ($aufgaben->groupBy('ressort_id') as $gruppe)
             @php $r = $gruppe->first()->ressort; $erl = $gruppe->where('status', 'erledigt')->count(); @endphp
@@ -105,7 +111,13 @@
                                 <a href="{{ route('aufgaben.show', $aufgabe) }}" class="block text-sm font-bold leading-snug hover:text-rot">{{ $aufgabe->titel }}</a>
                                 <div class="mt-2 flex items-center justify-between gap-2 text-xs text-beton">
                                     <span class="font-bold uppercase tracking-label text-[10px] text-nacht">{{ $aufgabe->ressort->kuerzel }}</span>
-                                    <span>{{ $aufgabe->istOffen() ? $aufgabe->faelligText() : '' }}</span>
+                                    @if ($aufgabe->istUeberfaellig())
+                                        <span class="marke-gelb"><x-icon name="uhr" class="h-3 w-3" /> {{ $aufgabe->faelligText() }}</span>
+                                    @elseif ($aufgabe->istHeuteFaellig())
+                                        <span class="marke bg-rot text-white">Heute</span>
+                                    @else
+                                        <span class="font-bold">{{ $aufgabe->istOffen() ? $aufgabe->faelligText() : '' }}</span>
+                                    @endif
                                     <x-person :user="$aufgabe->verantwortlich" />
                                 </div>
                             </article>
@@ -118,7 +130,7 @@
             const karte = document.getElementById('karte-' + $event.detail.id);
             if (!karte) return;
             okPost(karte.dataset.url, { status: $event.detail.status }).then(() => window.location.reload()).catch(e => $store.toast.zeige(e.message, 'fehler'))"></div>
-        <p class="mt-2 text-xs text-beton">Karten mit der Maus in eine andere Spalte ziehen, um den Status zu ändern.</p>
+        <p class="mt-2 text-xs text-beton"><span class="hidden lg:inline">Karten mit der Maus in eine andere Spalte ziehen, um den Status zu ändern.</span><span class="lg:hidden">Zum Ändern des Status die Karte antippen und die Aufgabe öffnen. Am PC lassen sich Karten auch verschieben.</span></p>
     @endif
 
     @can('schreiben')

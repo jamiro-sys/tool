@@ -91,6 +91,7 @@ class VorlageController extends Controller
     {
         Gate::authorize('ressort-verwalten', $vorlage->ressort);
         $daten = $this->validiere($request);
+        Gate::authorize('ressort-verwalten', Ressort::findOrFail($daten['ressort_id']));
         $vorher = $vorlage->turniere->pluck('id')->sort()->values()->all();
         $vorlage->setzeTurniere($daten['turniere'] ?? []);
         unset($daten['turniere']);

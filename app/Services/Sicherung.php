@@ -65,6 +65,9 @@ class Sicherung
     {
         $inhalt = json_decode(gzdecode(Storage::disk('local')->get($this->pfad($name))), true);
         abort_unless(is_array($inhalt['tabellen'] ?? null), 422, 'Sicherung ist ungültig.');
+        // Ein Datenexport enthaelt keine Passwoerter: eingespielt koennte sich niemand mehr anmelden
+        $personen = $inhalt['tabellen']['users'] ?? [];
+        abort_if($personen && ! array_key_exists('password', $personen[0]), 422, 'Das ist ein Datenexport, keine Sicherung. Er kann nicht eingespielt werden.');
 
         return $this->einspielen($inhalt['tabellen']);
     }
@@ -78,12 +81,11 @@ class Sicherung
         try {
             DB::transaction(function () use ($tabellen, $vorhanden, &$zeilen) {
                 $ziel = array_values(array_filter(array_keys($tabellen), fn ($t) => in_array($t, $vorhanden, true)));
-                $reihenfolge = $this->nachAbhaengigkeit($ziel);
-                // zuerst alles leeren (abhaengige Tabellen zuerst), dann Eltern vor Kindern einspielen
-                foreach (array_reverse($reihenfolge) as $tabelle) {
+                // Alle Tabellen leeren, auch solche, die es zur Zeit der Sicherung noch nicht gab (sonst bleiben fremde Reste)
+                foreach (array_reverse($this->nachAbhaengigkeit($vorhanden)) as $tabelle) {
                     DB::table($tabelle)->delete();
                 }
-                foreach ($reihenfolge as $tabelle) {
+                foreach ($this->nachAbhaengigkeit($ziel) as $tabelle) {
                     $spalten = Schema::getColumnListing($tabelle);
                     foreach (array_chunk($tabellen[$tabelle], 200) as $teil) {
                         $teil = array_map(fn ($r) => array_intersect_key($r, array_flip($spalten)), $teil);
@@ -91,12 +93,29 @@ class Sicherung
                         $zeilen += count($teil);
                     }
                 }
+                $this->nachpflegen($tabellen);
             });
         } finally {
             Schema::enableForeignKeyConstraints();
         }
+        \Illuminate\Support\Facades\Cache::flush();
 
         return $zeilen;
+    }
+
+    /** Aeltere Sicherung: Datenumstellungen nachholen, die seither per Migration dazugekommen sind. */
+    protected function nachpflegen(array $tabellen): void
+    {
+        if (! array_key_exists('turnier_vorlage', $tabellen) && Schema::hasColumn('vorlagen', 'turnier_id')) {
+            \App\Support\Datenpflege::turnierartenInPivot();
+        }
+        $aufgabe = $tabellen['aufgaben'][0] ?? null;
+        if ($aufgabe && ! array_key_exists('tage_vorher', $aufgabe)) {
+            \App\Support\Datenpflege::faelligkeitRelativ();
+            \App\Support\Datenpflege::nachherAbEnde();
+        } elseif (($tabellen['vorlagen'][0] ?? null) && ! array_key_exists('bezug', $tabellen['vorlagen'][0])) {
+            \App\Support\Datenpflege::nachherAbEnde();
+        }
     }
 
     /** Tabellen so ordnen, dass referenzierte Tabellen vor den abhaengigen kommen. */
@@ -131,7 +150,8 @@ class Sicherung
         $grenze = now()->subDays($tage)->getTimestamp();
         $geloescht = 0;
         foreach ($this->liste() as $b) {
-            if ($b['zeit'] < $grenze) {
+            // Sicherungen vor Leeren, Wiederherstellen, Updates und von Hand bleiben, bis jemand sie loescht
+            if ($b['zeit'] < $grenze && str_ends_with($b['name'], '-automatisch.json.gz')) {
                 Storage::disk('local')->delete(self::ORDNER.'/'.$b['name']);
                 $geloescht++;
             }

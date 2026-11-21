@@ -135,6 +135,13 @@ class UebergabeController extends Controller
     {
         Gate::authorize('ressort-verwalten', $uebergabe->ressort);
         $uebergabe->update(['status' => 'abgebrochen']);
+        // Wer nur fuer diese Uebergabe als Nachfolge ins Ressort kam, verliert den Einblick wieder
+        $ressort = $uebergabe->ressort;
+        $pivot = $ressort->mitglieder()->where('users.id', $uebergabe->an_id)->first()?->pivot;
+        $andere = Uebergabe::where('ressort_id', $ressort->id)->where('an_id', $uebergabe->an_id)->whereIn('status', ['geplant', 'in_arbeit'])->exists();
+        if ($pivot && $pivot->rolle === 'nachfolge' && ! $andere) {
+            $ressort->mitglieder()->detach($uebergabe->an_id);
+        }
 
         return back()->with('erfolg', 'Übergabe abgebrochen.');
     }
@@ -154,7 +161,7 @@ class UebergabeController extends Controller
         });
 
         $this->benachrichtiger->sende(User::where('aktiv', true)->get(), 'uebergabe', 'Neue Ressortleitung',
-            $uebergabe->an->name.' leitet ab sofort das Ressort '.$uebergabe->ressort->name.'. Danke '.($uebergabe->von?->name ?? '').'!',
+            $uebergabe->an->name.' leitet ab sofort das Ressort '.$uebergabe->ressort->name.'.'.($uebergabe->von && $uebergabe->von_id !== $uebergabe->an_id ? ' Danke '.$uebergabe->von->name.'!' : ''),
             route('ressorts.show', $uebergabe->ressort));
     }
 

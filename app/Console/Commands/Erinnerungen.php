@@ -22,7 +22,7 @@ class Erinnerungen extends Command
             ->whereNotNull('faellig_am')
             ->whereDate('faellig_am', '<=', today()->addDays($tage))
             ->where(fn ($q) => $q->whereNull('erinnert_am')->orWhereDate('erinnert_am', '<', today()))
-            ->whereHas('ausgabe', fn ($q) => $q->where('status', '!=', 'abgeschlossen'))
+            ->whereHas('ausgabe', fn ($q) => $q->nochAktuell())
             ->get();
 
         $anzahl = 0;
@@ -40,7 +40,7 @@ class Erinnerungen extends Command
                 $a->verantwortlich,
                 $ueberfaellig ? 'ueberfaellig' : 'faellig',
                 ($ueberfaellig ? 'Überfällig: ' : 'Bald fällig: ').$a->titel,
-                'Fällig '.$a->faelligText().' ('.$a->ressort->name.'). Brauchst du Hilfe? Melde dich im Ressort.',
+                $a->faelligSatz().' ('.$a->ressort->name.'). Brauchst du Hilfe? Melde dich im Ressort.',
                 route('aufgaben.show', $a)
             );
             $a->forceFill(['erinnert_am' => now()])->saveQuietly();

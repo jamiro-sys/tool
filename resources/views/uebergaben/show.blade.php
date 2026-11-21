@@ -29,7 +29,7 @@
     @if ($uebergabe->status === 'abgeschlossen')
         <div class="mb-6 flex items-center gap-3 bg-rot px-4 py-4 text-white">
             <x-icon name="pokal" class="h-6 w-6" />
-            <p class="text-sm"><span class="font-bold">Übergabe abgeschlossen am {{ $uebergabe->abgeschlossen_am->format('d.m.Y') }}.</span> {{ $uebergabe->an->name }} leitet das Ressort. Danke {{ $uebergabe->von?->name }} für die saubere Übergabe!</p>
+            <p class="text-sm"><span class="font-bold">Übergabe abgeschlossen am {{ $uebergabe->abgeschlossen_am->format('d.m.Y') }}.</span> {{ $uebergabe->an->name }} leitet das Ressort. @if ($uebergabe->von && $uebergabe->von_id !== $uebergabe->an_id)Danke {{ $uebergabe->von->name }} für die saubere Übergabe!@endif</p>
         </div>
     @endif
 
@@ -52,7 +52,7 @@
                 @if ($beteiligt && $offenStatus)
                     <form method="POST" action="{{ route('uebergaben.checkpunkt', $uebergabe) }}" class="flex gap-2 border-t border-nacht/10 p-3">@csrf
                         <input name="neu" class="feld flex-1" placeholder="Eigener Punkt, z.B. Login Sponsoring-Plattform übergeben" required>
-                        <button class="knopf-rahmen"><x-icon name="plus" class="h-4 w-4" /></button>
+                        <button class="knopf-rahmen" aria-label="Punkt hinzufügen"><x-icon name="plus" class="h-4 w-4" /></button>
                     </form>
                 @endif
             </section>
@@ -90,12 +90,10 @@
                     @endforeach
                 </div>
                 @if ($beteiligt && $offenStatus)
-                    <div class="border-t border-nacht/10 p-4">
-                        @if ($uebergabe->checklisteKomplett())
-                            <form method="POST" action="{{ route('uebergaben.bestaetigen', $uebergabe) }}">@csrf<button class="knopf-rot w-full"><x-icon name="check" class="h-4 w-4" /> Übergabe bestätigen</button></form>
-                        @else
-                            <p class="text-xs text-beton">Sobald alle Punkte der Checkliste erledigt sind, bestätigen beide Seiten. Danach wechselt die Leitung automatisch.</p>
-                        @endif
+                    {{-- Erscheint sofort, wenn der letzte Punkt der Checkliste abgehakt wird (ohne Neuladen) --}}
+                    <div class="border-t border-nacht/10 p-4" x-data="{ p: {{ $uebergabe->fortschritt() }} }" x-on:checkliste.window="p = $event.detail">
+                        <form method="POST" action="{{ route('uebergaben.bestaetigen', $uebergabe) }}" x-show="p >= 100" @unless ($uebergabe->checklisteKomplett()) x-cloak @endunless>@csrf<button class="knopf-rot w-full"><x-icon name="check" class="h-4 w-4" /> Übergabe bestätigen</button></form>
+                        <p x-show="p < 100" @if ($uebergabe->checklisteKomplett()) x-cloak @endif class="text-xs text-beton">Sobald alle Punkte der Checkliste erledigt sind, bestätigen beide Seiten. Danach wechselt die Leitung automatisch.</p>
                     </div>
                 @endif
             </section>

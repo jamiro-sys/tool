@@ -31,6 +31,9 @@ class ErkenntnisController extends Controller
             $daten['ressort_id'] = $aufgabe->ressort_id;
             $daten['ausgabe_id'] = $aufgabe->ausgabe_id;
             $daten['vorlage_id'] = $aufgabe->vorlage_id;
+        } elseif (! empty($daten['vorlage_id'])) {
+            // Jahresplan-Eintrag bestimmt das Ressort (kein Eintrag eines fremden Ressorts)
+            $daten['ressort_id'] = \App\Models\Vorlage::findOrFail($daten['vorlage_id'])->ressort_id;
         }
 
         Erkenntnis::create($daten + ['user_id' => $request->user()->id]);
@@ -41,6 +44,10 @@ class ErkenntnisController extends Controller
     public function uebernehmen(Request $request, Erkenntnis $erkenntnis)
     {
         Gate::authorize('ressort-verwalten', $erkenntnis->ressort);
+        abort_if($erkenntnis->vorlage && $erkenntnis->vorlage->ressort_id !== $erkenntnis->ressort_id, 403);
+        if ($erkenntnis->umgesetzt_am) {
+            return back()->with('erfolg', 'Schon übernommen.');
+        }
         $aenderungen = $request->validate([
             'titel' => ['nullable', 'string', 'max:200'],
             'tage_vorher' => ['nullable', 'integer', 'min:-365', 'max:730'],
@@ -66,6 +73,6 @@ class ErkenntnisController extends Controller
         abort_unless($erkenntnis->user_id === $request->user()->id || Gate::allows('ressort-verwalten', $erkenntnis->ressort), 403);
         $erkenntnis->delete();
 
-        return back()->with('erfolg', 'Erkenntnis entfernt.');
+        return back()->with('erfolg', 'Erkenntnis verworfen.');
     }
 }

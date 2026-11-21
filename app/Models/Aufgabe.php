@@ -132,6 +132,17 @@ class Aufgabe extends Model
         return $this->datumKurz();
     }
 
+    /** Fuer Meldungen: "Fällig heute", "Fällig in 4 Tagen", "Fällig am Sa, 8. Feb", "Ohne Termin". */
+    public function faelligSatz(): string
+    {
+        if (! $this->faellig_am) {
+            return 'Ohne Termin';
+        }
+        $text = $this->faelligText();
+
+        return preg_match('/^(heute|morgen|seit|in )/', $text) ? 'Fällig '.$text : 'Fällig am '.$text;
+    }
+
     /** "Sa, 8. Feb." bzw. "Sa, 8. Feb. 2027", wenn nicht im laufenden Jahr. */
     public function datumKurz(): string
     {

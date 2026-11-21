@@ -35,7 +35,7 @@
                                     <li class="px-3 py-2.5 text-xs text-beton">Leer.</li>
                                 @endforelse
                             </ul>
-                            @can('schreiben')
+                            @if (auth()->user()->darfAblegen($rid))
                                 <div class="flex flex-wrap items-center gap-2 px-3 pt-2">
                                     <button type="button" class="label hover:text-rot" x-on:click="umbenennen = !umbenennen">Umbenennen</button>
                                     <form method="POST" action="{{ route('ordner.loeschen', $o) }}" onsubmit="return confirm(@js('Ordner «'.$o->name.'» löschen? Der Inhalt bleibt im Ressort.'))">@csrf @method('DELETE')<button class="label hover:text-rot">Ordner löschen</button></form>
@@ -43,7 +43,7 @@
                                         <input name="name" required maxlength="120" class="feld min-h-[38px] py-1" value="{{ $o->name }}" aria-label="Neuer Name"><button class="knopf-nacht knopf-klein">Speichern</button>
                                     </form>
                                 </div>
-                            @endcan
+                            @endif
                         </div>
                     </details>
                 @endforeach
@@ -55,14 +55,14 @@
                 @if ($anzahl === 0 && $g['ordner']->isEmpty())
                     <p class="px-4 py-3 text-sm text-beton">Noch nichts abgelegt.</p>
                 @endif
-                @can('schreiben')
+                @if (auth()->user()->darfAblegen($rid))
                     <form method="POST" action="{{ route('ordner.speichern') }}" class="flex items-center gap-2 border-t border-nacht/5 px-4 py-2.5" x-data="{ neu: false }">@csrf
                         <input type="hidden" name="ressort_id" value="{{ $rid }}">
                         <button type="button" class="label flex items-center gap-1.5 hover:text-rot" x-show="!neu" x-on:click="neu = true; $nextTick(() => $refs.name.focus())"><x-icon name="plus" class="h-3.5 w-3.5" /> Unterordner</button>
                         <input x-show="neu" x-cloak x-ref="name" name="name" required maxlength="120" class="feld min-h-[38px] flex-1 py-1" placeholder="z. B. Verträge, Pläne, Reglemente" aria-label="Name des Unterordners">
                         <button x-show="neu" x-cloak class="knopf-nacht knopf-klein">Anlegen</button>
                     </form>
-                @endcan
+                @endif
             </div>
         </details>
     @endforeach

@@ -59,14 +59,14 @@ class AnmeldungController extends Controller
 
     public function einladung(string $token)
     {
-        $user = User::where('einladung_token', $token)->firstOrFail();
+        $user = User::where('einladung_token', $token)->where('aktiv', true)->firstOrFail();
 
         return view('auth.einladung', compact('user', 'token'));
     }
 
     public function einladungAnnehmen(Request $request, string $token)
     {
-        $user = User::where('einladung_token', $token)->firstOrFail();
+        $user = User::where('einladung_token', $token)->where('aktiv', true)->firstOrFail();
         $daten = $request->validate([
             'password' => ['required', 'confirmed', PasswortRegel::min(8)],
         ]);

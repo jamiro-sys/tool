@@ -30,14 +30,16 @@
     <section>
         <h2 class="titel mb-3 text-sm">Übergabe-Bereitschaft der Ressorts</h2>
         <div class="karte divide-y divide-nacht/5">
-            @foreach ($ressorts as $r)
+            @forelse ($ressorts as $r)
                 @php $stand = $r->wissensstand(); @endphp
                 <a href="{{ route('ressorts.show', $r) }}" class="grid items-center gap-3 px-4 py-3 hover:bg-kreide/60 sm:grid-cols-[200px_1fr_auto]">
                     <span class="text-sm font-bold">{{ $r->name }}</span>
                     @include('ressorts._ampel', ['stand' => $stand])
                     <span class="text-xs text-beton sm:w-56 sm:text-right">{{ $stand['hinweise'][0] ?? 'bereit' }}</span>
                 </a>
-            @endforeach
+            @empty
+                <p class="px-4 py-5 text-sm text-beton">Noch keine Ressorts angelegt.</p>
+            @endforelse
         </div>
     </section>
 </x-app>

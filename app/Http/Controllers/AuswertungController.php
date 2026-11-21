@@ -64,7 +64,8 @@ class AuswertungController extends Controller
         $kennzahlWerte = \App\Models\Kennzahl::whereIn('ausgabe_id', $ausgaben->pluck('id'))->get();
         $kennzahlen = [
             'labels' => $ausgaben->map(fn ($a) => $a->turnier->kurz.' '.$a->saison)->all(),
-            'reihen' => \App\Models\Auswahlliste::werte('kennzahl')
+            // Auch Werte zeigen, deren Name inzwischen aus der Liste entfernt wurde (die Werte bleiben bestehen)
+            'reihen' => \App\Models\Auswahlliste::werte('kennzahl')->merge($kennzahlWerte->pluck('name'))->unique()->values()
                 ->filter(fn ($n) => $kennzahlWerte->where('name', $n)->isNotEmpty())
                 ->map(fn ($n) => ['name' => $n, 'werte' => $ausgaben->map(fn ($a) => $kennzahlWerte->where('ausgabe_id', $a->id)->firstWhere('name', $n)?->wert)->all()])
                 ->values()->all(),

@@ -7,6 +7,7 @@ use App\Models\Kontakt;
 use App\Models\Ressort;
 use App\Models\Wissen;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 
@@ -40,7 +41,7 @@ class RessortInhaltController extends Controller
         abort_unless($kontakt->ressort_id === $ressort->id, 404);
         $kontakt->delete();
 
-        return redirect(route('ressorts.show', [$ressort, 'tab' => 'kontakte']))->with('erfolg', 'Kontakt entfernt.');
+        return redirect(route('ressorts.show', [$ressort, 'tab' => 'kontakte']))->with('erfolg', 'Kontakt gelöscht.');
     }
 
     public function wissenSpeichern(Request $request, Ressort $ressort, ?Wissen $wissen = null)
@@ -66,7 +67,7 @@ class RessortInhaltController extends Controller
         abort_unless($wissen->ressort_id === $ressort->id, 404);
         $wissen->delete();
 
-        return redirect(route('ressorts.show', [$ressort, 'tab' => 'wissen']))->with('erfolg', 'Wissensseite entfernt.');
+        return redirect(route('ressorts.show', [$ressort, 'tab' => 'wissen']))->with('erfolg', 'Wissensseite gelöscht.');
     }
 
     public function dokumentSpeichern(Request $request, Ressort $ressort)
@@ -74,9 +75,9 @@ class RessortInhaltController extends Controller
         Gate::authorize('ressort-mitarbeiten', $ressort);
         $daten = $request->validate([
             'titel' => ['required', 'string', 'max:200'],
-            'url' => ['nullable', 'url', 'max:1024', 'required_without:datei'],
+            'url' => ['nullable', 'url:http,https', 'max:1024', 'required_without:datei'],
             'datei' => ['nullable', 'file', 'max:20480', 'required_without:url'],
-            'aufgabe_id' => ['nullable', 'exists:aufgaben,id'],
+            'aufgabe_id' => ['nullable', Rule::exists('aufgaben', 'id')->where('ressort_id', $ressort->id)],
         ]);
 
         $eintrag = ['titel' => $daten['titel'], 'user_id' => $request->user()->id, 'aufgabe_id' => $daten['aufgabe_id'] ?? null];
@@ -101,10 +102,13 @@ class RessortInhaltController extends Controller
 
         $name = \Illuminate\Support\Str::slug($dokument->titel).'.'.$endung;
 
-        // Bilder und PDF direkt im Browser anzeigen, alles andere herunterladen
-        return request()->boolean('ansehen') && preg_match('/^(image\/|application\/pdf)/', (string) $dokument->mime)
-            ? Storage::disk('local')->response($dokument->pfad, $name)
-            : Storage::disk('local')->download($dokument->pfad, $name);
+        // Nur sichere Bildformate und PDF direkt im Browser anzeigen (kein SVG: kann Skripte enthalten), alles andere herunterladen
+        $sicher = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'application/pdf'];
+        $kopf = ['X-Content-Type-Options' => 'nosniff'];
+
+        return request()->boolean('ansehen') && in_array($dokument->mime, $sicher, true)
+            ? Storage::disk('local')->response($dokument->pfad, $name, ['Content-Type' => $dokument->mime] + $kopf)
+            : Storage::disk('local')->download($dokument->pfad, $name, $kopf);
     }
 
     public function dokumentLoeschen(Dokument $dokument)
@@ -119,6 +123,6 @@ class RessortInhaltController extends Controller
         }
         $dokument->delete();
 
-        return back()->with('erfolg', 'Dokument entfernt.');
+        return back()->with('erfolg', 'Gelöscht.');
     }
 }

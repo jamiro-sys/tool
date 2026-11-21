@@ -79,14 +79,14 @@
                     @forelse ($vorlage->versionen as $ver)
                         <li class="px-4 py-3 text-xs" x-data="{ auf: false }">
                             <button type="button" class="flex w-full items-center justify-between text-left" x-on:click="auf = !auf">
-                                <span><span class="font-bold">{{ $ver->user?->name ?? 'System' }}</span> <span class="text-beton">{{ $ver->created_at->format('d.m.Y') }}</span><br>{{ $ver->notiz ?? implode(', ', array_keys($ver->nachher ?? [])) }}</span>
+                                <span><span class="font-bold">{{ $ver->user?->name ?? 'System' }}</span> <span class="text-beton">{{ $ver->created_at->format('d.m.Y') }}</span><br>{{ $ver->notiz ?? collect(array_keys($ver->nachher ?? []))->map(fn ($f) => \App\Models\Vorlage::FELDNAMEN[$f] ?? $f)->implode(', ') }}</span>
                                 <x-icon name="pfeil" class="h-3.5 w-3.5 shrink-0 transition-transform" ::class="auf ? 'rotate-90' : ''" />
                             </button>
                             <div x-show="auf" x-collapse class="mt-2 space-y-1">
                                 @foreach ($ver->nachher ?? [] as $feld => $neu)
-                                    <div><span class="label">{{ $feld }}</span>
-                                        <div class="text-beton line-through">{{ \Illuminate\Support\Str::limit(is_array($ver->vorher[$feld] ?? null) ? json_encode($ver->vorher[$feld]) : (string) ($ver->vorher[$feld] ?? ''), 160) }}</div>
-                                        <div>{{ \Illuminate\Support\Str::limit(is_array($neu) ? json_encode($neu) : (string) $neu, 160) }}</div></div>
+                                    <div><span class="label">{{ \App\Models\Vorlage::FELDNAMEN[$feld] ?? $feld }}</span>
+                                        <div class="text-beton line-through">{{ \Illuminate\Support\Str::limit(\App\Models\Vorlage::verlaufWert($feld, $ver->vorher[$feld] ?? null), 160) }}</div>
+                                        <div>{{ \Illuminate\Support\Str::limit(\App\Models\Vorlage::verlaufWert($feld, $neu), 160) }}</div></div>
                                 @endforeach
                             </div>
                         </li>

@@ -22,7 +22,7 @@
                             <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                                 @if ($art === 'jahresplan')
                                     <div><label class="feld-label">Ressort</label>
-                                        <select name="{{ $p }}[ressort_id]" class="feld">@foreach ($ressorts as $r)<option value="{{ $r->id }}" @selected($v['ressort_id'] === $r->id)>{{ $r->name }}</option>@endforeach</select>
+                                        <select name="{{ $p }}[ressort_id]" class="feld" aria-label="Ressort">@foreach ($ressorts as $r)<option value="{{ $r->id }}" @selected($v['ressort_id'] === $r->id)>{{ $r->name }}</option>@endforeach</select>
                                         @if (! $v['ressort_id'])<p class="mt-1 text-xs font-bold text-rot">Ressort bitte wählen</p>@endif</div>
                                 @endif
                                 <div><label class="feld-label">Wann</label>
@@ -30,7 +30,7 @@
                                     @if ($v['tage_vorher'] === null)<p class="mt-1 text-xs font-bold text-rot">Zeitpunkt bitte prüfen</p>@endif</div>
                                 <div><label class="feld-label">Aufwand</label><x-aufwand :name="$p.'[aufwand]'" :wert="$v['aufwand']" klein /></div>
                                 <div><label class="feld-label">Priorität</label>
-                                    <select name="{{ $p }}[prioritaet]" class="feld min-h-[38px] py-1">@foreach (\App\Models\Vorlage::PRIORITAETEN as $k => $l)<option value="{{ $k }}" @selected($v['prioritaet'] === $k)>{{ $l }}</option>@endforeach</select></div>
+                                    <select name="{{ $p }}[prioritaet]" class="feld min-h-[38px] py-1" aria-label="Priorität">@foreach (\App\Models\Vorlage::PRIORITAETEN as $k => $l)<option value="{{ $k }}" @selected($v['prioritaet'] === $k)>{{ $l }}</option>@endforeach</select></div>
                             </div>
                             @if ($art === 'ressort' && $darfPlan)
                                 <label class="flex w-fit cursor-pointer items-center gap-2 border border-nacht/20 bg-white px-3 py-2 text-sm font-bold has-[:checked]:border-rot has-[:checked]:bg-rot/5">

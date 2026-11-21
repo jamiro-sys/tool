@@ -110,12 +110,15 @@ class MaterialController extends Controller
     public function loeschen(Material $material)
     {
         Gate::authorize('schreiben');
+        // Mit Verlauf in frueheren Turnieren: nur Ressortleitung oder Admin (Mietkosten und Einsatzlisten gehen sonst verloren)
+        abort_if($material->einsaetze()->exists() && ! ($material->ressort && Gate::allows('ressort-verwalten', $material->ressort)) && ! Gate::allows('admin'), 403,
+            'Dieses Material wurde schon eingesetzt. Löschen kann nur die Ressortleitung.');
         if ($material->foto_pfad) {
             Storage::disk('local')->delete($material->foto_pfad);
         }
         $material->delete();
 
-        return back()->with('erfolg', 'Material entfernt.');
+        return back()->with('erfolg', 'Material gelöscht.');
     }
 
     public function foto(Material $material)
