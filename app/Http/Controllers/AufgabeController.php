@@ -108,6 +108,13 @@ class AufgabeController extends Controller
         Gate::authorize('aufgabe-bearbeiten', $aufgabe);
         $daten = $this->validiere($request, true);
         $vorher = $aufgabe->verantwortlich_id;
+        $altesRessort = $aufgabe->ressort;
+        // In ein anderes Ressort verschieben nur, wer auch dort mitarbeitet
+        if (isset($daten['ressort_id']) && (int) $daten['ressort_id'] !== $aufgabe->ressort_id) {
+            $ziel = Ressort::findOrFail($daten['ressort_id']);
+            abort_unless(Gate::allows('ressort-mitarbeiten', $ziel) || Gate::allows('ressort-verwalten', $ziel), 403, 'In dieses Ressort kannst du keine Aufgaben verschieben.');
+        }
+        $darfPlan = Gate::allows('ressort-verwalten', $altesRessort);
 
         $this->checklisteAnwenden($daten, $aufgabe->checkliste ?? []);
 
@@ -118,7 +125,7 @@ class AufgabeController extends Controller
 
         // Wie oft? Jahresplan anpassen (nur Ressortleitung/Admin)
         $hinweis = null;
-        $darfPlan = Gate::allows('ressort-verwalten', $aufgabe->ressort);
+        $darfPlan = $darfPlan && Gate::allows('ressort-verwalten', $aufgabe->ressort_id === $altesRessort->id ? $altesRessort : $aufgabe->load('ressort')->ressort);
         if ($request->filled('wiederkehrend') && $darfPlan) {
             $planer = app(AusgabePlaner::class);
             if ($request->input('wiederkehrend') === 'jedes_jahr') {
@@ -207,6 +214,7 @@ class AufgabeController extends Controller
         Gate::authorize('aufgabe-verwalten', $aufgabe);
         $ausgabe = $aufgabe->ausgabe;
         Aktivitaet::protokolliere('aufgabe.geloescht', 'Aufgabe gelöscht: '.$aufgabe->titel, $ausgabe);
+        $aufgabe->verknuepfungen()->delete();
         $aufgabe->delete();
 
         return redirect()->route('aufgaben.index', $ausgabe)->with('erfolg', 'Aufgabe gelöscht.');
@@ -306,7 +314,7 @@ class AufgabeController extends Controller
         return $request->validate([
             'turniere' => ['required_with:turniere_gesendet', 'array'],
             'turniere.*' => ['integer', 'exists:turniere,id'],
-        ], ['turniere.required_with' => 'Bitte mindestens ein Turnier anhaken.'])['turniere'] ?? [];
+        ], ['turniere.required_with' => 'Bitte mindestens eine Turnierart anhaken.'])['turniere'] ?? [];
     }
 
     protected function setzeErledigt(Aufgabe $aufgabe): void
@@ -328,7 +336,7 @@ class AufgabeController extends Controller
         if ($aufgabe->verantwortlich_id && $aufgabe->verantwortlich_id !== $vorher) {
             $this->benachrichtiger->sende(
                 $aufgabe->verantwortlich, 'zugewiesen', 'Neue Aufgabe: '.$aufgabe->titel,
-                'Fällig '.$aufgabe->faelligText().' im Ressort '.$aufgabe->ressort->name.'.',
+                $aufgabe->faelligSatz().' im Ressort '.$aufgabe->ressort->name.'.',
                 route('aufgaben.show', $aufgabe), auth()->user()
             );
         }
@@ -339,7 +347,8 @@ class AufgabeController extends Controller
     {
         Gate::authorize('ressort-verwalten', $aufgabe->ressort);
         abort_if($aufgabe->vorlage_id, 409);
-        $vorlage = $planer->inJahresplan($aufgabe);
+        // Wie im Formular: neu im Jahresplan zuerst fuer die Turnierart dieses Turniers
+        $vorlage = $planer->inJahresplan($aufgabe, [$aufgabe->ausgabe->turnier_id]);
 
         return back()->with('erfolg', 'Im Jahresplan: kommt ab jetzt bei jedem neuen Turnier, '.$vorlage->zeitpunktText().'.');
     }
@@ -350,7 +359,7 @@ class AufgabeController extends Controller
         Gate::authorize('ressort-verwalten', $aufgabe->ressort);
         $ja = $request->boolean('wert');
         if ($ja) {
-            $planer->inJahresplan($aufgabe);
+            $planer->inJahresplan($aufgabe, $aufgabe->vorlage_id ? null : [$aufgabe->ausgabe->turnier_id]);
         } elseif ($aufgabe->vorlage) {
             $planer->ausJahresplan($aufgabe->vorlage, 'Im Rückblick '.$aufgabe->ausgabe->saison);
         }

@@ -23,12 +23,20 @@
 
         <section class="karte">
             <div class="karte-kopf"><h2 class="titel text-sm">Turnierarten im Vergleich</h2><span class="label">Aufgaben pro Ressort</span></div>
+            @if (! count($vergleich) || ! count($ressortNamen))
+                <x-leer icon="auswertung" titel="Noch keine Turniere" text="Sobald Turniere mit Aufgaben bestehen, siehst du hier den Vergleich der Turnierarten." />
+            @else
             <div class="h-80 p-4"><canvas x-data x-init="diagramm($el, 'balken', { labels: {{ json_encode($ressortNamen) }}, reihen: {{ json_encode(collect($vergleich)->map(fn ($v, $i) => ['name' => $v['name'], 'werte' => $v['werte'], 'farbe' => $i ? '#14213D' : '#B8161C'])->values()) }} })"></canvas></div>
+            @endif
         </section>
 
         <section class="karte">
             <div class="karte-kopf"><h2 class="titel text-sm">Pünktlichkeit</h2><span class="label">Erledigt bis Fälligkeit</span></div>
+            @if (! count($puenktlich['labels']))
+                <x-leer icon="uhr" titel="Noch keine Daten" text="Sobald Aufgaben erledigt sind, siehst du hier, wie viele pünktlich waren." />
+            @else
             <div class="h-80 p-4"><canvas x-data x-init="diagramm($el, 'linie', { labels: {{ json_encode($puenktlich['labels']) }}, werte: {{ json_encode($puenktlich['werte']) }}, name: 'Pünktlich' })"></canvas></div>
+            @endif
         </section>
 
         @if ($naechste && count($last))
@@ -41,12 +49,14 @@
         <section class="karte">
             <div class="karte-kopf"><h2 class="titel text-sm">Übergabe-Bereitschaft</h2></div>
             <div class="space-y-4 p-4">
-                @foreach ($wissen as $w)
+                @forelse ($wissen as $w)
                     <a href="{{ route('ressorts.show', $w['ressort']) }}" class="block hover:text-rot">
                         <p class="mb-1 text-sm font-bold">{{ $w['ressort']->name }}</p>
                         @include('ressorts._ampel', ['stand' => $w['stand']])
                     </a>
-                @endforeach
+                @empty
+                    <p class="text-sm text-beton">Noch keine Ressorts angelegt.</p>
+                @endforelse
             </div>
         </section>
     </div>

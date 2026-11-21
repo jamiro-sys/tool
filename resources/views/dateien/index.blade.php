@@ -10,7 +10,7 @@
     </a>
 
     @can('schreiben')
-        @include('dateien._hochladen')
+        @include('dateien._hochladen', ['ressorts' => $ablageRessorts])
     @endcan
 
     <form method="GET" class="mb-5 grid gap-2 sm:grid-cols-[220px_160px_1fr] sm:items-end" x-data x-on:change="$el.submit()">
@@ -22,7 +22,7 @@
     </form>
 
     @php
-        $orte = \App\Models\Ordner::orte($ressorts, $ordner);
+        $orte = \App\Models\Ordner::orte($ablageRessorts, $ordner);
         $nurRessort = $filter['ressort'] === 'allgemein' ? collect() : ($filter['ressort'] ? $ressorts->where('id', (int) $filter['ressort']) : $ressorts);
         $gruppen = \App\Models\Ordner::gruppen($nurRessort, $ordner, $dokumente, ! $filter['ressort'] || $filter['ressort'] === 'allgemein');
     @endphp

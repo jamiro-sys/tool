@@ -84,11 +84,22 @@ class Ausgabe extends Model
         ];
     }
 
+    /** Das Turnier, um das es gerade geht: das laufende oder naechste; sonst das zuletzt vergangene, das noch nicht abgeschlossen ist. */
     public static function naechste(): ?self
     {
-        return static::whereIn('status', ['planung', 'laufend', 'rueckblick'])
-            ->orderBy('datum_von')
-            ->first();
+        $offen = static::whereIn('status', ['planung', 'laufend', 'rueckblick'])->orderBy('datum_von')->get();
+
+        return $offen->first(fn (self $a) => ($a->datum_bis ?? $a->datum_von)->gte(today()))
+            ?? $offen->sortByDesc('datum_von')->first();
+    }
+
+    /** Erinnerungen nur bis 30 Tage nach Turnierende (danach geht es um den Rueckblick). */
+    public function scopeNochAktuell(\Illuminate\Database\Eloquent\Builder $q): \Illuminate\Database\Eloquent\Builder
+    {
+        $grenze = today()->subDays(30)->toDateString();
+
+        return $q->where('status', '!=', 'abgeschlossen')
+            ->where(fn ($w) => $w->whereDate('datum_bis', '>=', $grenze)->orWhere(fn ($x) => $x->whereNull('datum_bis')->whereDate('datum_von', '>=', $grenze)));
     }
 
     public function verknuepfungen(): \Illuminate\Database\Eloquent\Relations\MorphMany

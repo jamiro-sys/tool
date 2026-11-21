@@ -14,7 +14,7 @@ class StartController extends Controller
     {
         $user = $request->user();
         $naechste = Ausgabe::with('turnier', 'halle')->whereIn('status', ['planung', 'laufend', 'rueckblick'])->orderBy('datum_von')->get();
-        $ausgabe = $naechste->first();
+        $ausgabe = Ausgabe::naechste()?->load('turnier', 'halle');
 
         $meine = Aufgabe::with(['ressort', 'ausgabe'])
             ->whereHas('ausgabe', fn ($q) => $q->whereIn('status', ['planung', 'laufend', 'rueckblick']))

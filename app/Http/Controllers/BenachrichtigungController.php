@@ -72,7 +72,8 @@ class BenachrichtigungController extends Controller
     public function pushAbonnieren(Request $request)
     {
         $daten = $request->validate([
-            'endpoint' => ['required', 'url', 'max:500'],
+            // Nur echte Push-Dienste der Browser (Google, Apple, Mozilla, Microsoft)
+            'endpoint' => ['required', 'url:https', 'max:500', 'regex:/^https:\/\/([a-z0-9-]+\.)*(googleapis\.com|push\.apple\.com|push\.services\.mozilla\.com|notify\.windows\.com)\//i'],
             'keys.p256dh' => ['required', 'string'],
             'keys.auth' => ['required', 'string'],
         ]);

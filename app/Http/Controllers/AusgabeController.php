@@ -76,6 +76,7 @@ class AusgabeController extends Controller
             'zusatz.*.titel' => ['nullable', 'string', 'max:200'],
             'zusatz.*.ressort_id' => ['nullable', 'exists:ressorts,id'],
             'zusatz.*.faellig_am' => ['nullable', 'date'],
+            'zusatz.*.verantwortlich_id' => ['nullable', 'exists:users,id'],
         ]);
 
         $turnier = Turnier::findOrFail($daten['turnier_id']);
@@ -141,6 +142,13 @@ class AusgabeController extends Controller
             'notizen' => ['nullable', 'string', 'max:10000'],
             'faelligkeiten_verschieben' => ['sometimes', 'boolean'],
         ]);
+        // Ende nie vor dem Beginn (auch wenn nur eines der beiden Daten geaendert wird)
+        $von = \Carbon\Carbon::parse($daten['datum_von'] ?? $ausgabe->datum_von);
+        $bis = array_key_exists('datum_bis', $daten) ? ($daten['datum_bis'] ? \Carbon\Carbon::parse($daten['datum_bis']) : null) : $ausgabe->datum_bis;
+        if ($bis && $bis->lt($von)) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['datum_bis' => 'Der letzte Turniertag kann nicht vor dem ersten liegen.']);
+        }
+        $warRueckblick = $ausgabe->status === 'rueckblick';
 
         $altesDatum = $ausgabe->datum_von->copy();
         $altesEnde = $ausgabe->datum_bis?->copy();
@@ -163,7 +171,7 @@ class AusgabeController extends Controller
             }
         }
 
-        if (isset($daten['status']) && $daten['status'] === 'rueckblick') {
+        if (isset($daten['status']) && $daten['status'] === 'rueckblick' && ! $warRueckblick) {
             $this->benachrichtiger->sende(
                 User::where('aktiv', true)->get(), 'ausgabe', 'Rückblick: '.$ausgabe->titel,
                 'Das Turnier ist vorbei. Was lief gut, was machen wir nächstes Mal anders?',
@@ -227,6 +235,9 @@ class AusgabeController extends Controller
     {
         Gate::authorize('admin');
         Aktivitaet::protokolliere('ausgabe.geloescht', 'Turnier gelöscht: '.$ausgabe->titel);
+        // Links haengen polymorph am Turnier und an seinen Aufgaben (keine Datenbank-Kaskade)
+        \App\Models\Verknuepfung::where(fn ($q) => $q->where('bezug_type', 'ausgabe')->where('bezug_id', $ausgabe->id))
+            ->orWhere(fn ($q) => $q->where('bezug_type', 'aufgabe')->whereIn('bezug_id', $ausgabe->aufgaben()->pluck('id')))->delete();
         $ausgabe->delete();
 
         return redirect()->route('ausgaben.index')->with('erfolg', 'Turnier gelöscht.');

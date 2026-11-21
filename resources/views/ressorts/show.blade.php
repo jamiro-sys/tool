@@ -44,7 +44,7 @@
         @php
             $kacheln = [
                 ['aufgaben', 'Offen', $offen->count(), $ueberfaellig ? $ueberfaellig.' überfällig' : ($ausgabe ? 'im nächsten Turnier' : 'kein Turnier geplant')],
-                ['jahreslauf', 'Jahresplan', $kalender->flatten()->count(), 'Aufgaben jedes Jahr'],
+                ['jahreslauf', 'Jahreslauf', $kalender->flatten()->count(), 'Aufgaben jedes Jahr'],
                 ['personen', 'Personen', $ressort->mitglieder->count(), $ressort->leitung()?->name ?? 'ohne Leitung'],
                 ['material', 'Material', $ressort->material->count(), 'Einträge'],
                 ['kontakte', 'Kontakte', $ressort->kontakte->count(), 'Ansprechpersonen'],
@@ -178,16 +178,16 @@
                     @endforelse
                 </ul>
                 @if ($verwalten)
-                    <form method="POST" action="{{ route('ressorts.mitglied', $ressort) }}" class="space-y-2 border-t border-nacht/10 p-4">@csrf
+                    <form method="POST" action="{{ route('ressorts.mitglied', $ressort) }}" class="space-y-2 border-t border-nacht/10 p-4" x-on:submit="if ($el.rolle.value === 'entfernen' && !confirm('Person aus dem Ressort entfernen?')) $event.preventDefault()">@csrf
                         <p class="label">Person zuordnen</p>
-                        <select name="user_id" class="feld" required>@foreach ($personen as $p)<option value="{{ $p->id }}">{{ $p->name }}</option>@endforeach</select>
+                        <select name="user_id" class="feld" required aria-label="Person">@foreach ($personen as $p)<option value="{{ $p->id }}">{{ $p->name }}</option>@endforeach</select>
                         <div class="flex gap-2">
-                            <select name="rolle" class="feld flex-1">
+                            <select name="rolle" class="feld flex-1" aria-label="Rolle">
                                 <option value="mitglied">Mitglied</option><option value="nachfolge">Nachfolge</option>
                                 @can('admin')<option value="leitung">Leitung</option>@endcan
-                                <option value="entfernen">Entfernen</option>
+                                <option value="entfernen">Aus dem Ressort entfernen</option>
                             </select>
-                            <button class="knopf-nacht">OK</button>
+                            <button class="knopf-nacht">Speichern</button>
                         </div>
                     </form>
                 @endif
@@ -195,10 +195,10 @@
                     @break
                 @case('aufgaben')
 <section id="aufgaben" class="karte">
-                <div class="karte-kopf"><h2 class="titel text-sm">Offen {{ $ausgabe ? 'in' : '' }} {{ $ausgabe?->titel ?? 'im nächsten Turnier' }}</h2>
+                <div class="karte-kopf"><h2 class="titel text-sm">{{ $ausgabe ? 'Offen in '.$ausgabe->titel : 'Offene Aufgaben' }}</h2>
                     <span class="flex items-center gap-3">
                         @if ($ausgabe)<a href="{{ route('aufgaben.index', [$ausgabe, 'ressort' => $ressort->id]) }}" class="label hover:text-rot">Alle</a>@endif
-                        @if ($ausgabe && $mitarbeiten)<button type="button" class="knopf-rahmen knopf-klein" x-on:click="$dispatch('modal-assistent')"><x-icon name="funken" class="h-3.5 w-3.5" /> Mit Claude</button><button type="button" class="knopf-rot knopf-klein" x-on:click="$dispatch('modal-neue-aufgabe')"><x-icon name="plus" class="h-3.5 w-3.5" /> Aufgabe</button>@endif
+                        @if ($ausgabe && $mitarbeiten)<button type="button" class="knopf-rahmen knopf-klein" x-on:click="$dispatch('modal-assistent')"><x-icon name="funken" class="h-3.5 w-3.5" /> Mit Claude erfassen</button><button type="button" class="knopf-rot knopf-klein" x-on:click="$dispatch('modal-neue-aufgabe')"><x-icon name="plus" class="h-3.5 w-3.5" /> Aufgabe</button>@endif
                     </span></div>
                 @if (! $ausgabe)<p class="border-b border-nacht/5 px-4 py-3 text-sm text-beton">Es ist noch kein Turnier geplant. Aufgaben gehören immer zu einem Turnier: zuerst unter Turniere eines anlegen.</p>@endif
                 @forelse ($offen as $a)
@@ -233,14 +233,14 @@
                 @case('kontakte')
 <section id="kontakte" class="karte" x-data="{ neu: false }">
                 <div class="karte-kopf"><h2 class="titel text-sm">Kontakte</h2>
-                    @if ($mitarbeiten)<button type="button" class="knopf-rahmen knopf-klein" x-on:click="neu = !neu"><x-icon name="plus" class="h-3.5 w-3.5" /></button>@endif</div>
+                    @if ($mitarbeiten)<button type="button" class="knopf-rahmen knopf-klein" x-on:click="neu = !neu" aria-label="Neu erfassen"><x-icon name="plus" class="h-3.5 w-3.5" /></button>@endif</div>
                 @if ($mitarbeiten)
                     <form x-show="neu" x-collapse method="POST" action="{{ route('kontakte.speichern', $ressort) }}" class="space-y-2 border-b border-nacht/10 p-4">@csrf
-                        <input name="name" required class="feld" placeholder="Name">
-                        <input name="firma" class="feld" placeholder="Firma / Organisation">
-                        <input name="funktion" class="feld" placeholder="Funktion, z.B. Hallenwart">
-                        <div class="grid grid-cols-2 gap-2"><input name="telefon" class="feld" placeholder="Telefon"><input name="email" type="email" class="feld" placeholder="E-Mail"></div>
-                        <textarea name="notizen" class="feld" rows="2" placeholder="Was man wissen muss"></textarea>
+                        <input name="name" required class="feld" placeholder="Name" aria-label="Name">
+                        <input name="firma" class="feld" placeholder="Firma / Organisation" aria-label="Firma / Organisation">
+                        <input name="funktion" class="feld" placeholder="Funktion, z.B. Hallenwart" aria-label="Funktion">
+                        <div class="grid grid-cols-2 gap-2"><input name="telefon" class="feld" placeholder="Telefon" aria-label="Telefon"><input name="email" type="email" class="feld" placeholder="E-Mail" aria-label="E-Mail"></div>
+                        <textarea name="notizen" class="feld" rows="2" placeholder="Was man wissen muss" aria-label="Was man wissen muss"></textarea>
                         <button class="knopf-rot knopf-klein">Speichern</button>
                     </form>
                 @endif
@@ -283,8 +283,8 @@
                     @if ($mitarbeiten)<button type="button" class="knopf-rahmen knopf-klein" x-on:click="neu = !neu"><x-icon name="plus" class="h-3.5 w-3.5" /> Seite</button>@endif</div>
                 @if ($mitarbeiten)
                     <form x-show="neu" x-collapse method="POST" action="{{ route('wissen.speichern', $ressort) }}" class="space-y-3 border-b border-nacht/10 p-4">@csrf
-                        <input name="titel" required class="feld" placeholder="Titel, z.B. Ablauf Festwirtschaft am Turniertag">
-                        <textarea name="inhalt" required class="feld" rows="6" placeholder="Was muss eine neue Person wissen?"></textarea>
+                        <input name="titel" required class="feld" placeholder="Titel, z.B. Ablauf Festwirtschaft am Turniertag" aria-label="Titel">
+                        <textarea name="inhalt" required class="feld" rows="6" placeholder="Was muss eine neue Person wissen?" aria-label="Was muss eine neue Person wissen?"></textarea>
                         <button class="knopf-rot knopf-klein">Speichern</button>
                     </form>
                 @endif
@@ -346,7 +346,7 @@
 @if ($mitarbeiten)
                         @include('dateien._hochladen', ['ressorts' => $ressorts, 'ordner' => $alleOrdner->where('ressort_id', $ressort->id), 'vorRessort' => $ressort->id])
                     @endif
-                    @php $orte = \App\Models\Ordner::orte($ressorts, $alleOrdner); @endphp
+                    @php $orte = \App\Models\Ordner::orte($ressorts->filter(fn ($r) => auth()->user()->darfAblegen($r)), $alleOrdner); @endphp
                     @include('dateien._ablage', ['gruppen' => \App\Models\Ordner::gruppen([$ressort], $alleOrdner, $ressort->dokumente, false), 'offen' => true])
                     <a href="{{ route('dateien.index', ['ressort' => $ressort->id]) }}" class="label mt-3 inline-flex items-center gap-2 hover:text-rot">In der Dateiablage öffnen <x-icon name="pfeil" class="h-3.5 w-3.5" /></a>
                     @break

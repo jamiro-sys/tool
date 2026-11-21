@@ -14,9 +14,9 @@
                     <li class="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center" x-data="{ auf: false }">
                         <div class="min-w-0 flex-1"><p class="truncate font-mono text-xs font-bold">{{ $s['name'] }}</p><p class="text-xs text-beton">{{ \Carbon\Carbon::createFromTimestamp($s['zeit'])->timezone(config('app.timezone'))->format('d.m.Y H:i') }} | {{ number_format($s['groesse'] / 1024, 0, '.', "'") }} KB</p></div>
                         <div class="flex gap-2">
-                            <a href="{{ route('admin.sicherungen.download', $s['name']) }}" class="knopf-rahmen knopf-klein"><x-icon name="download" class="h-3.5 w-3.5" /></a>
+                            <a href="{{ route('admin.sicherungen.download', $s['name']) }}" class="knopf-rahmen knopf-klein" aria-label="Herunterladen"><x-icon name="download" class="h-3.5 w-3.5" /></a>
                             <button type="button" class="knopf-rahmen knopf-klein" x-on:click="auf = !auf">Einspielen</button>
-                            <form method="POST" action="{{ route('admin.sicherungen.loeschen', $s['name']) }}" onsubmit="return confirm('Sicherung löschen?')">@csrf @method('DELETE')<button class="knopf-leise knopf-klein"><x-icon name="loeschen" class="h-3.5 w-3.5" /></button></form>
+                            <form method="POST" action="{{ route('admin.sicherungen.loeschen', $s['name']) }}" onsubmit="return confirm('Sicherung löschen?')">@csrf @method('DELETE')<button class="knopf-leise knopf-klein" aria-label="Sicherung löschen"><x-icon name="loeschen" class="h-3.5 w-3.5" /></button></form>
                         </div>
                         <form x-show="auf" x-collapse method="POST" action="{{ route('admin.sicherungen.wiederherstellen', $s['name']) }}" class="w-full space-y-2 sm:basis-full">@csrf
                             <p class="text-xs">Alle aktuellen Daten werden durch diese Sicherung ersetzt. Vorher wird automatisch der jetzige Stand gesichert. Zum Bestätigen <span class="font-bold">WIEDERHERSTELLEN</span> eintippen.</p>

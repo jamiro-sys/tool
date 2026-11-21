@@ -14,7 +14,7 @@
     </ol>
 
     <form method="GET" class="mb-5 flex flex-wrap gap-2" x-data x-on:change="$el.submit()">
-        <select name="ressort" class="feld w-auto">
+        <select name="ressort" class="feld w-auto" aria-label="Ressort">
             <option value="">Alle Ressorts</option>
             @foreach ($ressorts as $r)<option value="{{ $r->id }}" @selected($ressortId === $r->id)>{{ $r->name }}</option>@endforeach
         </select>
@@ -51,7 +51,7 @@
                                 <div class="flex items-center gap-2">
                                     <span class="text-xs text-beton whitespace-nowrap">Plan {{ \App\Support\Aufwand::text($a->aufwand_geplant, '?') }}</span>
                                     <x-aufwand :name="'aufwand['.$a->id.']'" :wert="$a->aufwand_effektiv" klein />
-                                    <button type="button" class="knopf-rahmen knopf-klein" x-on:click="$dispatch('erkenntnis', { id: {{ $a->id }}, titel: @js($a->titel), vorlage: {{ $a->vorlage_id ? 'true' : 'false' }} })"><x-icon name="idee" class="h-3.5 w-3.5" /></button>
+                                    <button type="button" class="knopf-rahmen knopf-klein" aria-label="Erkenntnis festhalten" x-on:click="$dispatch('erkenntnis', { id: {{ $a->id }}, titel: @js($a->titel), vorlage: {{ $a->vorlage_id ? 'true' : 'false' }} })"><x-icon name="idee" class="h-3.5 w-3.5" /></button>
                                 </div>
                             </div>
                         @endforeach
@@ -91,7 +91,7 @@
                                                 <button class="knopf-rot knopf-klein">{{ ['streichen' => 'Kommt nicht mehr', 'neu' => 'In den Jahresplan', 'beibehalten' => 'Erledigt', 'anpassen' => 'Übernehmen'][$e->vorschlag] }}</button>
                                             </form>
                                         @endif
-                                        <form method="POST" action="{{ route('erkenntnisse.destroy', $e) }}">@csrf @method('DELETE')<button class="knopf-leise knopf-klein">Verwerfen</button></form>
+                                        <form method="POST" action="{{ route('erkenntnisse.destroy', $e) }}" onsubmit="return confirm('Diese Erkenntnis verwerfen?')">@csrf @method('DELETE')<button class="knopf-leise knopf-klein">Verwerfen</button></form>
                                     </div>
                                     @if ($e->vorschlag === 'anpassen' && $e->vorlage)
                                         <form method="POST" action="{{ route('erkenntnisse.uebernehmen', $e) }}" x-show="auf" x-collapse class="mt-3 space-y-2 border-t border-nacht/10 pt-3">@csrf
@@ -138,7 +138,7 @@
             <input type="hidden" name="aufgabe_id" :value="id">
             <p class="label text-rot">Erkenntnis</p>
             <p class="titel text-base" x-text="titel"></p>
-            <textarea name="text" required class="feld" rows="3" placeholder="Was war gut, was ändern wir?"></textarea>
+            <textarea name="text" required class="feld" rows="3" placeholder="Was war gut, was ändern wir?" aria-label="Was war gut, was ändern wir?"></textarea>
             <div class="grid grid-cols-2 gap-2">
                 @foreach (\App\Models\Erkenntnis::VORSCHLAEGE as $k => $l)
                     <label class="flex cursor-pointer items-center gap-2 border border-nacht/20 px-3 py-2 text-xs font-bold has-[:checked]:border-rot has-[:checked]:bg-rot/5" @if ($k === 'neu') x-show="!vorlage" @else x-show="vorlage || '{{ $k }}' === 'beibehalten'" @endif>

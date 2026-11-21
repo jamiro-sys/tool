@@ -89,7 +89,10 @@ class SystemController extends Controller
             'cache' => tap('Cache geleert.', fn () => Artisan::call('optimize:clear')),
             'optimieren' => tap('Routen und Ereignisse zwischengespeichert.', fn () => Artisan::call('route:cache') + Artisan::call('event:cache')),
             'queue' => tap('Warteschlange abgearbeitet.', fn () => Artisan::call('queue:work', ['--stop-when-empty' => true, '--max-time' => 40, '--tries' => 3])),
-            'migrieren' => tap('Datenbank auf dem neusten Stand.', fn () => Artisan::call('migrate', ['--force' => true])),
+            'migrieren' => tap('Sicherung erstellt, Datenbank auf dem neusten Stand.', function () {
+                app(\App\Services\Sicherung::class)->erstelle('vor-migration');
+                Artisan::call('migrate', ['--force' => true]);
+            }),
             'speicher_link' => tap('Speicher-Link erstellt.', fn () => Artisan::call('storage:link', ['--relative' => true])),
             'wartung_an' => $this->wartungAn(),
             'wartung_aus' => tap('Wartungsmodus beendet.', fn () => Artisan::call('up')),

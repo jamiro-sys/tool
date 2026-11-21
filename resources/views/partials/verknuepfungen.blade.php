@@ -1,11 +1,19 @@
 {{-- Links zu externen Werkzeugen. Erwartet $bezug (Model) und $typ (ausgabe|ressort|aufgabe). --}}
-@php $links = $bezug->verknuepfungen; @endphp
+@php
+    $links = $bezug->verknuepfungen;
+    $u = auth()->user();
+    $darfLinks = match (true) {
+        $bezug instanceof \App\Models\Ressort => $u->can('ressort-mitarbeiten', $bezug) || $u->can('ressort-verwalten', $bezug),
+        $bezug instanceof \App\Models\Aufgabe => $u->can('aufgabe-bearbeiten', $bezug),
+        default => $u->can('schreiben'),
+    };
+@endphp
 <section class="karte" x-data="{ neu: false }">
     <div class="karte-kopf">
         <h2 class="titel text-sm">Links</h2>
-        @can('schreiben')
+        @if ($darfLinks)
             <button type="button" class="knopf-leise knopf-klein" x-on:click="neu = !neu" aria-label="Link hinzufügen"><x-icon name="plus" class="h-4 w-4" /></button>
-        @endcan
+        @endif
     </div>
     @if ($links->isEmpty())
         <p class="px-4 py-3 text-xs text-beton">Noch keine Links. Hier kommen z. B. der Spielplan auf turnieragenda.ch oder der Schichtplan auf helfereinsatz.ch hin.</p>
@@ -18,22 +26,22 @@
                         <span class="block truncate text-sm font-bold">{{ $l->titel }}</span>
                         <span class="block truncate text-xs text-beton">{{ $l->werkzeug ? \App\Models\Verknuepfung::WERKZEUGE[$l->werkzeug] : $l->host() }}</span>
                     </a>
-                    @can('schreiben')
+                    @if ($darfLinks)
                         <form method="POST" action="{{ route('verknuepfungen.loeschen', $l) }}" onsubmit="return confirm('Link entfernen?')">@csrf @method('DELETE')
                             <button class="knopf-leise knopf-klein text-beton hover:text-rot" aria-label="Link entfernen"><x-icon name="x" class="h-4 w-4" /></button>
                         </form>
-                    @endcan
+                    @endif
                 </li>
             @endforeach
         </ul>
     @endif
-    @can('schreiben')
+    @if ($darfLinks)
         <form method="POST" action="{{ route('verknuepfungen.speichern') }}" x-show="neu" x-collapse x-cloak class="space-y-2 border-t border-nacht/10 p-4">@csrf
             <input type="hidden" name="bezug_typ" value="{{ $typ }}"><input type="hidden" name="bezug_id" value="{{ $bezug->id }}">
-            <input name="titel" required maxlength="120" class="feld" placeholder="Titel, z. B. Spielplan">
-            <input name="url" type="url" required class="feld" placeholder="https://">
-            <select name="werkzeug" class="feld"><option value="">Werkzeug (optional)</option>@foreach (\App\Models\Verknuepfung::WERKZEUGE as $k => $w)<option value="{{ $k }}">{{ $w }}</option>@endforeach</select>
+            <input name="titel" required maxlength="120" class="feld" placeholder="Titel, z. B. Spielplan" aria-label="Titel">
+            <input name="url" type="url" required class="feld" placeholder="https://" aria-label="Adresse">
+            <select name="werkzeug" class="feld" aria-label="Werkzeug"><option value="">Werkzeug (optional)</option>@foreach (\App\Models\Verknuepfung::WERKZEUGE as $k => $w)<option value="{{ $k }}">{{ $w }}</option>@endforeach</select>
             <button class="knopf-rot knopf-klein">Speichern</button>
         </form>
-    @endcan
+    @endif
 </section>

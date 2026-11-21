@@ -57,7 +57,7 @@ VAPID_PRIVATE_KEY={{ session('vapid')['privateKey'] }}</pre>
             <div class="karte-kopf"><h2 class="titel text-sm">Werkzeuge</h2></div>
             <div class="grid gap-2 p-4">
                 @foreach (['cache' => ['Cache leeren', 'neu-laden'], 'optimieren' => ['Zwischenspeicher aufbauen', 'server'], 'queue' => ['Warteschlange jetzt abarbeiten', 'senden'], 'migrieren' => ['Datenbank migrieren', 'datenbank'], 'speicher_link' => ['Speicher-Link erstellen', 'link']] as $aktion => [$label, $icon])
-                    <form method="POST" action="{{ route('admin.system.aktion') }}">@csrf<input type="hidden" name="aktion" value="{{ $aktion }}">
+                    <form method="POST" action="{{ route('admin.system.aktion') }}" @if ($aktion === 'migrieren') onsubmit="return confirm('Datenbank jetzt migrieren? Vorher wird automatisch eine Sicherung erstellt.')" @endif>@csrf<input type="hidden" name="aktion" value="{{ $aktion }}">
                         <button class="knopf-rahmen w-full justify-start"><x-icon :name="$icon" class="h-4 w-4" /> {{ $label }}</button></form>
                 @endforeach
                 <form method="POST" action="{{ route('admin.system.aktion') }}" onsubmit="return confirm('{{ $wartung ? 'Wartung beenden?' : 'Wartungsmodus aktivieren? Alle anderen sehen eine Wartungsseite.' }}')">@csrf
@@ -123,7 +123,7 @@ VAPID_PRIVATE_KEY={{ session('vapid')['privateKey'] }}</pre>
             <div class="karte-kopf"><h2 class="titel text-sm">Versandprotokoll</h2></div>
             <ul class="max-h-96 divide-y divide-nacht/5 overflow-y-auto text-xs">
                 @forelse ($versand as $v)
-                    <li class="flex items-center gap-2 px-4 py-2"><span class="{{ $v->status === 'ok' ? 'marke-rahmen' : 'marke-gelb' }}">{{ $v->kanal }}</span><span class="min-w-0 flex-1 truncate">{{ $v->user?->name }}: {{ $v->typ }}@if ($v->fehler) <span class="text-beton">({{ $v->fehler }})</span>@endif</span><span class="shrink-0 text-beton">{{ $v->created_at->format('d.m. H:i') }}</span></li>
+                    <li class="flex items-center gap-2 px-4 py-2"><span class="{{ $v->status === 'ok' ? 'marke-rahmen' : 'marke-gelb' }}">{{ $v->kanal }}</span><span class="min-w-0 flex-1 truncate">{{ $v->user?->name }}: {{ \App\Models\User::EREIGNISSE[$v->typ] ?? $v->typ }}@if ($v->fehler) <span class="text-beton">({{ $v->fehler }})</span>@endif</span><span class="shrink-0 text-beton">{{ $v->created_at->format('d.m. H:i') }}</span></li>
                 @empty
                     <li class="px-4 py-5 text-beton">Noch nichts versendet.</li>
                 @endforelse

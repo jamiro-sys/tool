@@ -32,10 +32,10 @@
 
         <section class="mt-8">
             <h2 class="titel border-b-2 border-rot pb-1 text-lg">2. Personen</h2>
-            <table class="tabelle mt-3">
+            <div class="mt-3 overflow-x-auto"><table class="tabelle">
                 <thead><tr><th>Name</th><th>Rolle</th><th>Telefon</th><th>E-Mail</th></tr></thead>
                 <tbody>@foreach ($ressort->mitglieder as $m)<tr><td class="font-bold">{{ $m->name }}</td><td>{{ ['leitung' => 'Leitung', 'mitglied' => 'Mitglied', 'nachfolge' => 'Nachfolge'][$m->pivot->rolle] ?? '' }}</td><td>{{ $m->telefon }}</td><td>{{ $m->email }}</td></tr>@endforeach</tbody>
-            </table>
+            </table></div>
         </section>
 
         <section class="mt-8">
@@ -53,7 +53,7 @@
 
         <section class="mt-8 seite-umbruch">
             <h2 class="titel border-b-2 border-rot pb-1 text-lg">4. Kontakte</h2>
-            <table class="tabelle mt-3">
+            <div class="mt-3 overflow-x-auto"><table class="tabelle">
                 <thead><tr><th>Name</th><th>Funktion</th><th>Telefon / E-Mail</th><th>Hinweise</th></tr></thead>
                 <tbody>
                     @forelse ($ressort->kontakte as $k)
@@ -62,7 +62,7 @@
                         <tr><td colspan="4" class="text-beton">[Keine Kontakte erfasst]</td></tr>
                     @endforelse
                 </tbody>
-            </table>
+            </table></div>
         </section>
 
         <section class="mt-8">
@@ -101,7 +101,7 @@
 
         <footer class="mt-12 flex items-center justify-between border-t border-nacht/10 pt-3">
             <span class="flex items-center gap-2"><span class="h-4 w-1 bg-rot"></span><span class="label">Hauptsponsor</span></span>
-            <span class="text-xs text-beton">[Logo Raiffeisen]</span>
+            <img src="{{ asset('img/raiffeisen-logo.svg') }}" alt="Raiffeisenbank Regio Altnau" class="h-10 w-auto">
         </footer>
     </main>
 </body>

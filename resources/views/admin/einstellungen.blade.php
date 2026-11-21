@@ -43,8 +43,8 @@
                         <form method="POST" action="{{ route('admin.turniere.speichern', $t) }}" class="mt-3 space-y-2">@csrf
                             <input name="name" required class="feld" value="{{ $t?->name }}" placeholder="Name">
                             <input name="kurz" required maxlength="12" class="feld" value="{{ $t?->kurz }}" placeholder="Kürzel, z.B. HERBST">
-                            <select name="halle_id" class="feld"><option value="">Halle</option>@foreach ($hallen as $h)<option value="{{ $h->id }}" @selected($t?->halle_id === $h->id)>{{ $h->name }}</option>@endforeach</select>
-                            <textarea name="beschreibung" class="feld" rows="2" placeholder="Beschreibung">{{ $t?->beschreibung }}</textarea>
+                            <select name="halle_id" class="feld" aria-label="Halle"><option value="">Halle</option>@foreach ($hallen as $h)<option value="{{ $h->id }}" @selected($t?->halle_id === $h->id)>{{ $h->name }}</option>@endforeach</select>
+                            <textarea name="beschreibung" class="feld" rows="2" placeholder="Beschreibung" aria-label="Beschreibung">{{ $t?->beschreibung }}</textarea>
                             <button class="knopf-rot knopf-klein">Speichern</button>
                         </form>
                     </details>

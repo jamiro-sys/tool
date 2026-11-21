@@ -79,6 +79,16 @@ class User extends Authenticatable
         return $this->rolle === 'lesend';
     }
 
+    /** Dateiablage: Allgemein fuer alle mit Schreibrecht, Ressort-Ordner fuer wer dort mitarbeitet (Admin ueberall). */
+    public function darfAblegen(Ressort|int|null $ressort): bool
+    {
+        if ($this->istLesend()) {
+            return false;
+        }
+
+        return $ressort === null || $this->istAdmin() || $this->gehoertZuRessort($ressort);
+    }
+
     public function istExperte(): bool
     {
         return $this->ansicht === 'experte';

@@ -43,10 +43,10 @@ class GrundSeeder extends Seeder
         // [Ressort, Titel, Tage vorher, Aufwand, Turnier, Anleitung, Checkliste]
         $vorlagen = [
             ['GL', 'Turnierdaten festlegen und Halle reservieren', 300, 2, null, "Termine mit dem Regionalverband abgleichen (keine Kollision mit anderen Hallenturnieren).\nReservation bei der Gemeinde schriftlich bestätigen lassen.", ['Termin mit Verband prüfen', 'Halle reservieren', 'Bestätigung ablegen']],
-            ['GL', 'OK-Startsitzung durchführen', 120, 3, null, "Traktanden: Rückblick letzte Ausgabe, offene Erkenntnisse, Budget, Verantwortlichkeiten. Protokoll im Ressort Gesamtleitung ablegen.", null],
+            ['GL', 'OK-Startsitzung durchführen', 120, 3, null, "Traktanden: Rückblick letztes Turnier, offene Erkenntnisse, Budget, Verantwortlichkeiten. Protokoll im Ressort Gesamtleitung ablegen.", null],
             ['GL', 'Bewilligungen bei der Gemeinde einholen', 60, 1.5, null, "Gesuch für Festwirtschaft und Lautsprecher. Frist der Gemeinde beachten.", null],
             ['GL', 'Schlusssitzung und Rückblick', -14, 2, null, "Rückblick im Tool gemeinsam durchgehen. Jedes Ressort bringt seine Erkenntnisse mit.", null],
-            ['FIN', 'Budget erstellen', 120, 3, null, "Vorlage: Abrechnung der letzten Ausgabe. Preise Festwirtschaft und Startgeld prüfen.", null],
+            ['FIN', 'Budget erstellen', 120, 3, null, "Vorlage: Abrechnung des letzten Turniers. Preise Festwirtschaft und Startgeld prüfen.", null],
             ['FIN', 'Startgelder einfordern', 30, 1, null, "Rechnungen an alle angemeldeten Teams, Zahlungsfrist 14 Tage vor dem Turnier.", null],
             ['FIN', 'Kasse und Wechselgeld vorbereiten', 3, 1, null, "Wechselgeld bei der Bank bestellen. Kassenblätter ausdrucken.", ['Wechselgeld bestellen', 'Kassenblätter drucken', 'Kartenterminal laden']],
             ['FIN', 'Schlussabrechnung erstellen', -21, 3, null, "Alle Belege sammeln, Abrechnung an Gesamtleitung und Vereinskasse.", null],
@@ -61,7 +61,7 @@ class GrundSeeder extends Seeder
             ['SPB', 'Spielplan erstellen', 14, 4, null, "Gruppen auslosen, Spielplan im Styleguide als PDF.", null],
             ['SPB', 'Rundschreiben an Teams', 10, 1.5, null, "Spielplan, Anfahrt, Garderoben, Reglement, Kontakt am Turniertag.", null],
             ['FW', 'Hygienekonzept prüfen', 30, 1, null, null, null],
-            ['FW', 'Getränke und Lebensmittel bestellen', 14, 2, null, "Mengen der letzten Ausgabe als Basis nehmen (siehe Erkenntnisse).", null],
+            ['FW', 'Getränke und Lebensmittel bestellen', 14, 2, null, "Mengen des letzten Turniers als Basis nehmen (siehe Erkenntnisse).", null],
             ['FW', 'Preisliste und Kassensystem', 7, 1, null, null, null],
             ['FW', 'Einkauf Frischwaren', 2, 3, null, null, null],
             ['HLF', 'Helferbedarf festlegen', 60, 1, null, "Schichten pro Ressort abfragen.", null],

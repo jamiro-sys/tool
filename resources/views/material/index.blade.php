@@ -51,7 +51,7 @@
                             <span class="hidden flex-wrap justify-end gap-1.5 sm:flex">
                                 @if ($bilanz['pruefen'])<span class="marke-gelb">Kauf prüfen</span>@endif
                                 @if ($bilanz['anzahl'])<span class="marke-rahmen">{{ $bilanz['anzahl'] }}x gemietet</span>@endif
-                                @if ($m->zustand !== 'gut')<span class="{{ $m->zustand === 'defekt' ? 'marke-offen' : 'marke-gelb' }}">{{ \App\Models\Material::ZUSTAND[$m->zustand] }}</span>@endif
+                                @if ($m->zustand !== 'gut')<span class="{{ $m->zustand === 'defekt' ? 'marke-rahmen border-rot text-rot' : 'marke-gelb' }}">{{ \App\Models\Material::ZUSTAND[$m->zustand] }}</span>@endif
                             </span>
                             <x-icon name="pfeil" class="h-4 w-4 shrink-0 transition-transform group-open:rotate-90" />
                         </summary>
@@ -59,7 +59,7 @@
                         <div class="mt-3 flex flex-wrap gap-1.5 sm:hidden">
                             @if ($bilanz['pruefen'])<span class="marke-gelb">Kauf prüfen</span>@endif
                             @if ($bilanz['anzahl'])<span class="marke-rahmen">{{ $bilanz['anzahl'] }}x gemietet</span>@endif
-                            @if ($m->zustand !== 'gut')<span class="marke-gelb">{{ \App\Models\Material::ZUSTAND[$m->zustand] }}</span>@endif
+                            @if ($m->zustand !== 'gut')<span class="{{ $m->zustand === 'defekt' ? 'marke-rahmen border-rot text-rot' : 'marke-gelb' }}">{{ \App\Models\Material::ZUSTAND[$m->zustand] }}</span>@endif
                         </div>
 
                         <div class="mt-4 grid gap-6 lg:grid-cols-2">

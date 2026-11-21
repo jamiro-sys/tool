@@ -22,6 +22,14 @@ class OrdnerUndVorschauTest extends OkTestCase
         Storage::fake('local');
         [$r1, $r2] = Ressort::orderBy('sortierung')->take(2)->get()->all();
         $m = $this->person('mitglied', $r1->kuerzel);
+        $m->ressorts()->attach($r2->id, ['rolle' => 'mitglied']);
+        $m = $m->fresh();
+
+        // Wer nicht im Ressort mitarbeitet, kann dort nichts ablegen, verschieben oder Ordner aendern
+        $fremd = $this->person('mitglied', $r1->kuerzel);
+        $this->actingAs($fremd)->post(route('ordner.speichern'), ['ressort_id' => $r2->id, 'name' => 'Fremd QQQ'])->assertForbidden();
+        $this->actingAs($fremd)->post(route('dateien.speichern'), ['ressort_id' => $r2->id, 'url' => 'https://example.ch'])->assertForbidden();
+        $this->actingAs($fremd)->post(route('dateien.speichern'), ['url' => 'https://example.ch', 'titel' => 'Allgemein QQQ'])->assertSessionHasNoErrors();
 
         // Beim Hochladen neuen Unterordner anlegen
         $this->actingAs($m)->post(route('dateien.speichern'), ['ressort_id' => $r1->id, 'ordner_id' => 'neu', 'neuer_ordner' => 'Verträge QQQ',
@@ -57,6 +65,8 @@ class OrdnerUndVorschauTest extends OkTestCase
         $this->actingAs($m)->delete(route('ordner.loeschen', $plaene))->assertSessionHasNoErrors();
         $this->assertNull(Ordner::find($plaene->id));
         $this->assertSame([$r2->id, null], [$vertrag->fresh()->ressort_id, $vertrag->fresh()->ordner_id]);
+        $this->actingAs($fremd)->patch(route('dateien.aendern', $vertrag), ['titel' => 'Weg', 'ort' => 'r:'.$r1->id])->assertForbidden();
+        $this->actingAs($fremd)->get(route('dokumente.download', [$vertrag, 'ansehen' => 1]))->assertOk();
 
         // Lesende Person darf nichts anlegen
         $this->actingAs($this->person('lesend'))->post(route('ordner.speichern'), ['name' => 'X'])->assertForbidden();

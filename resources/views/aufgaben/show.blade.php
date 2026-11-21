@@ -51,22 +51,20 @@
 
             <div class="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-nacht/10 bg-kreide/50 p-4">
                 @if ($darf)
-                    <button type="button" x-show="!erledigt" x-on:click="setze('erledigt')" :disabled="laedt" class="knopf-rot"><x-icon name="check" class="h-4 w-4" /> Als erledigt markieren</button>
-                    <span x-show="erledigt" x-cloak class="inline-flex min-h-[44px] items-center gap-2 bg-rot px-4 text-[11px] font-bold uppercase tracking-label text-white"><x-icon name="check" class="h-4 w-4" /> Erledigt</span>
+                    {{-- Offen oder in Arbeit: ein Hauptknopf; alles andere nur als kleine Textknoepfe --}}
+                    <button type="button" x-show="status === 'offen' || status === 'in_arbeit'" @if (! $aufgabe->istOffen()) x-cloak @endif x-on:click="setze('erledigt')" :disabled="laedt" class="knopf-rot"><x-icon name="check" class="h-4 w-4" /> Als erledigt markieren</button>
+                    <span x-show="erledigt" @unless ($aufgabe->status === 'erledigt') x-cloak @endunless class="inline-flex min-h-[44px] items-center gap-2 bg-rot px-4 text-[11px] font-bold uppercase tracking-label text-white"><x-icon name="check" class="h-4 w-4" /> Erledigt</span>
+                    <span x-show="status === 'entfaellt'" @unless ($aufgabe->status === 'entfaellt') x-cloak @endunless class="marke-entfaellt">Entfällt</span>
                     <span class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
-                        <button type="button" x-show="erledigt" x-cloak x-on:click="setze('offen')" class="font-bold uppercase tracking-label text-beton hover:text-rot">Wieder öffnen</button>
-                        <button type="button" x-show="status === 'offen'" x-on:click="setze('in_arbeit')" class="font-bold uppercase tracking-label text-beton hover:text-nacht">Ich bin dran</button>
-                        <span x-show="status === 'in_arbeit'" x-cloak class="marke-in_arbeit">In Arbeit</span>
-                        <button type="button" x-show="status === 'in_arbeit'" x-cloak x-on:click="setze('offen')" class="font-bold uppercase tracking-label text-beton hover:text-nacht">Zurück auf offen</button>
-                        <button type="button" x-show="status !== 'entfaellt' && !erledigt" x-on:click="if (confirm('Diese Aufgabe entfällt für dieses Turnier?')) setze('entfaellt')" class="font-bold uppercase tracking-label text-beton hover:text-rot">Entfällt</button>
-                        <span x-show="status === 'entfaellt'" x-cloak class="marke-entfaellt">Entfällt</span>
-                        <button type="button" x-show="status === 'entfaellt'" x-cloak x-on:click="setze('offen')" class="font-bold uppercase tracking-label text-beton hover:text-nacht">Doch machen</button>
+                        <span x-show="erledigt" x-cloak class="text-beton" x-text="'am ' + (@js($aufgabe->erledigt_am?->format('d.m.Y')) || new Date().toLocaleDateString('de-CH'))"></span>
+                        <span x-show="status === 'in_arbeit'" @unless ($aufgabe->status === 'in_arbeit') x-cloak @endunless class="marke-in_arbeit">In Arbeit</span>
+                        <button type="button" x-show="status === 'offen'" @unless ($aufgabe->status === 'offen') x-cloak @endunless x-on:click="setze('in_arbeit')" class="font-bold uppercase tracking-label text-beton hover:text-nacht">Ich bin dran</button>
+                        <button type="button" x-show="status === 'offen' || status === 'in_arbeit'" @if (! $aufgabe->istOffen()) x-cloak @endif x-on:click="if (confirm('Diese Aufgabe entfällt für dieses Turnier?')) setze('entfaellt')" class="font-bold uppercase tracking-label text-beton hover:text-rot">Entfällt</button>
+                        <button type="button" x-show="!(status === 'offen' || status === 'in_arbeit')" @if ($aufgabe->istOffen()) x-cloak @endif x-on:click="setze('offen')" class="font-bold uppercase tracking-label text-beton hover:text-rot">Wieder öffnen</button>
                     </span>
                 @else
                     <x-status :status="$aufgabe->status" />
-                @endif
-                @if ($aufgabe->erledigt_am)
-                    <span x-show="erledigt" class="text-xs text-beton">am {{ $aufgabe->erledigt_am->format('d.m.Y') }}</span>
+                    @if ($aufgabe->erledigt_am)<span class="text-xs text-beton">am {{ $aufgabe->erledigt_am->format('d.m.Y') }}</span>@endif
                 @endif
             </div>
             @if ($darf && ! $aufgabe->aufwand_effektiv)

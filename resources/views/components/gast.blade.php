@@ -19,7 +19,7 @@
     </main>
     <footer class="flex items-center justify-between border-t border-nacht/10 bg-white px-[6%] py-4">
         <span class="flex items-center gap-2"><span class="h-4 w-1 bg-rot"></span><span class="label">Hauptsponsor</span></span>
-        <span class="text-xs text-beton">[Logo Raiffeisen]</span>
+        <img src="{{ asset('img/raiffeisen-logo.svg') }}" alt="Raiffeisenbank Regio Altnau" class="h-10 w-auto">
     </footer>
 </body>
 </html>

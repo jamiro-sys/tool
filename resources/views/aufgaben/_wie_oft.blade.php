@@ -18,7 +18,7 @@
     </div>
     @if ($turnierarten->count() > 1)
         <div x-show="oft === 'jedes_jahr'" x-collapse x-cloak class="mt-3 border-l-4 border-rot bg-kreide/60 p-3">
-            <p class="feld-label">Bei welchen Turnieren?</p>
+            <p class="feld-label">Bei welchen Turnierarten?</p>
             <x-turnierarten :turniere="$turnierarten" :gewaehlt="$gewaehlt" klein />
             <p class="mt-1.5 text-xs text-beton">Eines oder mehrere anhaken.</p>
             @error('turniere')<p class="mt-1 text-xs font-bold text-rot">{{ $message }}</p>@enderror

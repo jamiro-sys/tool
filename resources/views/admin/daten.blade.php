@@ -18,7 +18,7 @@
             <p class="titel text-sm">Aufgaben als Tabelle</p>
             <p class="mt-1 text-xs text-beton">CSV für Excel oder Numbers.</p>
             <ul class="mt-3 divide-y divide-nacht/5">
-                @foreach ($ausgaben as $a)<li><a href="{{ route('admin.daten.csv', $a) }}" class="flex items-center justify-between py-2 text-sm hover:text-rot">{{ $a->titel }} <x-icon name="download" class="h-4 w-4" /></a></li>@endforeach
+                @forelse ($ausgaben as $a)<li><a href="{{ route('admin.daten.csv', $a) }}" class="flex items-center justify-between py-2 text-sm hover:text-rot">{{ $a->titel }} <x-icon name="download" class="h-4 w-4" /></a></li>@empty<li class="py-2 text-sm text-beton">Noch keine Turniere.</li>@endforelse
             </ul>
         </section>
         <section class="karte p-4">

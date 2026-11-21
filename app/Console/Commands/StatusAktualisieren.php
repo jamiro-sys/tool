@@ -17,7 +17,8 @@ class StatusAktualisieren extends Command
     {
         foreach ($planer->statusAktualisieren() as [$ausgabe, $neu]) {
             $this->info($ausgabe->titel.' => '.$neu);
-            if ($neu === 'rueckblick') {
+            // Nur bei einem Turnier, das gerade zu Ende ging (nicht bei nachgetragenen alten Turnieren)
+            if ($neu === 'rueckblick' && ($ausgabe->datum_bis ?? $ausgabe->datum_von)->gte(today()->subDays(7))) {
                 $benachrichtiger->sende(User::where('aktiv', true)->get(), 'ausgabe', 'Rückblick: '.$ausgabe->titel,
                     'Danke für euren Einsatz! Haltet jetzt fest, was gut lief und was wir nächstes Mal anders machen.',
                     route('ausgaben.rueckblick', $ausgabe));

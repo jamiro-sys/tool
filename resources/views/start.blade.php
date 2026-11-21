@@ -94,7 +94,7 @@
                             <a href="{{ route('ausgaben.show', $ausgabe) }}" class="label hover:text-rot">Dashboard</a>
                         </div>
                         <div class="space-y-4 p-4">
-                            @foreach ($ressorts as $r)
+                            @forelse ($ressorts as $r)
                                 <a href="{{ route('aufgaben.index', [$ausgabe, 'ressort' => $r['ressort']->id]) }}" class="block group">
                                     <div class="mb-1.5 flex items-center justify-between text-sm">
                                         <span class="font-bold group-hover:text-rot">{{ $r['ressort']->name }}</span>
@@ -105,7 +105,9 @@
                                     </div>
                                     <x-fortschritt :prozent="$r['prozent']" />
                                 </a>
-                            @endforeach
+                            @empty
+                                <p class="text-sm text-beton">Noch keine Aufgaben in diesem Turnier.</p>
+                            @endforelse
                         </div>
                     </section>
 

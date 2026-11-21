@@ -2,11 +2,9 @@
 
 namespace App\Services;
 
-use App\Models\Dokument;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * Leert alle Inhalte des Tools (Ressorts, Turniere, Hallen, Vorlagen, Ausgaben, Aufgaben,
@@ -16,7 +14,7 @@ class Inhalte
 {
     /** Reihenfolge: abhaengige Tabellen zuerst. */
     public const TABELLEN = [
-        'notifications', 'verknuepfungen', 'kennzahlen', 'kassen', 'einkauf_posten', 'produkte', 'material_einsatz', 'material', 'versandprotokoll', 'rundmeldungen', 'aktivitaeten',
+        'notifications', 'auswahllisten', 'verknuepfungen', 'kennzahlen', 'kassen', 'einkauf_posten', 'produkte', 'material_einsatz', 'material', 'versandprotokoll', 'rundmeldungen', 'aktivitaeten',
         'uebergaben', 'wissen', 'dokumente', 'ordner', 'kontakte', 'erkenntnisse', 'kommentare',
         'aufgaben', 'vorlage_versionen', 'turnier_vorlage', 'vorlagen', 'ausgaben', 'turniere', 'hallen',
         'ressort_user', 'ressorts',
@@ -28,9 +26,6 @@ class Inhalte
     public function leeren(): array
     {
         $name = $this->sicherung->erstelle('vor-leeren');
-
-        $dateien = Dokument::query()->where('typ', 'datei')->whereNotNull('pfad')->pluck('pfad')
-            ->merge(\App\Models\Material::whereNotNull('foto_pfad')->pluck('foto_pfad'))->all();
 
         $geloescht = 0;
         Schema::disableForeignKeyConstraints();
@@ -44,9 +39,7 @@ class Inhalte
             Schema::enableForeignKeyConstraints();
         }
 
-        if ($dateien) {
-            Storage::disk('local')->delete($dateien);
-        }
+        // Hochgeladene Dateien bleiben liegen, damit die Sicherung von vorhin vollstaendig wiederhergestellt werden kann
         Cache::flush();
 
         return ['sicherung' => $name, 'geloescht' => $geloescht];
