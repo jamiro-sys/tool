@@ -149,6 +149,9 @@
                 <li>Häkchen «Auch im Jahresplan übernehmen» beim Bearbeiten einer jährlichen Aufgabe: gleiche Kachel, standardmässig an; ohne Häkchen gilt die Änderung nur für dieses Turnier.</li>
                 <li>Claude-Assistent: Knopf «Mit Claude erfassen» mit Funken-Symbol (Nachtblau oder Rahmen), Vorschläge als Karten mit Häkchen, Hinweise von Claude gelb links markiert, offene Punkte rot «bitte prüfen».</li>
                 <li>Turnierarten wählen: Häkchen-Kacheln wie bei «Wie oft?», mehrere möglich, alle angehakt heisst für alle. Bei «Jedes Jahr» klappt die Auswahl mit rotem Rand links auf, das aktuelle Turnier ist vorgewählt.</li>
+                <li>Aufgabe ansehen: oben ein Steckbrief (Fällig, Wer, Aufwand, Wie oft, Marke «Wichtig»), darunter ein Hauptknopf «Als erledigt markieren» in Rot; «Ich bin dran», «Entfällt» und «Wieder öffnen» nur als kleine Textknöpfe. Ändern nur über «Bearbeiten».</li>
+                <li>Aufgabe erfassen: sichtbar nur Was, Ressort, Wer, Wann und Wie oft; alles Weitere unter dem Aufklapper «Weitere Angaben». «Wichtig» als Häkchen.</li>
+                <li>Fälligkeit in Listen einheitlich: überfällig gelb «seit 3 Tagen», heute rot «Heute», bis 14 Tage «in 4 Tagen», sonst «Sa, 8. Feb». Erledigte stehen zugeklappt am Ende der Gruppe.</li>
                 <li>Dateien ablegen: Titel und Ressort werden aus dem Dateinamen vorgeschlagen und lassen sich ändern.</li>
                 <li>Animationen dezent und abschaltbar (reduzierte Bewegung wird respektiert).</li>
             </ul>

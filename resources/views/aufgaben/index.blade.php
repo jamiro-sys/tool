@@ -64,9 +64,26 @@
                     <a href="{{ route('ressorts.show', $r) }}" class="titel text-sm hover:text-rot">{{ $r->name }}</a>
                     <span class="flex w-32 items-center gap-2"><x-fortschritt :prozent="$gruppe->count() ? $erl / $gruppe->count() * 100 : 0" /><span class="label">{{ $erl }}/{{ $gruppe->count() }}</span></span>
                 </div>
-                @foreach ($gruppe as $aufgabe)
-                    @include('aufgaben._zeile', ['aufgabe' => $aufgabe])
+                @php
+                    $nurErledigt = ($filter['status'] ?? '') === 'erledigt';
+                    [$fertig, $aktiv] = $nurErledigt ? [collect(), $gruppe] : $gruppe->partition(fn ($x) => ! $x->istOffen());
+                @endphp
+                @foreach ($aktiv as $aufgabe)
+                    @include('aufgaben._zeile', ['aufgabe' => $aufgabe, 'ohneRessort' => true])
                 @endforeach
+                @if ($fertig->count())
+                    <div x-data="{ auf: {{ $aktiv->isEmpty() ? 'true' : 'false' }} }" class="border-t border-nacht/10">
+                        <button type="button" class="flex w-full items-center gap-2 px-4 py-2.5 text-left label hover:text-rot" x-on:click="auf = !auf" :aria-expanded="auf">
+                            <x-icon name="pfeil" class="h-3.5 w-3.5 transition-transform" ::class="auf ? 'rotate-90' : ''" />
+                            <span x-text="auf ? 'Erledigte ausblenden' : '{{ $fertig->count() }} erledigt anzeigen'">{{ $fertig->count() }} erledigt anzeigen</span>
+                        </button>
+                        <div x-show="auf" x-collapse {{ $aktiv->isEmpty() ? '' : 'x-cloak' }} data-erledigte>
+                            @foreach ($fertig->sortByDesc('erledigt_am') as $aufgabe)
+                                @include('aufgaben._zeile', ['aufgabe' => $aufgabe, 'ohneRessort' => true])
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
             </section>
         @endforeach
     @elseif ($ansicht === 'board')
@@ -88,7 +105,7 @@
                                 <a href="{{ route('aufgaben.show', $aufgabe) }}" class="block text-sm font-bold leading-snug hover:text-rot">{{ $aufgabe->titel }}</a>
                                 <div class="mt-2 flex items-center justify-between gap-2 text-xs text-beton">
                                     <span class="font-bold uppercase tracking-label text-[10px] text-nacht">{{ $aufgabe->ressort->kuerzel }}</span>
-                                    <span>{{ $aufgabe->faelligText() }}</span>
+                                    <span>{{ $aufgabe->istOffen() ? $aufgabe->faelligText() : '' }}</span>
                                     <x-person :user="$aufgabe->verantwortlich" />
                                 </div>
                             </article>

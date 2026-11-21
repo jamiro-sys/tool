@@ -16,7 +16,7 @@
             <span class="min-w-0 flex-1">
                 <span class="block truncate text-sm font-bold transition-colors" :class="erledigt ? 'text-beton line-through' : ''">{{ $aufgabe->titel }}</span>
                 <span class="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-beton">
-                    <span class="font-bold uppercase tracking-label text-[10px] text-nacht">{{ $aufgabe->ressort->kuerzel }}</span>
+                    @unless ($ohneRessort ?? false)<span class="font-bold uppercase tracking-label text-[10px] text-nacht">{{ $aufgabe->ressort->kuerzel }}</span>@endunless
                     @if ($mitAusgabe)<span>{{ $aufgabe->ausgabe->turnier->kurz ?? $aufgabe->ausgabe->titel }}</span>@endif
                     @if ($aufgabe->checklisteFortschritt())
                         <span class="inline-flex items-center gap-1"><x-icon name="aufgaben" class="h-3 w-3" /> {{ $aufgabe->checklisteFortschritt()['erledigt'] }}/{{ $aufgabe->checklisteFortschritt()['total'] }}</span>
@@ -30,7 +30,7 @@
                     <span class="marke-gelb"><x-icon name="uhr" class="h-3 w-3" /> {{ $aufgabe->faelligText() }}</span>
                 @elseif ($heute)
                     <span class="marke bg-rot text-white">Heute</span>
-                @else
+                @elseif ($aufgabe->istOffen())
                     <span class="text-xs font-bold text-beton">{{ $aufgabe->faelligText() }}</span>
                 @endif
                 @if (! ($ohnePerson ?? false))

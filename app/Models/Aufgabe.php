@@ -108,24 +108,39 @@ class Aufgabe extends Model
         return ['erledigt' => $erledigt, 'total' => count($liste)];
     }
 
+    /** Kurz und einheitlich: "seit 3 Tagen", "heute", "morgen", "in 4 Tagen", sonst "Sa, 8. Feb." (Jahr nur wenn anders). */
     public function faelligText(): string
     {
         if (! $this->faellig_am) {
             return 'ohne Termin';
         }
-        if (! $this->istOffen()) {
-            return $this->faellig_am->format('d.m.Y');
-        }
         $tage = (int) today()->diffInDays($this->faellig_am, false);
+        if ($this->istOffen()) {
+            $relativ = match (true) {
+                $tage === 0 => 'heute',
+                $tage === 1 => 'morgen',
+                $tage === -1 => 'seit gestern',
+                $tage < 0 => 'seit '.abs($tage).' Tagen',
+                $tage <= 14 => 'in '.$tage.' Tagen',
+                default => null,
+            };
+            if ($relativ) {
+                return $relativ;
+            }
+        }
 
-        return match (true) {
-            $tage === 0 => 'heute',
-            $tage === 1 => 'morgen',
-            $tage === -1 => 'seit gestern',
-            $tage < 0 => 'seit '.abs($tage).' Tagen',
-            $tage <= 14 => 'in '.$tage.' Tagen',
-            default => $this->faellig_am->format('d.m.Y'),
-        };
+        return $this->datumKurz();
+    }
+
+    /** "Sa, 8. Feb." bzw. "Sa, 8. Feb. 2027", wenn nicht im laufenden Jahr. */
+    public function datumKurz(): string
+    {
+        if (! $this->faellig_am) {
+            return 'ohne Termin';
+        }
+        $d = $this->faellig_am->copy()->locale('de_CH');
+
+        return $d->isoFormat($d->year === today()->year ? 'dd, D. MMM' : 'dd, D. MMM YYYY');
     }
 
     public function verknuepfungen(): \Illuminate\Database\Eloquent\Relations\MorphMany
