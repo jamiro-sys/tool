@@ -84,6 +84,7 @@ class AufgabeController extends Controller
         $jedesJahr = $request->input('wiederkehrend') === 'jedes_jahr' && Gate::allows('ressort-verwalten', $ressort);
         $turniere = $jedesJahr ? $this->turnierWahl($request) : [];
         unset($daten['wiederkehrend']);
+        $this->checklisteAnwenden($daten, []);
         $this->wannAnwenden($request, $daten, $ausgabe);
         $aufgabe = $ausgabe->aufgaben()->create($daten);
         Aktivitaet::protokolliere('aufgabe.erstellt', 'Aufgabe erstellt: '.$aufgabe->titel, $aufgabe);
@@ -108,14 +109,7 @@ class AufgabeController extends Controller
         $daten = $this->validiere($request, true);
         $vorher = $aufgabe->verantwortlich_id;
 
-        if (isset($daten['checkliste_text'])) {
-            $alt = collect($aufgabe->checkliste ?? [])->keyBy('text');
-            $daten['checkliste'] = collect(preg_split('/\r?\n/', $daten['checkliste_text']))
-                ->map(fn ($z) => trim($z))->filter()
-                ->map(fn ($z) => ['text' => $z, 'erledigt' => (bool) ($alt[$z]['erledigt'] ?? false)])
-                ->values()->all() ?: null;
-            unset($daten['checkliste_text']);
-        }
+        $this->checklisteAnwenden($daten, $aufgabe->checkliste ?? []);
 
         $this->wannAnwenden($request, $daten, $aufgabe->ausgabe);
         $warImPlan = (bool) $aufgabe->vorlage?->aktiv;
@@ -267,6 +261,20 @@ class AufgabeController extends Controller
             'aufwand_effektiv' => ['nullable', 'numeric', 'min:0', 'max:999'],
             'checkliste_text' => ['nullable', 'string', 'max:5000'],
         ]);
+    }
+
+    /** Checkliste aus Textfeld (eine Zeile pro Punkt); erledigte Punkte mit gleichem Text bleiben erledigt. */
+    protected function checklisteAnwenden(array &$daten, array $bisher): void
+    {
+        if (! array_key_exists('checkliste_text', $daten)) {
+            return;
+        }
+        $alt = collect($bisher)->keyBy('text');
+        $daten['checkliste'] = collect(preg_split('/\r?\n/', (string) $daten['checkliste_text']))
+            ->map(fn ($z) => trim($z))->filter()
+            ->map(fn ($z) => ['text' => $z, 'erledigt' => (bool) ($alt[$z]['erledigt'] ?? false)])
+            ->values()->all() ?: null;
+        unset($daten['checkliste_text']);
     }
 
     /** Faelligkeit aus "Wann": Abstand zum Turnier ergibt das Datum; ohne Abstand gilt das fixe Datum (oder keines). */

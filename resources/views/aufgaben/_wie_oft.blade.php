@@ -8,7 +8,7 @@
 @endphp
 <fieldset x-data="{ oft: @js($start) }">
     <legend class="feld-label">Wie oft?</legend>
-    <div class="grid gap-2 {{ ($schmal ?? false) ? '' : 'sm:grid-cols-2' }}">
+    <div class="grid gap-2 sm:grid-cols-2">
         @foreach (['einmalig' => ['Nur dieses Turnier', 'Kommt nur jetzt vor, z. B. Musikboxen ausleihen'], 'jedes_jahr' => ['Jedes Jahr', 'Kommt in den Jahresplan und bei jedem neuen Turnier wieder']] as $k => [$t, $txt])
             <label class="flex cursor-pointer items-start gap-3 border border-nacht/20 bg-white px-3 py-2.5 has-[:checked]:border-rot has-[:checked]:bg-rot/5">
                 <input type="radio" name="wiederkehrend" value="{{ $k }}" class="mt-1" x-model="oft" @checked($start === $k)>

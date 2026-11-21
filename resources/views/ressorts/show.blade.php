@@ -71,7 +71,7 @@
                 <section class="karte">
                     <div class="karte-kopf"><h2 class="titel text-sm">Als Nächstes {{ $ausgabe ? 'in '.$ausgabe->titel : '' }}</h2><span class="flex items-center gap-3"><a href="{{ route('ressorts.show', [$ressort, 'tab' => 'aufgaben']) }}" class="label hover:text-rot">Alle {{ $offen->count() }}</a>@if ($ausgabe && $mitarbeiten)<button type="button" class="knopf-rahmen knopf-klein" x-on:click="$dispatch('modal-assistent')" aria-label="Mit Claude erfassen"><x-icon name="funken" class="h-3.5 w-3.5" /></button><button type="button" class="knopf-rot knopf-klein" x-on:click="$dispatch('modal-neue-aufgabe')" aria-label="Neue Aufgabe"><x-icon name="plus" class="h-3.5 w-3.5" /> Aufgabe</button>@endif</span></div>
                     @forelse ($offen->take(5) as $a)
-                        @include('aufgaben._zeile', ['aufgabe' => $a->setRelation('ressort', $ressort)])
+                        @include('aufgaben._zeile', ['aufgabe' => $a->setRelation('ressort', $ressort), 'ohneRessort' => true])
                     @empty
                         <x-leer icon="check" titel="Nichts offen" />
                     @endforelse
@@ -202,7 +202,7 @@
                     </span></div>
                 @if (! $ausgabe)<p class="border-b border-nacht/5 px-4 py-3 text-sm text-beton">Es ist noch kein Turnier geplant. Aufgaben gehören immer zu einem Turnier: zuerst unter Turniere eines anlegen.</p>@endif
                 @forelse ($offen as $a)
-                    @include('aufgaben._zeile', ['aufgabe' => $a->setRelation('ressort', $ressort)])
+                    @include('aufgaben._zeile', ['aufgabe' => $a->setRelation('ressort', $ressort), 'ohneRessort' => true])
                 @empty
                     <x-leer icon="check" titel="Nichts offen" />
                 @endforelse
