@@ -60,11 +60,12 @@ class EinstellungenController extends Controller
     public function turnier(Request $request, ?Turnier $turnier = null)
     {
         $daten = $request->validate([
-            'name' => ['required', 'string', 'max:150'],
-            'kurz' => ['required', 'string', 'max:12'],
+            // Namen und Kuerzel eindeutig: Saisonplanung, Import und Filter erkennen Turnierarten daran
+            'name' => ['required', 'string', 'max:150', \Illuminate\Validation\Rule::unique('turniere', 'name')->ignore($turnier?->id)],
+            'kurz' => ['required', 'string', 'max:12', \Illuminate\Validation\Rule::unique('turniere', 'kurz')->ignore($turnier?->id)],
             'halle_id' => ['nullable', 'exists:hallen,id'],
             'beschreibung' => ['nullable', 'string', 'max:5000'],
-        ]);
+        ], ['name.unique' => 'Diese Turnierart gibt es schon.', 'kurz.unique' => 'Dieses Kürzel ist schon vergeben.']);
         $turnier && $turnier->exists ? $turnier->update($daten) : Turnier::create($daten);
 
         return back()->with('erfolg', 'Turnierart gespeichert.');

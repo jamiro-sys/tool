@@ -41,6 +41,9 @@ Route::middleware(['auth', 'aktiv'])->group(function () {
     // Ausgaben
     Route::get('/ausgaben', [AusgabeController::class, 'index'])->name('ausgaben.index');
     Route::get('/ausgaben/neu', [AusgabeController::class, 'create'])->name('ausgaben.create');
+    Route::get('/saison/neu', [\App\Http\Controllers\SaisonController::class, 'create'])->name('saison.create');
+    Route::post('/saison', [\App\Http\Controllers\SaisonController::class, 'store'])->name('saison.store');
+    Route::post('/saison/abbrechen', [\App\Http\Controllers\SaisonController::class, 'abbrechen'])->name('saison.abbrechen');
     Route::post('/ausgaben', [AusgabeController::class, 'store'])->name('ausgaben.store');
     Route::get('/ausgaben/{ausgabe}', [AusgabeController::class, 'show'])->name('ausgaben.show');
     Route::patch('/ausgaben/{ausgabe}', [AusgabeController::class, 'update'])->name('ausgaben.update');

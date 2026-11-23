@@ -67,7 +67,7 @@ class VorlageController extends Controller
         if ($request->boolean('schnell')) {
             return redirect()->route('vorlagen.index', array_filter($request->only(['ressort', 'status'])))
                 ->with('erfolg', '«'.$vorlage->titel.'» ist im Jahresplan.')
-                ->with('schnell', ['ressort_id' => $vorlage->ressort_id, 'tage_vorher' => $vorlage->tage_vorher, 'neu' => $vorlage->id, 'turniere' => $turniere, 'bezug' => $vorlage->bezug]);
+                ->with('schnell', ['ressort_id' => $vorlage->ressort_id, 'tage_vorher' => $vorlage->tage_vorher, 'neu' => $vorlage->id, 'turniere' => $turniere, 'bezug' => $vorlage->bezug, 'haeufigkeit' => $vorlage->haeufigkeit]);
         }
 
         return redirect()->route('vorlagen.show', $vorlage)->with('erfolg', 'Im Jahresplan gespeichert.');
@@ -139,6 +139,7 @@ class VorlageController extends Controller
             'anleitung' => ['nullable', 'string', 'max:20000'],
             'tage_vorher' => ['required', 'integer', 'min:-365', 'max:730'],
             'bezug' => ['nullable', Rule::in(\App\Support\Wann::BEZUG)],
+            'haeufigkeit' => ['nullable', Rule::in(array_keys(Vorlage::HAEUFIGKEIT))],
             'aufwand_std' => ['nullable', 'numeric', 'min:0', 'max:999'],
             'prioritaet' => ['required', Rule::in(array_keys(Vorlage::PRIORITAETEN))],
             'checkliste_text' => ['nullable', 'string', 'max:5000'],
@@ -146,6 +147,11 @@ class VorlageController extends Controller
         ], ['turniere.required_with' => 'Bitte mindestens eine Turnierart anhaken.']);
         unset($daten['turniere_gesendet']);
         $daten['bezug'] = $daten['bezug'] ?? 'beginn';
+        $daten['haeufigkeit'] = $daten['haeufigkeit'] ?? 'turnier';
+        // Einmal pro Saison: gilt fuer die Saison, nicht fuer einzelne Turnierarten
+        if ($daten['haeufigkeit'] === 'saison') {
+            $daten['turniere'] = [];
+        }
         $daten['checkliste'] = collect(preg_split('/\r?\n/', $daten['checkliste_text'] ?? ''))->map(fn ($z) => trim($z))->filter()->values()->all() ?: null;
         unset($daten['checkliste_text']);
 

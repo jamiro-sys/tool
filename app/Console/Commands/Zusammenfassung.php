@@ -34,7 +34,9 @@ class Zusammenfassung extends Command
                 : collect();
             $aufgaben = Aufgabe::with('ressort', 'ausgabe')->offen()->where('verantwortlich_id', $u->id)
                 ->whereNotNull('faellig_am')->whereDate('faellig_am', '<=', today()->addDays($art === 'woche' ? 14 : 7))
-                ->whereHas('ausgabe', fn ($q) => $q->nochAktuell())
+                ->where(fn ($q) => $q->whereHas('ausgabe', fn ($a) => $a->nochAktuell())
+                // Saison-Aufgaben bleiben aktiv, solange ein Turnier ihrer Saison noch aktuell ist
+                ->orWhere(fn ($w) => $w->where('saison_aufgabe', true)->whereHas('ausgabe', fn ($a) => $a->whereIn('saison', \App\Models\Ausgabe::query()->nochAktuell()->select('saison')))))
                 ->orderBy('faellig_am')->get();
 
             if ($meldungen->isEmpty() && $aufgaben->isEmpty()) {

@@ -23,6 +23,7 @@
                     @endif
                     @if ($aufgabe->begleitung_id === auth()->id())<span class="marke-rahmen">Begleitung</span>@endif
                     @if ($aufgabe->prioritaet === 'hoch')<span class="marke-rahmen border-rot text-rot">Wichtig</span>@endif
+                    @if ($aufgabe->saison_aufgabe)<span class="marke-rahmen" title="Einmal pro Saison, geführt im Turnier {{ $aufgabe->ausgabe?->titel }}">Saison</span>@endif
                 </span>
             </span>
             <span class="flex shrink-0 flex-col items-end gap-1">

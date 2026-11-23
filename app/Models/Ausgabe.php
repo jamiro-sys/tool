@@ -24,6 +24,21 @@ class Ausgabe extends Model
         return ['datum_von' => 'date', 'datum_bis' => 'date'];
     }
 
+    /** Die anderen Turniere derselben Saison (z. B. Februar zum Dezember). */
+    public function geschwister(): \Illuminate\Support\Collection
+    {
+        return static::with('turnier')->where('saison', $this->saison)->where('id', '!=', $this->id)->orderBy('datum_von')->get();
+    }
+
+    /** Aufgaben "einmal pro Saison" aus den anderen Turnieren dieser Saison. */
+    public function saisonAufgabenAnderer(): \Illuminate\Database\Eloquent\Collection
+    {
+        return Aufgabe::with(['ressort', 'verantwortlich', 'ausgabe.turnier'])
+            ->where('saison_aufgabe', true)
+            ->whereHas('ausgabe', fn ($q) => $q->where('saison', $this->saison)->where('id', '!=', $this->id))
+            ->orderByRaw('faellig_am is null')->orderBy('faellig_am')->get();
+    }
+
     public function turnier(): BelongsTo
     {
         return $this->belongsTo(Turnier::class);

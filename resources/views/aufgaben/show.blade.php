@@ -41,8 +41,8 @@
                 </div>
                 <div>
                     <dt class="label">Wie oft</dt>
-                    <dd class="mt-1 text-sm">{{ $jaehrlich ? 'Jedes Jahr' : 'Nur dieses Turnier' }}</dd>
-                    @if ($jaehrlich && $aufgabe->vorlage->turnierartText())<dd class="text-xs text-beton">{{ $aufgabe->vorlage->turnierartText() }}</dd>@endif
+                    <dd class="mt-1 text-sm">{{ $aufgabe->saison_aufgabe ? 'Einmal pro Saison '.$aufgabe->ausgabe->saison : ($jaehrlich ? 'Jedes Jahr' : 'Nur dieses Turnier') }}</dd>
+                    @if ($jaehrlich && ! $aufgabe->saison_aufgabe && $aufgabe->vorlage->turnierartText())<dd class="text-xs text-beton">{{ $aufgabe->vorlage->turnierartText() }}</dd>@endif
                 </div>
             </dl>
             @if ($aufgabe->prioritaet === 'hoch')

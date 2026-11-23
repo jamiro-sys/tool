@@ -49,7 +49,14 @@ class AufgabeController extends Controller
 
         $aufgaben = $query->orderByRaw('faellig_am is null')->orderBy('faellig_am')->orderBy('titel')->get();
 
+        $saisonAufgaben = $ausgabe->saisonAufgabenAnderer()
+            ->when($request->filled('ressort'), fn ($c) => $c->where('ressort_id', $request->integer('ressort')))
+            ->when($request->filled('person'), fn ($c) => $request->query('person') === 'keine' ? $c->whereNull('verantwortlich_id') : $c->where('verantwortlich_id', $request->integer('person')))
+            ->when($request->filled('q'), fn ($c) => $c->filter(fn ($a) => str_contains(mb_strtolower($a->titel.' '.$a->beschreibung), mb_strtolower((string) $request->query('q')))))
+            ->where('status', '!=', 'entfaellt');
+
         return view('aufgaben.index', [
+            'saisonAufgaben' => $saisonAufgaben,
             'ausgabe' => $ausgabe->load('turnier', 'halle'),
             'aufgaben' => $aufgaben,
             'ansicht' => $ansicht,
@@ -90,7 +97,7 @@ class AufgabeController extends Controller
         Aktivitaet::protokolliere('aufgabe.erstellt', 'Aufgabe erstellt: '.$aufgabe->titel, $aufgabe);
         $this->meldeZuweisung($aufgabe, null);
         if ($jedesJahr) {
-            app(AusgabePlaner::class)->inJahresplan($aufgabe, $turniere);
+            app(AusgabePlaner::class)->inJahresplan($aufgabe, $turniere, $this->haeufigkeit($request));
         }
         $meldung = $jedesJahr ? 'Aufgabe erstellt und in den Jahresplan aufgenommen.' : 'Aufgabe erstellt.';
 
@@ -129,7 +136,7 @@ class AufgabeController extends Controller
         if ($request->filled('wiederkehrend') && $darfPlan) {
             $planer = app(AusgabePlaner::class);
             if ($request->input('wiederkehrend') === 'jedes_jahr') {
-                $planer->inJahresplan($aufgabe, $this->turnierWahl($request));
+                $planer->inJahresplan($aufgabe, $this->turnierWahl($request), $this->haeufigkeit($request));
                 $hinweis = ' Kommt jedes Jahr wieder'.($aufgabe->vorlage->turnierartText() ? ' ('.$aufgabe->vorlage->turnierartText().')' : '').'.';
             } elseif ($aufgabe->vorlage?->aktiv) {
                 $planer->ausJahresplan($aufgabe->vorlage, 'Bei der Aufgabe auf «Nur dieses Turnier» gestellt');
@@ -309,6 +316,11 @@ class AufgabeController extends Controller
     }
 
     /** Gewaehlte Turnierarten bei "Jedes Jahr"; wurden Haekchen angezeigt, muss mindestens eines gesetzt sein. */
+    protected function haeufigkeit(Request $request): string
+    {
+        return $request->input('haeufigkeit') === 'saison' ? 'saison' : 'turnier';
+    }
+
     protected function turnierWahl(Request $request): array
     {
         return $request->validate([

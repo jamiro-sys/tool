@@ -22,7 +22,9 @@ class Erinnerungen extends Command
             ->whereNotNull('faellig_am')
             ->whereDate('faellig_am', '<=', today()->addDays($tage))
             ->where(fn ($q) => $q->whereNull('erinnert_am')->orWhereDate('erinnert_am', '<', today()))
-            ->whereHas('ausgabe', fn ($q) => $q->nochAktuell())
+            ->where(fn ($q) => $q->whereHas('ausgabe', fn ($a) => $a->nochAktuell())
+                // Saison-Aufgaben bleiben aktiv, solange ein Turnier ihrer Saison noch aktuell ist
+                ->orWhere(fn ($w) => $w->where('saison_aufgabe', true)->whereHas('ausgabe', fn ($a) => $a->whereIn('saison', \App\Models\Ausgabe::query()->nochAktuell()->select('saison')))))
             ->get();
 
         $anzahl = 0;

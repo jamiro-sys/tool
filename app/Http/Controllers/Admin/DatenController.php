@@ -48,7 +48,7 @@ class DatenController extends Controller
                 'ressort' => $v->ressort->name,
                 'ressort_kuerzel' => $v->ressort->kuerzel,
                 'turniere' => $v->turniere->map(fn ($t) => $t->kurz ?: $t->name)->values()->all(),
-                ...$v->only(['titel', 'beschreibung', 'anleitung', 'tage_vorher', 'bezug', 'aufwand_std', 'prioritaet', 'checkliste', 'aktiv']),
+                ...$v->only(['titel', 'beschreibung', 'anleitung', 'tage_vorher', 'bezug', 'haeufigkeit', 'aufwand_std', 'prioritaet', 'checkliste', 'aktiv']),
             ])->all(),
         ];
 
@@ -89,12 +89,13 @@ class DatenController extends Controller
                     'anleitung' => $v['anleitung'] ?? null,
                     'tage_vorher' => (int) ($v['tage_vorher'] ?? 14),
                     'bezug' => in_array($v['bezug'] ?? null, \App\Support\Wann::BEZUG, true) ? $v['bezug'] : 'beginn',
+                    'haeufigkeit' => ($v['haeufigkeit'] ?? null) === 'saison' ? 'saison' : 'turnier',
                     'aufwand_std' => $v['aufwand_std'] ?? null,
                     'prioritaet' => $v['prioritaet'] ?? 'normal',
                     'checkliste' => collect($v['checkliste'] ?? [])->map(fn ($p) => is_array($p) ? ($p['text'] ?? null) : $p)->filter()->values()->all() ?: null,
                     'aktiv' => (bool) ($v['aktiv'] ?? true),
                 ]);
-                $neueVorlage->setzeTurniere($turniere);
+                $neueVorlage->setzeTurniere($neueVorlage->proSaison() ? [] : $turniere);
                 $neu++;
             }
         });

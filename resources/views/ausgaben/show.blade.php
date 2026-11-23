@@ -64,6 +64,16 @@
             </div>
         </section>
 
+        @if ($geschwister->isNotEmpty())
+            <section class="karte border-l-4 border-l-rot p-4 lg:col-span-full" data-saison-karte>
+                <p class="label">Saison {{ $ausgabe->saison }}</p>
+                <p class="mt-1 text-sm">Gehört zusammen mit
+                    @foreach ($geschwister as $g)<a href="{{ route('ausgaben.show', $g) }}" class="font-bold hover:text-rot">{{ $g->titel }}</a> ({{ $g->datumText() }})@if (! $loop->last), @endif @endforeach.
+                    @if ($saisonOffen)<a href="{{ route('aufgaben.index', $ausgabe) }}" class="ml-1 font-bold text-rot hover:underline">{{ $saisonOffen }} {{ $saisonOffen === 1 ? 'Saison-Aufgabe' : 'Saison-Aufgaben' }} offen</a>@endif
+                </p>
+            </section>
+        @endif
+
         <section class="karte">
             <div class="karte-kopf"><h2 class="titel text-sm">Überfällig und nächste 14 Tage</h2></div>
             @forelse ($bald as $a)

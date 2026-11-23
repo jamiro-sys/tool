@@ -22,8 +22,12 @@ class AusgabePlaner
      * Vorschlag fuer den Assistenten: alle aktiven Vorlagen, die fuer das Turnier gelten,
      * mit den offenen Erkenntnissen und der verantwortlichen Person der letzten Ausgabe.
      */
-    public function vorschlag(Turnier $turnier, Carbon $datum, ?Carbon $bis = null): Collection
+    public function vorschlag(Turnier $turnier, Carbon $datum, ?Carbon $bis = null, ?string $saison = null): Collection
     {
+        // Saison-Eintraege nur, wenn es in dieser Saison noch keine Aufgabe dazu gibt (kommen ins zuerst angelegte Turnier)
+        $saison ??= \App\Support\Saison::fuer($datum);
+        $schonInSaison = $this->vorlagenInSaison($saison);
+
         $letzte = Ausgabe::where('turnier_id', $turnier->id)->orderByDesc('datum_von')->first();
         $letzteAufgaben = $letzte
             ? Aufgabe::where('ausgabe_id', $letzte->id)->whereNotNull('vorlage_id')->get()->keyBy('vorlage_id')
@@ -32,7 +36,7 @@ class AusgabePlaner
         return Vorlage::with(['ressort.mitglieder', 'turniere', 'erkenntnisse' => fn ($q) => $q->whereNull('umgesetzt_am')->with('user')])
             ->where('aktiv', true)
             ->get()
-            ->filter(fn (Vorlage $v) => $v->giltFuer($turnier))
+            ->filter(fn (Vorlage $v) => $v->proSaison() ? ! in_array($v->id, $schonInSaison, true) : $v->giltFuer($turnier))
             ->map(function (Vorlage $v) use ($datum, $bis, $letzteAufgaben) {
                 $vorher = $letzteAufgaben->get($v->id);
                 $vorschlagPerson = $vorher?->verantwortlich_id ?? $v->ressort->leitung()?->id;
@@ -48,6 +52,14 @@ class AusgabePlaner
             })
             ->sortBy(fn ($e) => [$e['vorlage']->ressort->sortierung, -$e['vorlage']->tage_vorher])
             ->values();
+    }
+
+    /** IDs der Jahresplan-Eintraege, zu denen es in der Saison schon eine Aufgabe gibt. */
+    public function vorlagenInSaison(string $saison, ?int $ohneAusgabe = null): array
+    {
+        return Aufgabe::whereNotNull('vorlage_id')
+            ->whereHas('ausgabe', fn ($q) => $q->where('saison', $saison)->when($ohneAusgabe, fn ($w) => $w->where('id', '!=', $ohneAusgabe)))
+            ->distinct()->pluck('vorlage_id')->map(fn ($i) => (int) $i)->all();
     }
 
     /**
@@ -69,11 +81,15 @@ class AusgabePlaner
             ]);
 
             $vorlagen = Vorlage::whereIn('id', array_keys($auswahl))->get()->keyBy('id');
+            $schonInSaison = $this->vorlagenInSaison($ausgabe->saison, $ausgabe->id);
             $anzahl = 0;
 
             foreach ($auswahl as $vorlageId => $wahl) {
                 $vorlage = $vorlagen->get($vorlageId);
                 if (! $vorlage || ($wahl['aktion'] ?? 'uebernehmen') === 'weglassen') {
+                    continue;
+                }
+                if ($vorlage->proSaison() && in_array($vorlage->id, $schonInSaison, true)) {
                     continue;
                 }
 
@@ -93,6 +109,7 @@ class AusgabePlaner
                     'faellig_am' => $eigenes ? $gewaehlt : $berechnet,
                     'tage_vorher' => $eigenes ? Wann::ausDatum($ausgabe, $gewaehlt) : (int) $vorlage->tage_vorher,
                     'bezug' => $eigenes ? 'beginn' : ($vorlage->bezug ?? 'beginn'),
+                    'saison_aufgabe' => $vorlage->proSaison(),
                     'prioritaet' => $vorlage->prioritaet,
                     'aufwand_geplant' => $vorlage->aufwand_std,
                     'checkliste' => collect($vorlage->checkliste ?? [])->map(fn ($p) => ['text' => is_array($p) ? $p['text'] : $p, 'erledigt' => false])->values()->all() ?: null,
@@ -237,9 +254,18 @@ class AusgabePlaner
     }
 
     /** Aufgabe in den Jahresplan aufnehmen: kommt ab dem naechsten Turnier wieder. */
-    public function inJahresplan(Aufgabe $aufgabe, ?array $turniere = null): Vorlage
+    public function inJahresplan(Aufgabe $aufgabe, ?array $turniere = null, ?string $haeufigkeit = null): Vorlage
     {
+        if ($haeufigkeit !== null) {
+            $aufgabe->update(['saison_aufgabe' => $haeufigkeit === 'saison']);
+            if ($haeufigkeit === 'saison') {
+                $turniere = [];
+            }
+        }
         if ($aufgabe->vorlage) {
+            if ($haeufigkeit !== null && $aufgabe->vorlage->haeufigkeit !== $haeufigkeit) {
+                $this->aendereVorlage($aufgabe->vorlage, ['haeufigkeit' => $haeufigkeit], $haeufigkeit === 'saison' ? 'Einmal pro Saison' : 'Bei jedem Turnier');
+            }
             if (! $aufgabe->vorlage->aktiv) {
                 $this->aendereVorlage($aufgabe->vorlage, ['aktiv' => true, 'deaktiviert_am' => null, 'deaktiviert_grund' => null], 'Wieder im Jahresplan');
             }
@@ -260,6 +286,7 @@ class AusgabePlaner
             'bezug' => $aufgabe->tage_vorher !== null ? ($aufgabe->bezug ?? 'beginn') : 'beginn',
             'aufwand_std' => $aufgabe->aufwand_effektiv ?? $aufgabe->aufwand_geplant,
             'prioritaet' => $aufgabe->prioritaet ?? 'normal',
+            'haeufigkeit' => $aufgabe->saison_aufgabe ? 'saison' : 'turnier',
             'aktiv' => true,
             'aktiv_seit' => $aufgabe->ausgabe->saison,
         ]);

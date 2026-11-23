@@ -38,9 +38,11 @@
                                     <input type="checkbox" class="h-4 w-4" x-model="jedesJahr"> Jedes Jahr (in den Jahresplan)
                                 </label>
                             @endif
-                            @if ($turniere->count() > 1)
-                                <div x-show="{{ $art === 'jahresplan' ? 'true' : 'jedesJahr' }}" x-cloak><p class="feld-label">Gilt für</p><x-turnierarten :turniere="$turniere" :gewaehlt="$v['turniere']" :prefix="$p" klein /></div>
-                            @endif
+                            <div x-show="{{ $art === 'jahresplan' ? 'true' : 'jedesJahr' }}" x-cloak>
+                                <x-haeufigkeit klein :name="$p.'[haeufigkeit]'" :wert="($v['pro_saison'] ?? false) ? 'saison' : 'turnier'">
+                                    @if ($turniere->count() > 1)<p class="feld-label mt-1">Gilt für</p><x-turnierarten :turniere="$turniere" :gewaehlt="$v['turniere']" :prefix="$p" klein />@endif
+                                </x-haeufigkeit>
+                            </div>
                             <button type="button" class="label hover:text-rot" x-on:click="mehr = !mehr" x-text="mehr ? 'Weniger' : 'Beschreibung und Checkliste{{ ($v['beschreibung'] || $v['checkliste']) ? ' (ausgefüllt)' : '' }}'"></button>
                             <div x-show="mehr" x-collapse x-cloak class="grid gap-3 md:grid-cols-2">
                                 <div><label class="feld-label">Beschreibung</label><textarea name="{{ $p }}[beschreibung]" rows="3" class="feld">{{ $v['beschreibung'] }}</textarea></div>

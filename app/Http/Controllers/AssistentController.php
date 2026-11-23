@@ -89,6 +89,7 @@ class AssistentController extends Controller
             'zeilen.*.aufwand' => ['nullable', 'numeric', 'min:0', 'max:999'],
             'zeilen.*.prioritaet' => ['nullable', Rule::in(['tief', 'normal', 'hoch'])],
             'zeilen.*.jedes_jahr' => ['nullable', 'boolean'],
+            'zeilen.*.haeufigkeit' => ['nullable', Rule::in(array_keys(Vorlage::HAEUFIGKEIT))],
             'zeilen.*.turniere' => ['nullable', 'array'],
             'zeilen.*.turniere.*' => ['integer', 'exists:turniere,id'],
             'zeilen.*.checkliste' => ['nullable', 'string', 'max:5000'],
@@ -105,6 +106,7 @@ class AssistentController extends Controller
             $checkliste = collect(preg_split('/\r?\n/', (string) ($z['checkliste'] ?? '')))->map(fn ($p) => trim($p))->filter()->values();
             $tage = isset($z['tage_vorher']) && $z['tage_vorher'] !== '' ? (int) $z['tage_vorher'] : null;
             $bezug = $z['bezug'] ?? 'beginn';
+            $haeufigkeit = ($z['haeufigkeit'] ?? 'turnier') === 'saison' ? 'saison' : 'turnier';
 
             if ($daten['art'] === 'jahresplan') {
                 $rid = (int) ($z['ressort_id'] ?? 0);
@@ -115,9 +117,9 @@ class AssistentController extends Controller
                     'ressort_id' => $rid, 'titel' => $z['titel'], 'beschreibung' => $z['beschreibung'] ?? null,
                     'tage_vorher' => $tage ?? 14, 'bezug' => $tage === null ? 'beginn' : $bezug,
                     'aufwand_std' => $z['aufwand'] ?? null, 'prioritaet' => $z['prioritaet'] ?? 'normal',
-                    'checkliste' => $checkliste->all() ?: null, 'aktiv' => true,
+                    'checkliste' => $checkliste->all() ?: null, 'aktiv' => true, 'haeufigkeit' => $haeufigkeit,
                 ]);
-                $vorlage->setzeTurniere($z['turniere'] ?? []);
+                $vorlage->setzeTurniere($haeufigkeit === 'saison' ? [] : ($z['turniere'] ?? []));
                 $anzahl++;
 
                 continue;
@@ -133,7 +135,7 @@ class AssistentController extends Controller
             ]);
             $anzahl++;
             if (! empty($z['jedes_jahr']) && Gate::allows('ressort-verwalten', $ressort)) {
-                app(AusgabePlaner::class)->inJahresplan($aufgabe, $z['turniere'] ?? []);
+                app(AusgabePlaner::class)->inJahresplan($aufgabe, $z['turniere'] ?? [], $haeufigkeit);
                 $imPlan++;
             }
         }
