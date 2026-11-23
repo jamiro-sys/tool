@@ -23,12 +23,17 @@
             <div class="karte space-y-4 p-4">
                 <div><label class="feld-label" for="ressort_id">Ressort</label>
                     <select id="ressort_id" name="ressort_id" class="feld" required>@foreach ($ressorts as $r)<option value="{{ $r->id }}" @selected(old('ressort_id', $vorlage->ressort_id) == $r->id)>{{ $r->name }}</option>@endforeach</select></div>
-                @if ($turniere->isNotEmpty())
-                    <div><p class="feld-label">Gilt für</p>
-                        <x-turnierarten :turniere="$turniere" :gewaehlt="old('turniere', $vorlage->exists ? $vorlage->turniere->pluck('id')->all() : [])" class="flex-col" />
-                        <p class="mt-1 text-xs text-beton">Anhaken, bei welchen Turnierarten die Aufgabe kommt. Mehrere möglich.</p>
-                        @error('turniere')<p class="mt-1 text-xs font-bold text-rot">{{ $message }}</p>@enderror</div>
-                @endif
+                <div><p class="feld-label">Wie oft im Jahr</p>
+                    <x-haeufigkeit :wert="old('haeufigkeit', $vorlage->haeufigkeit ?? 'turnier')">
+                        @if ($turniere->count() > 1)
+                            <p class="feld-label mt-2">Bei welchen Turnierarten</p>
+                            <x-turnierarten :turniere="$turniere" :gewaehlt="old('turniere', $vorlage->exists ? $vorlage->turniere->pluck('id')->all() : [])" class="flex-col" />
+                            <p class="mt-1 text-xs text-beton">Mehrere möglich.</p>
+                        @elseif ($turniere->isNotEmpty())
+                            <x-turnierarten :turniere="$turniere" :gewaehlt="old('turniere', $vorlage->exists ? $vorlage->turniere->pluck('id')->all() : [])" class="hidden" />
+                        @endif
+                    </x-haeufigkeit>
+                    @error('turniere')<p class="mt-1 text-xs font-bold text-rot">{{ $message }}</p>@enderror</div>
                 <div><label class="feld-label" for="tage_vorher">Wann</label><x-wann id="tage_vorher" :tage="old('tage_vorher', $vorlage->tage_vorher ?? 14)" :bezug="old('bezug', $vorlage->bezug ?? 'beginn')" />
                     <p class="mt-1 text-xs text-beton">Vorher zählt ab dem ersten Turniertag, nachher ab dem letzten. Monat = 30 Tage.</p></div>
                 <div><label class="feld-label" for="aufwand_std">Aufwand</label><x-aufwand name="aufwand_std" id="aufwand_std" :wert="old('aufwand_std', $vorlage->aufwand_std)" /></div>

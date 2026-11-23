@@ -22,9 +22,10 @@
                         <select id="s-ressort" name="ressort_id" required class="feld">@foreach ($verwaltbar as $r)<option value="{{ $r->id }}" @selected(old('ressort_id', $schnell['ressort_id'] ?? $filter['ressort'] ?? null) == $r->id)>{{ $r->name }}</option>@endforeach</select></div>
                     <div><label class="feld-label" for="s-zeit">Wann</label><x-wann id="s-zeit" zeile :tage="old('tage_vorher', $schnell['tage_vorher'] ?? 30)" :bezug="old('bezug', $schnell['bezug'] ?? 'beginn')" /></div>
                     <div><label class="feld-label" for="s-aufwand">Aufwand</label><x-aufwand name="aufwand_std" id="s-aufwand" :wert="old('aufwand_std')" /></div>
-                    @if ($turniere->count() > 1)
-                        <div><p class="feld-label">Gilt für</p><x-turnierarten :turniere="$turniere" :gewaehlt="old('turniere', $schnell['turniere'] ?? [])" klein /></div>
-                    @endif
+                    <div><p class="feld-label">Wie oft</p>
+                        <x-haeufigkeit klein :wert="old('haeufigkeit', $schnell['haeufigkeit'] ?? 'turnier')">
+                            @if ($turniere->count() > 1)<x-turnierarten :turniere="$turniere" :gewaehlt="old('turniere', $schnell['turniere'] ?? [])" klein />@endif
+                        </x-haeufigkeit></div>
                     <button class="knopf-rot w-full sm:w-auto"><x-icon name="plus" class="h-4 w-4" /> Hinzufügen</button>
                 </div>
                 <p class="mt-2 text-xs text-beton">Nach dem Hinzufügen ist das Feld gleich wieder bereit für die nächste Aufgabe. Anleitung und Checkliste ergänzt du später mit einem Klick auf die Aufgabe, oder du <a href="{{ route('vorlagen.create') }}" class="font-bold text-nacht underline hover:text-rot">erfasst sie gleich ausführlich</a>.</p>
@@ -59,9 +60,9 @@
                                     <span class="shrink-0 text-xs font-bold text-beton sm:w-32">{{ $v->zeitpunktText() }}</span>
                                     <span class="min-w-0 flex-1">
                                         <span class="block truncate text-sm font-bold">{{ $v->titel }}</span>
-                                        @if ($v->turniere->isNotEmpty() || blank($v->anleitung) || $v->offene_erkenntnisse)
+                                        @if ($v->proSaison() || $v->turniere->isNotEmpty() || blank($v->anleitung) || $v->offene_erkenntnisse)
                                             <span class="mt-0.5 flex flex-wrap items-center gap-1.5">
-                                                @foreach ($v->turniere as $t)<span class="marke-rahmen">{{ $t->kurz ?: $t->name }}</span>@endforeach
+                                                @if ($v->proSaison())<span class="marke-rahmen border-rot text-rot">Saison</span>@else @foreach ($v->turniere as $t)<span class="marke-rahmen">{{ $t->kurz ?: $t->name }}</span>@endforeach @endif
                                                 @if (blank($v->anleitung))<span class="text-xs text-beton">ohne Anleitung</span>@endif
                                                 @if ($v->offene_erkenntnisse)<span class="marke bg-nacht text-white"><x-icon name="idee" class="h-3 w-3" /> {{ $v->offene_erkenntnisse }}</span>@endif
                                             </span>

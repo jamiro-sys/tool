@@ -20,7 +20,7 @@ class Aufgabe extends Model
 
     protected $fillable = [
         'ausgabe_id', 'vorlage_id', 'ressort_id', 'verantwortlich_id', 'begleitung_id', 'titel',
-        'beschreibung', 'anleitung', 'faellig_am', 'tage_vorher', 'bezug', 'status', 'prioritaet', 'aufwand_geplant',
+        'beschreibung', 'anleitung', 'faellig_am', 'tage_vorher', 'bezug', 'saison_aufgabe', 'status', 'prioritaet', 'aufwand_geplant',
         'aufwand_effektiv', 'checkliste', 'erledigt_am', 'erledigt_von', 'erinnert_am',
     ];
 
@@ -29,6 +29,7 @@ class Aufgabe extends Model
         return [
             'faellig_am' => 'date',
             'tage_vorher' => 'integer',
+            'saison_aufgabe' => 'boolean',
             'erledigt_am' => 'datetime',
             'erinnert_am' => 'datetime',
             'checkliste' => 'array',

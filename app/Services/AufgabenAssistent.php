@@ -121,7 +121,8 @@ class AufgabenAssistent
         - aufwand_minuten: nur wenn ein Aufwand genannt ist, sonst null.
         - prioritaet: «hoch» nur bei deutlich Wichtigem oder Fristen, sonst «normal».
         - jedes_jahr: true, wenn die Aufgabe offensichtlich jedes Jahr wiederkommt, false bei Einmaligem.
-        - turnierarten: Namen der Turnierarten, für die die Aufgabe gilt; leere Liste, wenn sie für alle gilt.
+        - pro_saison: true, wenn die Aufgabe nur einmal pro Saison für alle Turniere zusammen anfällt (z. B. Sponsoren anfragen, Saisonbudget, Plakat mit allen Daten), sonst false.
+        - turnierarten: Namen der Turnierarten, für die die Aufgabe gilt; leere Liste, wenn sie für alle gilt oder pro_saison true ist.
         - checkliste: Unterpunkte, wenn der Text welche nennt, sonst leere Liste.
         Doppelte Aufgaben fasst du zusammen. Unter hinweis notierst du kurz, was unklar war, sonst null.
         TXT;
@@ -147,10 +148,11 @@ class AufgabenAssistent
                             'aufwand_minuten' => $oderNull(['type' => 'integer']),
                             'prioritaet' => ['type' => 'string', 'enum' => ['tief', 'normal', 'hoch']],
                             'jedes_jahr' => ['type' => 'boolean'],
+                            'pro_saison' => ['type' => 'boolean'],
                             'turnierarten' => ['type' => 'array', 'items' => ['type' => 'string']],
                             'checkliste' => ['type' => 'array', 'items' => ['type' => 'string']],
                         ],
-                        'required' => ['titel', 'beschreibung', 'ressort', 'wann', 'abstand_tage', 'aufwand_minuten', 'prioritaet', 'jedes_jahr', 'turnierarten', 'checkliste'],
+                        'required' => ['titel', 'beschreibung', 'ressort', 'wann', 'abstand_tage', 'aufwand_minuten', 'prioritaet', 'jedes_jahr', 'pro_saison', 'turnierarten', 'checkliste'],
                         'additionalProperties' => false,
                     ],
                 ],
@@ -195,7 +197,8 @@ class AufgabenAssistent
                 'aufwand' => filled($a['aufwand_minuten'] ?? null) ? round(max(0, (int) $a['aufwand_minuten']) / 60, 2) : null,
                 'prioritaet' => in_array($a['prioritaet'] ?? null, ['tief', 'normal', 'hoch'], true) ? $a['prioritaet'] : 'normal',
                 'jedes_jahr' => (bool) ($a['jedes_jahr'] ?? false),
-                'turniere' => $turniere,
+                'pro_saison' => (bool) ($a['pro_saison'] ?? false),
+                'turniere' => ($a['pro_saison'] ?? false) ? [] : $turniere,
                 'checkliste' => collect($a['checkliste'] ?? [])->map(fn ($p) => trim((string) $p))->filter()->values()->all(),
             ];
         })->values()->all();

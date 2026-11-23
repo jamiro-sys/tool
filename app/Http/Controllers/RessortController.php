@@ -28,7 +28,10 @@ class RessortController extends Controller
         $ressort->load(['mitglieder', 'vorlagen.turniere', 'kontakte', 'dokumente.user', 'dokumente.ordner', 'wissen.user', 'uebergaben.von', 'uebergaben.an', 'material.einsaetze']);
         $ausgabe = Ausgabe::naechste();
 
-        $offen = $ausgabe ? $ressort->aufgaben()->with('verantwortlich')->where('ausgabe_id', $ausgabe->id)->offen()->orderByRaw('faellig_am is null')->orderBy('faellig_am')->get() : collect();
+        $offen = $ausgabe ? $ressort->aufgaben()->with(['verantwortlich', 'ausgabe.turnier'])->offen()
+            ->where(fn ($q) => $q->where('ausgabe_id', $ausgabe->id)
+                ->orWhere(fn ($w) => $w->where('saison_aufgabe', true)->whereHas('ausgabe', fn ($x) => $x->where('saison', $ausgabe->saison))))
+            ->orderByRaw('faellig_am is null')->orderBy('faellig_am')->get() : collect();
 
         // Jahreskalender: Vorlagen nach Monaten vor dem Turnier
         $kalender = $ressort->vorlagen->where('aktiv', true)->sortByDesc('tage_vorher')->groupBy(function ($v) {

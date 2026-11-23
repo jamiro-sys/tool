@@ -1,6 +1,11 @@
 <x-app titel="Neues Turnier">
-    <x-seitenkopf titel="Neues Turnier planen" ueber="Assistent" :zurueck="route('ausgaben.index')">
+    <x-seitenkopf :titel="$saisonSchritt ? 'Saison '.$saisonSchritt[0].' planen' : 'Neues Turnier planen'" :ueber="$saisonSchritt ? 'Turnier '.$saisonSchritt[1].' von '.$saisonSchritt[2] : 'Assistent'" :zurueck="route('ausgaben.index')">
         <x-slot:unter>Schritt {{ $vorschlag ? '2' : '1' }} von 2: {{ $vorschlag ? 'Aufgaben prüfen, anpassen oder weglassen.' : 'Turnierart und Datum wählen.' }}</x-slot:unter>
+        @if ($saisonSchritt)
+            <x-slot:aktionen>
+                <form method="POST" action="{{ route('saison.abbrechen') }}" onsubmit="return confirm('Saisonplanung beenden? Bereits erstellte Turniere bleiben.')">@csrf<button class="knopf-leise">Saisonplanung beenden</button></form>
+            </x-slot:aktionen>
+        @endif
     </x-seitenkopf>
 
     @if ($turniere->isEmpty())
@@ -28,6 +33,8 @@
                 <label class="feld-label" for="datum_von">Turniertag (erster Tag)</label>
                 <input type="date" id="datum_von" name="datum_von" required class="feld" value="{{ $eingabe['datum_von'] ?? '' }}">
             </div>
+            @if (filled($eingabe['saison'] ?? null))<input type="hidden" name="saison" value="{{ $eingabe['saison'] }}">@endif
+            @if (filled($eingabe['datum_bis'] ?? null))<input type="hidden" name="datum_bis" value="{{ $eingabe['datum_bis'] }}">@endif
             <div class="flex items-end"><button class="knopf-nacht w-full">{{ $vorschlag ? 'Neu berechnen' : 'Weiter' }} <x-icon name="pfeil" class="h-4 w-4" /></button></div>
         </div>
     </form>
@@ -35,8 +42,7 @@
     @if ($vorschlag)
         @php
             $datumVon = $datum->format('Y-m-d');
-            $saisonStart = $datum->month >= 7 ? $datum->year : $datum->year - 1;
-            $saison = $saisonStart.'/'.substr($saisonStart + 1, -2);
+            $saison = filled($eingabe['saison'] ?? null) ? $eingabe['saison'] : \App\Support\Saison::fuer($datum);
             $alle = $vorschlag->flatten(1);
         @endphp
         <form method="POST" action="{{ route('ausgaben.store') }}" x-data="{ weg: {}, zusatz: [] }">
@@ -56,7 +62,7 @@
                     </div>
                     <div>
                         <label class="feld-label" for="datum_bis">Letzter Turniertag</label>
-                        <input type="date" id="datum_bis" name="datum_bis" class="feld" value="{{ $datum->copy()->addDay()->format('Y-m-d') }}">
+                        <input type="date" id="datum_bis" name="datum_bis" class="feld" value="{{ $eingabe['datum_bis'] ?? $datum->copy()->addDay()->format('Y-m-d') }}">
                     </div>
                     <div class="md:col-span-2">
                         <label class="feld-label" for="halle_id">Halle</label>
@@ -95,7 +101,7 @@
                                         <input type="hidden" name="auswahl[{{ $v->id }}][aktion]" :value="weg[{{ $v->id }}] ? 'weglassen' : 'uebernehmen'" value="uebernehmen">
                                         <span class="min-w-0">
                                             <span class="block text-sm font-bold">{{ $v->titel }}</span>
-                                            <span class="text-xs text-beton">{{ $v->zeitpunktText() }} @if ($v->turniere->isNotEmpty()) | nur {{ $v->turnierartText() }} @endif @if ($e['aufwand_vorjahr']) | letztes Mal {{ \App\Support\Aufwand::text($e['aufwand_vorjahr']) }} @endif</span>
+                                            <span class="text-xs text-beton">{{ $v->zeitpunktText() }} @if ($v->proSaison()) <span class="marke-rahmen border-rot text-rot">Saison</span> @elseif ($v->turniere->isNotEmpty()) | nur {{ $v->turnierartText() }} @endif @if ($e['aufwand_vorjahr']) | letztes Mal {{ \App\Support\Aufwand::text($e['aufwand_vorjahr']) }} @endif</span>
                                         </span>
                                     </label>
                                     <div class="grid grid-cols-2 gap-2 lg:w-[380px]">

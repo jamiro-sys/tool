@@ -14,10 +14,18 @@ class Vorlage extends Model
 
     public const PRIORITAETEN = ['tief' => 'Tief', 'normal' => 'Normal', 'hoch' => 'Hoch'];
 
+    /** Wie oft im Jahr: bei jedem (gewaehlten) Turnier oder einmal pro Saison (Dezember + Februar zusammen). */
+    public const HAEUFIGKEIT = ['turnier' => 'Bei jedem Turnier', 'saison' => 'Einmal pro Saison'];
+
+    public function proSaison(): bool
+    {
+        return $this->haeufigkeit === 'saison';
+    }
+
     /** Lesbare Feldnamen fuer den Verlauf. */
     public const FELDNAMEN = [
         'titel' => 'Titel', 'beschreibung' => 'Beschreibung', 'anleitung' => 'Anleitung', 'checkliste' => 'Checkliste',
-        'tage_vorher' => 'Wann', 'bezug' => 'Bezug', 'aufwand_std' => 'Aufwand', 'prioritaet' => 'Priorität',
+        'tage_vorher' => 'Wann', 'bezug' => 'Bezug', 'haeufigkeit' => 'Wie oft', 'aufwand_std' => 'Aufwand', 'prioritaet' => 'Priorität',
         'aktiv' => 'Jedes Jahr', 'aktiv_seit' => 'Im Jahresplan seit', 'deaktiviert_am' => 'Herausgenommen am',
         'deaktiviert_grund' => 'Grund', 'ressort_id' => 'Ressort', 'turnierarten' => 'Turnierarten', 'turnier_id' => 'Turnierart',
     ];
@@ -32,6 +40,7 @@ class Vorlage extends Model
         return match ($feld) {
             'tage_vorher' => \App\Support\Wann::text((int) $wert, 'beginn'),
             'bezug' => $wert === 'ende' ? 'ab Turnierende' : 'ab Turnierbeginn',
+            'haeufigkeit' => self::HAEUFIGKEIT[$wert] ?? (string) $wert,
             'aufwand_std' => \App\Support\Aufwand::text((float) $wert),
             'prioritaet' => self::PRIORITAETEN[$wert] ?? (string) $wert,
             'aktiv' => $wert ? 'Ja' : 'Nein',
@@ -44,7 +53,7 @@ class Vorlage extends Model
     }
 
     protected $fillable = [
-        'ressort_id', 'turnier_id', 'titel', 'beschreibung', 'anleitung', 'tage_vorher', 'bezug',
+        'ressort_id', 'turnier_id', 'titel', 'beschreibung', 'anleitung', 'tage_vorher', 'bezug', 'haeufigkeit',
         'aufwand_std', 'prioritaet', 'checkliste', 'aktiv', 'aktiv_seit', 'deaktiviert_am', 'deaktiviert_grund',
     ];
 
@@ -101,6 +110,10 @@ class Vorlage extends Model
     /** Kurzname der Turnierarten, wenn die Aufgabe nicht fuer alle gilt. */
     public function turnierartText(): ?string
     {
+        if ($this->proSaison()) {
+            return 'einmal pro Saison';
+        }
+
         return $this->turniere->isEmpty() ? null : $this->turniere->map(fn ($t) => $t->kurz ?: $t->name)->implode(', ');
     }
 

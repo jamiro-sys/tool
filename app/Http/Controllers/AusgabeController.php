@@ -42,7 +42,7 @@ class AusgabeController extends Controller
         if ($turnier && $request->filled('datum_von')) {
             $datum = Carbon::parse($request->query('datum_von'));
             $bis = $request->filled('datum_bis') ? Carbon::parse($request->query('datum_bis')) : null;
-            $vorschlag = $this->planer->vorschlag($turnier, $datum, $bis)->groupBy(fn ($e) => $e['vorlage']->ressort_id);
+            $vorschlag = $this->planer->vorschlag($turnier, $datum, $bis, $request->filled('saison') ? (string) $request->query('saison') : null)->groupBy(fn ($e) => $e['vorlage']->ressort_id);
         }
 
         return view('ausgaben.create', [
@@ -54,6 +54,7 @@ class AusgabeController extends Controller
             'ressorts' => Ressort::orderBy('sortierung')->get()->keyBy('id'),
             'personen' => User::where('aktiv', true)->orderBy('name')->get(),
             'eingabe' => $request->only(['turnier_id', 'datum_von', 'datum_bis', 'saison', 'titel', 'halle_id']),
+            'saisonSchritt' => SaisonController::schritt($request, $turnier?->id),
         ]);
     }
 
@@ -81,6 +82,25 @@ class AusgabeController extends Controller
 
         $turnier = Turnier::findOrFail($daten['turnier_id']);
         $ausgabe = $this->planer->erstelle($turnier, $daten, $daten['auswahl'] ?? [], $daten['zusatz'] ?? []);
+
+        // Saison-Ablauf: weiter zum naechsten Turnier der Saison, am Schluss eine gemeinsame Meldung
+        $plan = $request->session()->get(SaisonController::SESSION);
+        if ($plan && collect($plan['plan'])->contains('turnier_id', $turnier->id) && $plan['saison'] === $ausgabe->saison) {
+            $plan['erstellt'][] = $turnier->id;
+            $request->session()->put(SaisonController::SESSION, $plan);
+            if ($weiter = SaisonController::naechsterSchritt($request)) {
+                return redirect()->to($weiter)->with('erfolg', $ausgabe->titel.' erstellt. Jetzt das nächste Turnier der Saison prüfen.');
+            }
+            $request->session()->forget(SaisonController::SESSION);
+            $turniereDerSaison = Ausgabe::where('saison', $ausgabe->saison)->whereIn('turnier_id', $plan['erstellt'])->orderBy('datum_von')->get();
+            $this->benachrichtiger->sende(
+                User::where('aktiv', true)->get(), 'ausgabe', 'Saison '.$ausgabe->saison.' geplant',
+                'Die Planung hat begonnen: '.$turniereDerSaison->map(fn ($a) => $a->titel.' ('.$a->datumText().')')->implode(', ').'. Schau dir deine Aufgaben an.',
+                route('ausgaben.index'), $request->user()
+            );
+
+            return redirect()->route('ausgaben.index')->with('erfolg', 'Saison '.$ausgabe->saison.' geplant. Viel Erfolg!');
+        }
 
         $this->benachrichtiger->sende(
             User::where('aktiv', true)->get(), 'ausgabe', 'Neues Turnier: '.$ausgabe->titel,
@@ -126,6 +146,8 @@ class AusgabeController extends Controller
             'fortschritt' => $ausgabe->fortschritt(),
             'bald' => $ausgabe->aufgaben->filter->istOffen()->filter(fn ($a) => $a->faellig_am && $a->faellig_am->lte(today()->addDays(14)))->sortBy('faellig_am')->take(10),
             'ohneZuteilung' => $ausgabe->aufgaben->filter->istOffen()->whereNull('verantwortlich_id')->count(),
+            'saisonOffen' => $ausgabe->saisonAufgabenAnderer()->filter->istOffen()->count(),
+            'geschwister' => $ausgabe->geschwister(),
         ]);
     }
 
