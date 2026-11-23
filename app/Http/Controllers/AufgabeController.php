@@ -218,7 +218,7 @@ class AufgabeController extends Controller
 
     public function destroy(Request $request, Aufgabe $aufgabe)
     {
-        Gate::authorize('aufgabe-verwalten', $aufgabe);
+        Gate::authorize('aufgabe-loeschen', $aufgabe);
         $ausgabe = $aufgabe->ausgabe;
         $vorlage = $aufgabe->vorlage;
         $ausPlan = $request->boolean('aus_jahresplan') && $vorlage?->aktiv && Gate::allows('ressort-verwalten', $aufgabe->ressort);
