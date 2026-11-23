@@ -118,7 +118,7 @@ class AssistentTest extends OkTestCase
         $this->actingAs($leitung)->get(route('ressorts.show', [$r, 'tab' => 'aufgaben']))->assertSee('modal-assistent', false);
         $this->actingAs($leitung)->post(route('assistent.vorschlag'), ['art' => 'ressort', 'ressort_id' => $r->id, 'dateien' => [
             UploadedFile::fake()->create('liste.pdf', 20, 'application/pdf'), UploadedFile::fake()->image('notiz.png'),
-        ]])->assertOk()->assertSee('Stockgeld QQ')->assertSee('Jedes Jahr (in den Jahresplan)');
+        ]])->assertOk()->assertSee('Stockgeld QQ')->assertSee('Nur dieses Mal');
         $this->assertSame(['document', 'image', 'text'], array_column($fake->gesendet, 'type'));
         $this->assertSame('application/pdf', $fake->gesendet[0]['source']['mediaType']);
 

@@ -219,7 +219,7 @@
                             <ul class="mt-1.5 space-y-1">
                                 @foreach ($vorlagen as $v)
                                     <li><a href="{{ route('vorlagen.show', $v) }}" class="flex items-center gap-2 text-sm hover:text-rot">{{ $v->titel }}
-                                        @if ($v->proSaison())<span class="marke-rahmen border-rot text-rot">Saison</span>@else @foreach ($v->turniere as $t)<span class="marke-rahmen">{{ $t->kurz ?: $t->name }}</span>@endforeach @endif
+                                        @if ($v->proSaison())<span class="marke-rahmen border-rot text-rot">Einmal pro Saison</span>@elseif ($v->turniere->isNotEmpty())<span class="marke-rahmen">nur {{ $v->turnierartText() }}</span>@endif
                                         @if (blank($v->anleitung))<span class="marke-gelb">ohne Anleitung</span>@endif</a></li>
                                 @endforeach
                             </ul>

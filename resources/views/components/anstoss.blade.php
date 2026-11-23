@@ -1,5 +1,5 @@
 @props(['ausgabe' => null, 'kompakt' => false])
-{{-- Kopfzeile "Anstoss" gemaess Styleguide: rote Flaeche, Negativlogo, Titel, Mittellinie und Mittelkreis in Weiss 35 % --}}
+{{-- Kopfzeile "Anstoss" gemaess Styleguide: rote Flaeche, Negativlogo, Titel, Mittellinie und Mittelkreis in Weiss 35 %. Das gewaehlte Turnier steht rechts in der Turnierwahl, nicht im Titel. --}}
 <header {{ $attributes->merge(['class' => 'relative bg-rot text-white']) }}>
     <div class="flex h-[64px] items-stretch sm:h-[76px]">
         <a href="{{ route('start') }}" class="flex shrink-0 items-center gap-3 pl-4 pr-2 sm:pl-6" aria-label="Zur Startseite">
@@ -7,16 +7,13 @@
             <span class="flex flex-col leading-none">
                 <span class="text-[9px] font-bold tracking-weit sm:text-[10px]">RAIFFEISEN</span>
                 <span class="text-lg font-extrabold tracking-tight sm:text-[22px]">HALLENCUP</span>
-                @if ($ausgabe)
-                    <span class="mt-1 hidden text-[10px] font-bold uppercase tracking-[0.1em] sm:block">{{ $ausgabe->datumText() }}</span>
-                @else
-                    <span class="mt-1 hidden text-[10px] font-bold uppercase tracking-[0.1em] sm:block">OK-TOOL</span>
-                @endif
+                {{-- Datum nur bei Drucklisten eines bestimmten Turniers, im Tool steht dort OK-TOOL --}}
+                <span class="mt-1 hidden text-[10px] font-bold uppercase tracking-[0.1em] sm:block">{{ $ausgabe ? $ausgabe->datumText() : 'OK-TOOL' }}</span>
             </span>
         </a>
 
         {{-- Freie Flaeche mit Hallenlinien --}}
-        <div class="relative mx-4 min-w-[48px] flex-1" aria-hidden="true">
+        <div class="relative mx-2 min-w-[40px] flex-1 sm:mx-4" aria-hidden="true">
             <svg class="absolute inset-0 h-full w-full" preserveAspectRatio="none">
                 <line x1="50%" y1="0" x2="50%" y2="100%" stroke="#fff" stroke-opacity=".35" stroke-width="2" />
             </svg>

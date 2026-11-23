@@ -111,6 +111,26 @@ class AusgabeController extends Controller
         return redirect()->route('ausgaben.show', $ausgabe)->with('erfolg', 'Turnier erstellt. Viel Erfolg bei der Planung!');
     }
 
+    /** Turnier in der Kopfzeile waehlen: gleiche Ansicht fuer das gewaehlte Turnier, sonst zurueck. */
+    public function waehlen(Request $request, Ausgabe $ausgabe)
+    {
+        session([Ausgabe::WAHL => $ausgabe->id]);
+        $ansicht = $request->query('ansicht');
+        $mitTurnier = ['ausgaben.show', 'aufgaben.index', 'ausgaben.rueckblick', 'material.ausgabe'];
+        if (in_array($ansicht, $mitTurnier, true)) {
+            return redirect()->route($ansicht, $ausgabe);
+        }
+        if ($ansicht === 'aufgaben.show') {
+            return redirect()->route('aufgaben.index', $ausgabe);
+        }
+
+        // Uebrige Seiten (Start, Ressorts ...) zeigen ab jetzt das gewaehlte Turnier; nur eigene Adressen
+        $zurueck = url()->previous();
+        $eigen = str_starts_with($zurueck, url('/')) && $zurueck !== url()->current();
+
+        return redirect()->to($eigen ? $zurueck : route('start'));
+    }
+
     public function show(Ausgabe $ausgabe)
     {
         $ausgabe->load('turnier', 'halle', 'aufgaben.ressort', 'aufgaben.verantwortlich', 'kennzahlen', 'verknuepfungen');

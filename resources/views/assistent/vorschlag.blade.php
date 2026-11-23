@@ -13,7 +13,7 @@
         <div class="space-y-4">
             @foreach ($vorschlaege as $i => $v)
                 @php $p = 'zeilen['.$i.']'; @endphp
-                <section class="karte p-4 transition-opacity" x-data="{ nehmen: true, jedesJahr: {{ $v['jedes_jahr'] ? 'true' : 'false' }}, mehr: false }" :class="nehmen ? '' : 'opacity-50'">
+                <section class="karte p-4 transition-opacity" x-data="{ nehmen: true, mehr: false }" :class="nehmen ? '' : 'opacity-50'">
                     <div class="flex items-start gap-3">
                         <input type="hidden" name="{{ $p }}[nehmen]" :value="nehmen ? 1 : 0" value="1">
                         <input type="checkbox" class="mt-3 h-5 w-5 shrink-0" checked x-on:change="nehmen = $event.target.checked; anzahl += nehmen ? 1 : -1" aria-label="Übernehmen">
@@ -32,17 +32,14 @@
                                 <div><label class="feld-label">Priorität</label>
                                     <select name="{{ $p }}[prioritaet]" class="feld min-h-[38px] py-1" aria-label="Priorität">@foreach (\App\Models\Vorlage::PRIORITAETEN as $k => $l)<option value="{{ $k }}" @selected($v['prioritaet'] === $k)>{{ $l }}</option>@endforeach</select></div>
                             </div>
-                            @if ($art === 'ressort' && $darfPlan)
-                                <label class="flex w-fit cursor-pointer items-center gap-2 border border-nacht/20 bg-white px-3 py-2 text-sm font-bold has-[:checked]:border-rot has-[:checked]:bg-rot/5">
-                                    <input type="hidden" name="{{ $p }}[jedes_jahr]" :value="jedesJahr ? 1 : 0" value="{{ $v['jedes_jahr'] ? 1 : 0 }}">
-                                    <input type="checkbox" class="h-4 w-4" x-model="jedesJahr"> Jedes Jahr (in den Jahresplan)
-                                </label>
+                            @if ($art === 'jahresplan' || $darfPlan)
+                                <div><p class="feld-label">Wie oft?</p>
+                                    <x-haeufigkeit :name="$p.'[haeufigkeit]'" :wert="$art === 'ressort' && ! $v['jedes_jahr'] ? 'einmalig' : (($v['pro_saison'] ?? false) ? 'saison' : 'turnier')"
+                                        :einmalig="$art === 'ressort' ? ['name' => $p.'[jedes_jahr]', 'an' => 1, 'aus' => 0] : null">
+                                        @if ($turniere->count() > 1)<p class="feld-label mt-1">Bei welchen Turnieren?</p><x-turnierarten :turniere="$turniere" :gewaehlt="$v['turniere']" :prefix="$p" klein />@endif
+                                    </x-haeufigkeit>
+                                </div>
                             @endif
-                            <div x-show="{{ $art === 'jahresplan' ? 'true' : 'jedesJahr' }}" x-cloak>
-                                <x-haeufigkeit klein :name="$p.'[haeufigkeit]'" :wert="($v['pro_saison'] ?? false) ? 'saison' : 'turnier'">
-                                    @if ($turniere->count() > 1)<p class="feld-label mt-1">Gilt für</p><x-turnierarten :turniere="$turniere" :gewaehlt="$v['turniere']" :prefix="$p" klein />@endif
-                                </x-haeufigkeit>
-                            </div>
                             <button type="button" class="label hover:text-rot" x-on:click="mehr = !mehr" x-text="mehr ? 'Weniger' : 'Beschreibung und Checkliste{{ ($v['beschreibung'] || $v['checkliste']) ? ' (ausgefüllt)' : '' }}'"></button>
                             <div x-show="mehr" x-collapse x-cloak class="grid gap-3 md:grid-cols-2">
                                 <div><label class="feld-label">Beschreibung</label><textarea name="{{ $p }}[beschreibung]" rows="3" class="feld">{{ $v['beschreibung'] }}</textarea></div>

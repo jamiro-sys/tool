@@ -101,7 +101,7 @@
                                         <input type="hidden" name="auswahl[{{ $v->id }}][aktion]" :value="weg[{{ $v->id }}] ? 'weglassen' : 'uebernehmen'" value="uebernehmen">
                                         <span class="min-w-0">
                                             <span class="block text-sm font-bold">{{ $v->titel }}</span>
-                                            <span class="text-xs text-beton">{{ $v->zeitpunktText() }} @if ($v->proSaison()) <span class="marke-rahmen border-rot text-rot">Saison</span> @elseif ($v->turniere->isNotEmpty()) | nur {{ $v->turnierartText() }} @endif @if ($e['aufwand_vorjahr']) | letztes Mal {{ \App\Support\Aufwand::text($e['aufwand_vorjahr']) }} @endif</span>
+                                            <span class="text-xs text-beton">{{ $v->zeitpunktText() }} @if ($v->proSaison()) <span class="marke-rahmen border-rot text-rot">Einmal pro Saison</span> @elseif ($v->turniere->isNotEmpty()) | nur {{ $v->turnierartText() }} @endif @if ($e['aufwand_vorjahr']) | letztes Mal {{ \App\Support\Aufwand::text($e['aufwand_vorjahr']) }} @endif</span>
                                         </span>
                                     </label>
                                     <div class="grid grid-cols-2 gap-2 lg:w-[380px]">

@@ -58,7 +58,7 @@
         <section class="karte mb-5 border-l-4 border-l-rot" data-saison-block>
             <div class="karte-kopf">
                 <div><h2 class="titel text-sm">Für die ganze Saison {{ $ausgabe->saison }}</h2>
-                    <p class="text-xs text-beton">Einmal pro Saison, geführt im Turnier {{ $saisonAufgaben->pluck('ausgabe.titel')->unique()->implode(', ') }}</p></div>
+                    <p class="text-xs text-beton">Diese Aufgaben kommen nur einmal pro Saison und gelten für alle Turniere der Saison. Erfasst sind sie im Turnier {{ $saisonAufgaben->pluck('ausgabe.titel')->unique()->implode(', ') }}.</p></div>
                 <span class="label">{{ $saisonAufgaben->filter->istOffen()->count() }} offen</span>
             </div>
             @foreach ($saisonAufgaben->sortBy(fn ($a) => $a->istOffen() ? 0 : 1) as $aufgabe)

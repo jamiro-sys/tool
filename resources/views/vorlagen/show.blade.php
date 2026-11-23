@@ -1,11 +1,12 @@
 <x-app :titel="$vorlage->titel">
     <x-seitenkopf :titel="$vorlage->titel" :ueber="'Jahresplan | '.$vorlage->ressort->name" :zurueck="route('vorlagen.index')">
-        <x-slot:unter>{{ $vorlage->zeitpunktText() }} | {{ $vorlage->proSaison() ? 'einmal pro Saison' : ($vorlage->turniere->isNotEmpty() ? 'nur '.$vorlage->turniere->pluck('name')->implode(' und ') : 'alle Turnierarten') }} @if ($vorlage->aufwand_std) | ca. {{ \App\Support\Aufwand::text($vorlage->aufwand_std) }} @endif</x-slot:unter>
+        <x-slot:unter>{{ $vorlage->zeitpunktText() }} | {{ $vorlage->wieOftText() }} @if ($vorlage->aufwand_std) | ca. {{ \App\Support\Aufwand::text($vorlage->aufwand_std) }} @endif</x-slot:unter>
         <x-slot:aktionen>
             @can('ressort-verwalten', $vorlage->ressort)
+                <button type="button" class="knopf-leise" x-data x-on:click="$dispatch('modal-vorlage-loeschen')" data-loeschen><x-icon name="loeschen" class="h-4 w-4" /> Löschen</button>
                 <a href="{{ route('vorlagen.edit', $vorlage) }}" class="knopf-rahmen" data-kuerzel="e"><x-icon name="stift" class="h-4 w-4" /> Bearbeiten</a>
                 <div class="flex items-center gap-2 border border-nacht/20 bg-white py-1 pl-3 pr-1">
-                    <span class="label">Jedes Jahr</span>
+                    <span class="label">Kommt wieder?</span>
                     <div class="grid grid-cols-2 gap-1 text-[11px] font-bold uppercase tracking-label">
                         @if ($vorlage->aktiv)
                             <span class="bg-rot px-3 py-2 text-white">Ja</span>
@@ -98,10 +99,24 @@
         </aside>
     </div>
 
+    @can('ressort-verwalten', $vorlage->ressort)
+    <x-modal name="vorlage-loeschen" titel="Aus dem Jahresplan löschen">
+        <form method="POST" action="{{ route('vorlagen.destroy', $vorlage) }}" class="space-y-4 text-sm">@csrf @method('DELETE')
+            <p><span class="font-bold">«{{ $vorlage->titel }}»</span> wird ganz aus dem Jahresplan gelöscht, mit Anleitung, Checkliste und Verlauf. Das lässt sich nicht rückgängig machen.</p>
+            <p class="text-beton">Aufgaben in bestehenden Turnieren bleiben. Bei neuen Turnieren kommt sie nicht mehr.</p>
+            <p class="text-xs text-beton">Nur pausieren? Dann bei «Kommt wieder?» auf Nein stellen. So bleibt der Verlauf erhalten und du kannst sie später wieder aktivieren.</p>
+            <div class="flex justify-end gap-2">
+                <button type="button" class="knopf-leise" x-on:click="offen = false">Abbrechen</button>
+                <button class="knopf-rot"><x-icon name="loeschen" class="h-4 w-4" /> Endgültig löschen</button>
+            </div>
+        </form>
+    </x-modal>
+    @endcan
+
     <x-modal name="archivieren" titel="Nicht mehr wiederholen">
         <form method="POST" action="{{ route('vorlagen.aktiv', $vorlage) }}" class="space-y-4">@csrf
             <input type="hidden" name="aktiv" value="0">
-            <p class="text-sm">Die Aufgabe kommt bei neuen Turnieren nicht mehr. Bereits geplante Turniere und der Verlauf bleiben erhalten, und du kannst sie jederzeit wieder auf «Ja» stellen.</p>
+            <p class="text-sm">Die Aufgabe kommt bei neuen Turnieren nicht mehr. Bereits geplante Turniere und der Verlauf bleiben erhalten, und du kannst «Kommt wieder?» jederzeit wieder auf Ja stellen.</p>
             <div><label class="feld-label" for="grund">Grund</label><input id="grund" name="grund" class="feld" placeholder="z.B. Wird neu von der Halle erledigt"></div>
             <div class="flex justify-end"><button class="knopf-nacht">Nicht mehr wiederholen</button></div>
         </form>

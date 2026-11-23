@@ -100,7 +100,7 @@ class SaisonTest extends OkTestCase
 
         // Im Dezember erscheint sie im Block "Fuer die ganze Saison"
         $this->actingAs($admin)->get(route('aufgaben.index', $dez))->assertOk()->assertSee('Für die ganze Saison 2027/28')->assertSee('Sponsoren anfragen QQ');
-        $this->actingAs($admin)->get(route('ausgaben.show', $dez))->assertOk()->assertSee('1 Saison-Aufgabe offen');
+        $this->actingAs($admin)->get(route('ausgaben.show', $dez))->assertOk()->assertSee('1 Aufgabe für die ganze Saison offen');
 
         // Neue Saison: wieder genau einmal
         $this->anlegen($admin, $this->dez(), '2028-12-02', '2028/29');
@@ -130,7 +130,7 @@ class SaisonTest extends OkTestCase
         $aufgabe = Aufgabe::where('titel', 'Plakat beide Daten QQ')->firstOrFail();
         $this->assertTrue($aufgabe->saison_aufgabe);
         $this->assertSame('saison', $aufgabe->vorlage->haeufigkeit);
-        $this->actingAs($leitung)->get(route('aufgaben.show', $aufgabe))->assertSee('Einmal pro Saison 2026/27');
+        $this->actingAs($leitung)->get(route('aufgaben.show', $aufgabe))->assertSee('gilt für die ganze Saison 2026/27');
     }
 
     public function test_erinnerung_fuer_saison_aufgabe_solange_saison_laeuft(): void

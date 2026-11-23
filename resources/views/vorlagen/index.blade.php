@@ -3,8 +3,10 @@
         @if ($verwaltbar->isNotEmpty())
             <x-slot:aktionen><button type="button" class="knopf-nacht" x-data x-on:click="$dispatch('modal-assistent')"><x-icon name="funken" class="h-4 w-4" /> Mit Claude erfassen</button></x-slot:aktionen>
         @endif
-        <x-slot:unter>{{ $anzahl === 1 ? 'Eine Aufgabe kommt' : $anzahl.' Aufgaben kommen' }} bei jedem neuen Turnier automatisch.@if ($verwaltbar->isNotEmpty()) Mit Nein kommt eine Aufgabe nicht mehr, ihr Verlauf bleibt erhalten.@endif</x-slot:unter>
+        <x-slot:unter>{{ $anzahl === 1 ? 'Eine Aufgabe kommt' : $anzahl.' Aufgaben kommen' }} automatisch in neue Turniere, je nach «Wie oft».@if ($verwaltbar->isNotEmpty()) Mit Nein kommt eine Aufgabe nicht mehr, ihr Verlauf bleibt erhalten.@endif</x-slot:unter>
     </x-seitenkopf>
+
+    <x-begriffe class="mb-5" />
 
     @if ($ressorts->isEmpty())
         <div class="karte p-4"><x-ohne-ressort /></div>
@@ -22,9 +24,9 @@
                         <select id="s-ressort" name="ressort_id" required class="feld">@foreach ($verwaltbar as $r)<option value="{{ $r->id }}" @selected(old('ressort_id', $schnell['ressort_id'] ?? $filter['ressort'] ?? null) == $r->id)>{{ $r->name }}</option>@endforeach</select></div>
                     <div><label class="feld-label" for="s-zeit">Wann</label><x-wann id="s-zeit" zeile :tage="old('tage_vorher', $schnell['tage_vorher'] ?? 30)" :bezug="old('bezug', $schnell['bezug'] ?? 'beginn')" /></div>
                     <div><label class="feld-label" for="s-aufwand">Aufwand</label><x-aufwand name="aufwand_std" id="s-aufwand" :wert="old('aufwand_std')" /></div>
-                    <div><p class="feld-label">Wie oft</p>
-                        <x-haeufigkeit klein :wert="old('haeufigkeit', $schnell['haeufigkeit'] ?? 'turnier')">
-                            @if ($turniere->count() > 1)<x-turnierarten :turniere="$turniere" :gewaehlt="old('turniere', $schnell['turniere'] ?? [])" klein />@endif
+                    <div class="w-full"><p class="feld-label">Wie oft?</p>
+                        <x-haeufigkeit :wert="old('haeufigkeit', $schnell['haeufigkeit'] ?? 'turnier')">
+                            @if ($turniere->count() > 1)<p class="feld-label mt-1">Bei welchen Turnieren?</p><x-turnierarten :turniere="$turniere" :gewaehlt="old('turniere', $schnell['turniere'] ?? [])" klein />@endif
                         </x-haeufigkeit></div>
                     <button class="knopf-rot w-full sm:w-auto"><x-icon name="plus" class="h-4 w-4" /> Hinzufügen</button>
                 </div>
@@ -38,7 +40,7 @@
         <form method="GET" class="mb-5 flex flex-wrap items-end gap-2" x-data x-on:change="$el.submit()">
             <select name="ressort" class="feld w-auto" aria-label="Ressort"><option value="">Alle Ressorts</option>@if ($hatRessorts)<option value="meine" @selected(($filter['ressort'] ?? '') === 'meine')>Meine Ressorts</option>@endif @foreach ($ressorts as $r)<option value="{{ $r->id }}" @selected(($filter['ressort'] ?? '') == $r->id)>{{ $r->name }}</option>@endforeach</select>
             @if ($turniere->count() > 1)<select name="turnier" class="feld w-auto" aria-label="Turnierart"><option value="">Alle Turnierarten</option>@foreach ($turniere as $t)<option value="{{ $t->id }}" @selected(($filter['turnier'] ?? '') == $t->id)>{{ $t->name }}</option>@endforeach</select>@endif
-            <select name="status" class="feld w-auto" aria-label="Jedes Jahr"><option value="alle" @selected($filter['status'] === 'alle')>Ja und Nein</option><option value="ja" @selected($filter['status'] === 'ja')>Nur Ja</option><option value="nein" @selected($filter['status'] === 'nein')>Nur Nein</option></select>
+            <select name="status" class="feld w-auto" aria-label="Kommt wieder"><option value="alle" @selected($filter['status'] === 'alle')>Kommen wieder und nicht mehr</option><option value="ja" @selected($filter['status'] === 'ja')>Kommen wieder</option><option value="nein" @selected($filter['status'] === 'nein')>Kommen nicht mehr</option></select>
             @if ($verwaltbar->isNotEmpty())
             <label class="flex min-h-[44px] items-center gap-2 border border-nacht/20 bg-white px-3 text-sm"><input type="checkbox" name="nur" value="ohne_anleitung" @checked(($filter['nur'] ?? '') === 'ohne_anleitung')> ohne Anleitung</label>
             @endif
@@ -49,10 +51,11 @@
         @forelse ($sichtbar as $ressort)
             @php $liste = $vorlagen[$ressort->id] ?? collect(); $darf = auth()->user()->can('ressort-verwalten', $ressort); @endphp
             <section class="karte mb-5">
-                <div class="karte-kopf"><a href="{{ route('ressorts.show', $ressort) }}" class="titel text-sm hover:text-rot">{{ $ressort->name }}</a><span class="label">{{ $liste->where('aktiv', true)->count() }} jedes Jahr</span></div>
+                <div class="karte-kopf"><a href="{{ route('ressorts.show', $ressort) }}" class="titel text-sm hover:text-rot">{{ $ressort->name }}</a><span class="label">{{ $liste->where('aktiv', true)->count() }} kommen wieder</span></div>
                 @if ($liste->isEmpty())
                     <p class="px-4 py-4 text-sm text-beton">Noch nichts im Jahresplan.</p>
                 @else
+                    @if ($darf)<div class="flex justify-end border-b border-nacht/5 px-4 py-1.5"><span class="label whitespace-nowrap">Kommt wieder?</span></div>@endif
                     <ul class="divide-y divide-nacht/5">
                         @foreach ($liste as $v)
                             <li class="flex items-center gap-3 px-4 py-2.5 {{ ($schnell['neu'] ?? null) === $v->id ? 'bg-gelb/15' : '' }}" x-data="jahresplanSchalter(@js(route('vorlagen.aktiv', $v)), {{ $v->aktiv ? 'true' : 'false' }})" :class="wert ? '' : 'bg-kreide/60'">
@@ -62,7 +65,7 @@
                                         <span class="block truncate text-sm font-bold">{{ $v->titel }}</span>
                                         @if ($v->proSaison() || $v->turniere->isNotEmpty() || blank($v->anleitung) || $v->offene_erkenntnisse)
                                             <span class="mt-0.5 flex flex-wrap items-center gap-1.5">
-                                                @if ($v->proSaison())<span class="marke-rahmen border-rot text-rot">Saison</span>@else @foreach ($v->turniere as $t)<span class="marke-rahmen">{{ $t->kurz ?: $t->name }}</span>@endforeach @endif
+                                                @if ($v->proSaison())<span class="marke-rahmen border-rot text-rot">Einmal pro Saison</span>@elseif ($v->turniere->isNotEmpty())<span class="marke-rahmen">nur {{ $v->turnierartText() }}</span>@endif
                                                 @if (blank($v->anleitung))<span class="text-xs text-beton">ohne Anleitung</span>@endif
                                                 @if ($v->offene_erkenntnisse)<span class="marke bg-nacht text-white"><x-icon name="idee" class="h-3 w-3" /> {{ $v->offene_erkenntnisse }}</span>@endif
                                             </span>
@@ -71,12 +74,12 @@
                                     <span class="hidden shrink-0 text-xs text-beton md:block">{{ \App\Support\Aufwand::text($v->aufwand_std) }}</span>
                                 </a>
                                 @if ($darf)
-                                    <div class="grid shrink-0 grid-cols-2 border border-nacht/20 text-[11px] font-bold uppercase tracking-label" role="group" aria-label="Jedes Jahr: {{ $v->titel }}">
+                                    <div class="grid shrink-0 grid-cols-2 border border-nacht/20 text-[11px] font-bold uppercase tracking-label" role="group" aria-label="Kommt wieder: {{ $v->titel }}" title="Kommt wieder?">
                                         <button type="button" class="px-3 py-2 uppercase" :class="wert ? 'bg-rot text-white' : 'text-beton hover:bg-nacht/5'" x-on:click="setze(true)" :aria-pressed="wert">Ja</button>
                                         <button type="button" class="px-3 py-2 uppercase" :class="wert ? 'text-beton hover:bg-nacht/5' : 'bg-nacht text-white'" x-on:click="setze(false)" :aria-pressed="!wert">Nein</button>
                                     </div>
                                 @else
-                                    <span class="label shrink-0" x-text="wert ? 'Jedes Jahr' : 'Kommt nicht mehr'"></span>
+                                    <span class="label shrink-0" x-text="wert ? 'Kommt wieder' : 'Kommt nicht mehr'"></span>
                                 @endif
                             </li>
                         @endforeach

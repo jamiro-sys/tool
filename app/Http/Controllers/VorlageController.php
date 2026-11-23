@@ -105,6 +105,16 @@ class VorlageController extends Controller
         return redirect()->route('vorlagen.show', $vorlage)->with('erfolg', 'Gespeichert.');
     }
 
+    /** Ganz aus dem Jahresplan loeschen. Aufgaben in bestehenden Turnieren bleiben (gelten dann als "nur dieses Mal"). */
+    public function destroy(Vorlage $vorlage)
+    {
+        Gate::authorize('ressort-verwalten', $vorlage->ressort);
+        Aktivitaet::protokolliere('vorlage.geloescht', 'Aus dem Jahresplan gelöscht: '.$vorlage->titel);
+        $vorlage->delete();
+
+        return redirect()->route('vorlagen.index')->with('erfolg', '«'.$vorlage->titel.'» ist aus dem Jahresplan gelöscht. Aufgaben in bestehenden Turnieren bleiben.');
+    }
+
     public function aktiv(Request $request, Vorlage $vorlage)
     {
         Gate::authorize('ressort-verwalten', $vorlage->ressort);

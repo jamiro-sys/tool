@@ -179,7 +179,7 @@ class AssistentController extends Controller
         }
         $ressort = Ressort::findOrFail($ressortId);
         abort_unless(Gate::allows('ressort-mitarbeiten', $ressort) || Gate::allows('ressort-verwalten', $ressort), 403);
-        $ausgabe = Ausgabe::naechste();
+        $ausgabe = Ausgabe::gewaehlt();
         abort_unless($ausgabe, 422, 'Es ist noch kein Turnier geplant.');
 
         return [$ressort, $ausgabe, route('ressorts.show', [$ressort, 'tab' => 'aufgaben'])];

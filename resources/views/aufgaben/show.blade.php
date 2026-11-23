@@ -9,6 +9,9 @@
     <div class="max-w-3xl">
     <x-seitenkopf :titel="$aufgabe->titel" :ueber="$aufgabe->ressort->name.' | '.$aufgabe->ausgabe->titel" :zurueck="route('aufgaben.index', $aufgabe->ausgabe)">
         <x-slot:aktionen>
+            @can('aufgabe-verwalten', $aufgabe)
+                <button type="button" class="knopf-leise" x-on:click="$dispatch('modal-loeschen')" data-loeschen><x-icon name="loeschen" class="h-4 w-4" /> Löschen</button>
+            @endcan
             @if ($darf)
                 <button type="button" class="knopf-rahmen" x-on:click="$dispatch('modal-bearbeiten')" data-kuerzel="e"><x-icon name="stift" class="h-4 w-4" /> Bearbeiten</button>
             @endif
@@ -41,8 +44,9 @@
                 </div>
                 <div>
                     <dt class="label">Wie oft</dt>
-                    <dd class="mt-1 text-sm">{{ $aufgabe->saison_aufgabe ? 'Einmal pro Saison '.$aufgabe->ausgabe->saison : ($jaehrlich ? 'Jedes Jahr' : 'Nur dieses Turnier') }}</dd>
-                    @if ($jaehrlich && ! $aufgabe->saison_aufgabe && $aufgabe->vorlage->turnierartText())<dd class="text-xs text-beton">{{ $aufgabe->vorlage->turnierartText() }}</dd>@endif
+                    <dd class="mt-1 text-sm">{{ $aufgabe->saison_aufgabe ? 'Einmal pro Saison' : ($jaehrlich ? 'Bei jedem Turnier' : 'Nur dieses Mal') }}</dd>
+                    @if ($aufgabe->saison_aufgabe)<dd class="text-xs text-beton">gilt für die ganze Saison {{ $aufgabe->ausgabe->saison }}</dd>
+                    @elseif ($jaehrlich && $aufgabe->vorlage->turniere->isNotEmpty())<dd class="text-xs text-beton">nur {{ $aufgabe->vorlage->turnierartText() }}</dd>@endif
                 </div>
             </dl>
             @if ($aufgabe->prioritaet === 'hoch')
@@ -186,7 +190,7 @@
         {{-- Mehr: Links, Dokumente, frueher, Jahresplan, loeschen --}}
         <section x-data="{ mehr: {{ $mehrAnzahl ? 'true' : 'false' }} }" class="border-t border-nacht/10 pt-3">
             <button type="button" class="flex w-full items-center justify-between py-2" x-on:click="mehr = !mehr" :aria-expanded="mehr">
-                <span class="label text-nacht">Mehr: Links, Dokumente, frühere Turniere</span>
+                <span class="label text-nacht">Mehr: Links, Dokumente, frühere Turniere, Jahresplan</span>
                 <x-icon name="pfeil" class="h-4 w-4 transition-transform" ::class="mehr ? 'rotate-90' : ''" />
             </button>
             <div x-show="mehr" x-collapse {{ $mehrAnzahl ? '' : 'x-cloak' }} class="mt-2 grid gap-5 md:grid-cols-2">
@@ -221,11 +225,6 @@
                     @if ($aufgabe->vorlage)
                         <a href="{{ route('vorlagen.show', $aufgabe->vorlage) }}" class="label flex items-center gap-1 hover:text-rot"><x-icon name="vorlagen" class="h-4 w-4" /> Im Jahresplan ansehen</a>
                     @endif
-                    @can('aufgabe-verwalten', $aufgabe)
-                        <form method="POST" action="{{ route('aufgaben.destroy', $aufgabe) }}" onsubmit="return confirm('Aufgabe wirklich löschen? Tipp: «Entfällt» behält die Geschichte.')">@csrf @method('DELETE')
-                            <button class="label flex items-center gap-1 text-beton hover:text-rot"><x-icon name="loeschen" class="h-4 w-4" /> Aufgabe löschen</button>
-                        </form>
-                    @endcan
                 </div>
             </div>
         </section>
@@ -237,11 +236,42 @@
             <form method="POST" action="{{ route('aufgaben.update', $aufgabe) }}">
                 @csrf @method('PATCH')
                 @include('aufgaben._formular', ['aufgabe' => $aufgabe])
-                <div class="mt-5 flex justify-end gap-2">
+                <div class="mt-5 flex items-center justify-end gap-2">
+                    @can('aufgabe-verwalten', $aufgabe)
+                        <button type="button" class="mr-auto label flex items-center gap-1 text-beton hover:text-rot" x-on:click="offen = false; $dispatch('modal-loeschen')"><x-icon name="loeschen" class="h-4 w-4" /> Löschen</button>
+                    @endcan
                     <button type="button" class="knopf-leise" x-on:click="offen = false">Abbrechen</button>
                     <button class="knopf-rot">Speichern</button>
                 </div>
             </form>
         </x-modal>
     @endif
+
+    @can('aufgabe-verwalten', $aufgabe)
+        <x-modal name="loeschen" titel="Aufgabe löschen">
+            <form method="POST" action="{{ route('aufgaben.destroy', $aufgabe) }}" class="space-y-4 text-sm">
+                @csrf @method('DELETE')
+                <p><span class="font-bold">«{{ $aufgabe->titel }}»</span> wird aus dem Turnier {{ $aufgabe->ausgabe->titel }} gelöscht, mit Checkliste, Absprachen und Links. Das lässt sich nicht rückgängig machen.</p>
+                @if ($aufgabe->saison_aufgabe)
+                    <p class="border-l-4 border-rot bg-kreide px-3 py-2">Sie gilt für die ganze Saison {{ $aufgabe->ausgabe->saison }} und verschwindet damit auch bei den anderen Turnieren der Saison.</p>
+                @endif
+                @if ($jaehrlich)
+                    @can('ressort-verwalten', $aufgabe->ressort)
+                        <label class="flex cursor-pointer items-start gap-3 border border-nacht/20 bg-white px-3 py-2.5 has-[:checked]:border-rot has-[:checked]:bg-rot/5">
+                            <input type="checkbox" name="aus_jahresplan" value="1" class="mt-1 h-4 w-4">
+                            <span><span class="block font-bold">Auch im Jahresplan auf «Kommt nicht mehr» stellen</span>
+                                <span class="block text-xs text-beton">Ohne Häkchen kommt die Aufgabe bei neuen Turnieren wieder ({{ $aufgabe->vorlage->wieOftText() }}).</span></span>
+                        </label>
+                    @else
+                        <p class="text-beton">Im Jahresplan bleibt sie. Bei neuen Turnieren kommt sie wieder.</p>
+                    @endcan
+                @endif
+                <p class="text-xs text-beton">Nur dieses Mal nicht nötig? Dann besser «Entfällt» wählen, so bleibt sichtbar, dass sie bewusst weggelassen wurde.</p>
+                <div class="flex justify-end gap-2">
+                    <button type="button" class="knopf-leise" x-on:click="offen = false">Abbrechen</button>
+                    <button class="knopf-rot"><x-icon name="loeschen" class="h-4 w-4" /> Endgültig löschen</button>
+                </div>
+            </form>
+        </x-modal>
+    @endcan
 </x-app>

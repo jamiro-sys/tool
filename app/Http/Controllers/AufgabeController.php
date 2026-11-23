@@ -137,9 +137,9 @@ class AufgabeController extends Controller
             $planer = app(AusgabePlaner::class);
             if ($request->input('wiederkehrend') === 'jedes_jahr') {
                 $planer->inJahresplan($aufgabe, $this->turnierWahl($request), $this->haeufigkeit($request));
-                $hinweis = ' Kommt jedes Jahr wieder'.($aufgabe->vorlage->turnierartText() ? ' ('.$aufgabe->vorlage->turnierartText().')' : '').'.';
+                $hinweis = ' Kommt wieder: '.$aufgabe->vorlage->wieOftText().'.';
             } elseif ($aufgabe->vorlage?->aktiv) {
-                $planer->ausJahresplan($aufgabe->vorlage, 'Bei der Aufgabe auf «Nur dieses Turnier» gestellt');
+                $planer->ausJahresplan($aufgabe->vorlage, 'Bei der Aufgabe auf «Nur dieses Mal» gestellt');
                 $hinweis = ' Kommt bei neuen Turnieren nicht mehr.';
             }
         }
@@ -216,15 +216,22 @@ class AufgabeController extends Controller
             : back();
     }
 
-    public function destroy(Aufgabe $aufgabe)
+    public function destroy(Request $request, Aufgabe $aufgabe)
     {
         Gate::authorize('aufgabe-verwalten', $aufgabe);
         $ausgabe = $aufgabe->ausgabe;
+        $vorlage = $aufgabe->vorlage;
+        $ausPlan = $request->boolean('aus_jahresplan') && $vorlage?->aktiv && Gate::allows('ressort-verwalten', $aufgabe->ressort);
         Aktivitaet::protokolliere('aufgabe.geloescht', 'Aufgabe gelöscht: '.$aufgabe->titel, $ausgabe);
         $aufgabe->verknuepfungen()->delete();
         $aufgabe->delete();
+        if ($ausPlan) {
+            app(AusgabePlaner::class)->ausJahresplan($vorlage, 'Beim Löschen der Aufgabe in '.$ausgabe->titel);
+        }
 
-        return redirect()->route('aufgaben.index', $ausgabe)->with('erfolg', 'Aufgabe gelöscht.');
+        return redirect()->route('aufgaben.index', $ausgabe)->with('erfolg', $ausPlan
+            ? 'Aufgabe gelöscht. Sie kommt auch bei neuen Turnieren nicht mehr.'
+            : 'Aufgabe gelöscht.'.($vorlage?->aktiv ? ' Im Jahresplan bleibt sie.' : ''));
     }
 
     public function kommentar(Request $request, Aufgabe $aufgabe)

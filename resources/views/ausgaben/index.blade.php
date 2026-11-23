@@ -9,6 +9,8 @@
         </x-slot:aktionen>
     </x-seitenkopf>
 
+    <x-begriffe class="mb-6" />
+
     <div class="grid gap-4 md:grid-cols-2 mb-8">
         @foreach ($turniere as $t)
             <div class="karte flex items-center gap-4 p-4">
