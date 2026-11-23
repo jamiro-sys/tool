@@ -51,7 +51,10 @@
         </form>
     @endif
 
-    <x-anstoss :ausgabe="$navAusgabe" class="kein-druck sticky top-0 z-30">
+    <x-anstoss class="kein-druck sticky top-0 z-30">
+        @if ($navAusgabe)
+            <div class="hidden sm:block">@include('partials.turnierwahl', ['leiste' => false])</div>
+        @endif
         <div x-data="suche('{{ route('suche') }}')" x-on:suche-oeffnen.window="oeffnen()">
             <button type="button" x-on:click="oeffnen()" class="flex h-11 w-11 items-center justify-center hover:bg-white/10" aria-label="Suche (Taste /)"><x-icon name="suche" /></button>
             <template x-teleport="body">
@@ -98,6 +101,10 @@
             </div>
         </div>
     </x-anstoss>
+    @if ($navAusgabe)
+        {{-- Handy: Turnierwahl als schmale Leiste unter der Kopfzeile, damit Suche und Glocke Platz haben --}}
+        <div class="kein-druck sticky top-[64px] z-20 bg-nacht text-white sm:hidden">@include('partials.turnierwahl', ['leiste' => true])</div>
+    @endif
 
     <div class="flex">
         {{-- Seitenleiste (PC) --}}

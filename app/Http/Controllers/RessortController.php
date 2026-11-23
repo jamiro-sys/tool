@@ -16,7 +16,7 @@ class RessortController extends Controller
     public function index()
     {
         $ressorts = Ressort::with(['mitglieder', 'vorlagen', 'kontakte', 'wissen'])->orderBy('sortierung')->get();
-        $ausgabe = Ausgabe::naechste();
+        $ausgabe = Ausgabe::gewaehlt();
         $fortschritt = $ausgabe ? StartController::ressortFortschritt($ausgabe)->keyBy(fn ($e) => $e['ressort']->id) : collect();
 
         return view('ressorts.index', compact('ressorts', 'ausgabe', 'fortschritt'));
@@ -26,7 +26,7 @@ class RessortController extends Controller
     {
         $tab = in_array($request->query('tab'), ['uebersicht', 'auftrag', 'personen', 'aufgaben', 'jahreslauf', 'kontakte', 'wissen', 'material', 'dateien', 'erkenntnisse'], true) ? $request->query('tab') : 'uebersicht';
         $ressort->load(['mitglieder', 'vorlagen.turniere', 'kontakte', 'dokumente.user', 'dokumente.ordner', 'wissen.user', 'uebergaben.von', 'uebergaben.an', 'material.einsaetze']);
-        $ausgabe = Ausgabe::naechste();
+        $ausgabe = Ausgabe::gewaehlt();
 
         $offen = $ausgabe ? $ressort->aufgaben()->with(['verantwortlich', 'ausgabe.turnier'])->offen()
             ->where(fn ($q) => $q->where('ausgabe_id', $ausgabe->id)

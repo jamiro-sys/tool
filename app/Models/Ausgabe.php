@@ -108,6 +108,25 @@ class Ausgabe extends Model
             ?? $offen->sortByDesc('datum_von')->first();
     }
 
+    /** Session-Schluessel fuer das in der Kopfzeile gewaehlte Turnier. */
+    public const WAHL = 'turnier_wahl';
+
+    /** Das in der Kopfzeile gewaehlte Turnier, sonst das naechste. */
+    public static function gewaehlt(): ?self
+    {
+        $id = session(self::WAHL);
+
+        return ($id ? static::find($id) : null) ?? static::naechste();
+    }
+
+    /** Kurz fuer die Kopfzeile, z. B. "DEZ 2027". */
+    public function kurzname(): string
+    {
+        $kurz = $this->turnier?->kurz;
+
+        return $kurz ? mb_strtoupper($kurz).' '.$this->datum_von->format('Y') : $this->titel;
+    }
+
     /** Erinnerungen nur bis 30 Tage nach Turnierende (danach geht es um den Rueckblick). */
     public function scopeNochAktuell(\Illuminate\Database\Eloquent\Builder $q): \Illuminate\Database\Eloquent\Builder
     {

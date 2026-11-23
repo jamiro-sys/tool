@@ -46,6 +46,7 @@ Route::middleware(['auth', 'aktiv'])->group(function () {
     Route::post('/saison/abbrechen', [\App\Http\Controllers\SaisonController::class, 'abbrechen'])->name('saison.abbrechen');
     Route::post('/ausgaben', [AusgabeController::class, 'store'])->name('ausgaben.store');
     Route::get('/ausgaben/{ausgabe}', [AusgabeController::class, 'show'])->name('ausgaben.show');
+    Route::get('/ausgaben/{ausgabe}/waehlen', [AusgabeController::class, 'waehlen'])->name('ausgaben.waehlen');
     Route::patch('/ausgaben/{ausgabe}', [AusgabeController::class, 'update'])->name('ausgaben.update');
     Route::delete('/ausgaben/{ausgabe}', [AusgabeController::class, 'destroy'])->name('ausgaben.destroy');
     Route::get('/ausgaben/{ausgabe}/rueckblick', [AusgabeController::class, 'rueckblick'])->name('ausgaben.rueckblick');
@@ -99,6 +100,7 @@ Route::middleware(['auth', 'aktiv'])->group(function () {
     Route::get('/vorlagen/{vorlage}', [VorlageController::class, 'show'])->name('vorlagen.show');
     Route::get('/vorlagen/{vorlage}/bearbeiten', [VorlageController::class, 'edit'])->name('vorlagen.edit');
     Route::put('/vorlagen/{vorlage}', [VorlageController::class, 'update'])->name('vorlagen.update');
+    Route::delete('/vorlagen/{vorlage}', [VorlageController::class, 'destroy'])->name('vorlagen.destroy');
     Route::post('/vorlagen/{vorlage}/aktiv', [VorlageController::class, 'aktiv'])->name('vorlagen.aktiv');
 
     // Erkenntnisse

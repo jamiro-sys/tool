@@ -17,6 +17,23 @@ class Vorlage extends Model
     /** Wie oft im Jahr: bei jedem (gewaehlten) Turnier oder einmal pro Saison (Dezember + Februar zusammen). */
     public const HAEUFIGKEIT = ['turnier' => 'Bei jedem Turnier', 'saison' => 'Einmal pro Saison'];
 
+    /** Die drei Antworten auf "Wie oft?" mit Erklaerung, ueberall gleich verwendet. */
+    public const WIE_OFT = [
+        'einmalig' => ['Nur dieses Mal', 'Nur in diesem Turnier. Kommt später nicht wieder.'],
+        'turnier' => ['Bei jedem Turnier', 'Kommt in jedem Turnier wieder, im Dezember und im Februar je einmal.'],
+        'saison' => ['Einmal pro Saison', 'Kommt pro Saison nur einmal, für Dezember und Februar zusammen.'],
+    ];
+
+    /** Lesbar: "Einmal pro Saison", "Bei jedem Turnier" oder "Bei jedem Turnier (nur DEZ)". */
+    public function wieOftText(): string
+    {
+        if ($this->proSaison()) {
+            return self::WIE_OFT['saison'][0];
+        }
+
+        return self::WIE_OFT['turnier'][0].($this->turniere->isNotEmpty() ? ' (nur '.$this->turniere->map(fn ($t) => $t->kurz ?: $t->name)->implode(', ').')' : '');
+    }
+
     public function proSaison(): bool
     {
         return $this->haeufigkeit === 'saison';
@@ -26,7 +43,7 @@ class Vorlage extends Model
     public const FELDNAMEN = [
         'titel' => 'Titel', 'beschreibung' => 'Beschreibung', 'anleitung' => 'Anleitung', 'checkliste' => 'Checkliste',
         'tage_vorher' => 'Wann', 'bezug' => 'Bezug', 'haeufigkeit' => 'Wie oft', 'aufwand_std' => 'Aufwand', 'prioritaet' => 'Priorität',
-        'aktiv' => 'Jedes Jahr', 'aktiv_seit' => 'Im Jahresplan seit', 'deaktiviert_am' => 'Herausgenommen am',
+        'aktiv' => 'Kommt wieder', 'aktiv_seit' => 'Im Jahresplan seit', 'deaktiviert_am' => 'Herausgenommen am',
         'deaktiviert_grund' => 'Grund', 'ressort_id' => 'Ressort', 'turnierarten' => 'Turnierarten', 'turnier_id' => 'Turnierart',
     ];
 

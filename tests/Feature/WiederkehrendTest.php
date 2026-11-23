@@ -63,7 +63,7 @@ class WiederkehrendTest extends OkTestCase
     {
         $admin = $this->person('admin');
         $vorlage = Vorlage::create(['ressort_id' => Ressort::first()->id, 'titel' => 'Halle buchen XYZ', 'tage_vorher' => 90]);
-        $this->actingAs($admin)->get(route('vorlagen.show', $vorlage))->assertOk()->assertSee('Jedes Jahr');
+        $this->actingAs($admin)->get(route('vorlagen.show', $vorlage))->assertOk()->assertSee('Kommt wieder?');
         $this->actingAs($admin)->post(route('vorlagen.aktiv', $vorlage), ['aktiv' => 0, 'grund' => 'Halle fix gebucht'])->assertRedirect();
         $this->assertFalse($vorlage->fresh()->aktiv);
         $this->actingAs($admin)->get(route('vorlagen.show', $vorlage))->assertSee('nicht mehr bei neuen Turnieren');
@@ -117,7 +117,7 @@ class WiederkehrendTest extends OkTestCase
         $a = $this->turnier();
         $r = Ressort::first();
         $leitung = $this->person('mitglied', $r->kuerzel, 'leitung');
-        $this->actingAs($leitung)->get(route('aufgaben.index', $a))->assertSee('Wie oft?')->assertSee('Nur dieses Turnier');
+        $this->actingAs($leitung)->get(route('aufgaben.index', $a))->assertSee('Wie oft?')->assertSee('Nur dieses Mal');
 
         $this->actingAs($leitung)->post(route('aufgaben.store', $a), ['titel' => 'Musikboxen ausleihen QQQ', 'ressort_id' => $r->id, 'wiederkehrend' => 'einmalig', 'faellig_am' => $a->datum_von->copy()->subDays(7)->format('Y-m-d')])->assertRedirect();
         $this->assertNull(Aufgabe::where('titel', 'Musikboxen ausleihen QQQ')->value('vorlage_id'));
@@ -144,7 +144,7 @@ class WiederkehrendTest extends OkTestCase
         $vorlage = Vorlage::create(['ressort_id' => $r->id, 'titel' => 'Musikboxen QQQ', 'tage_vorher' => 7, 'aktiv' => true]);
         $wiederkehrend = Aufgabe::create(['ausgabe_id' => $a->id, 'ressort_id' => $r->id, 'titel' => 'Musikboxen QQQ', 'status' => 'erledigt', 'vorlage_id' => $vorlage->id]);
 
-        $this->actingAs($admin)->get(route('ausgaben.rueckblick', $a))->assertOk()->assertSee('Nächstes Jahr');
+        $this->actingAs($admin)->get(route('ausgaben.rueckblick', $a))->assertOk()->assertSee('Kommt wieder?');
 
         // Nein: kommt nicht mehr
         $this->actingAs($admin)->postJson(route('aufgaben.naechstes-jahr', $wiederkehrend), ['wert' => 0])->assertJson(['wert' => false]);
@@ -202,7 +202,7 @@ class WiederkehrendTest extends OkTestCase
 
         // Knopf im Ressort, Formular mit vorgewaehltem Ressort und Turnierwahl (aktuelles Turnier angehakt)
         $seite = $this->actingAs($leitung)->get(route('ressorts.show', [$r, 'tab' => 'aufgaben']))->assertOk();
-        $seite->assertSee("modal-neue-aufgabe", false)->assertSee('Bei welchen Turnierarten?')->assertSee(route('aufgaben.store', $a), false);
+        $seite->assertSee("modal-neue-aufgabe", false)->assertSee('Bei welchen Turnieren?')->assertSee(route('aufgaben.store', $a), false);
         $this->assertMatchesRegularExpression('/value="'.$a->turnier_id.'" checked/', $seite->getContent());
 
         $zurueck = route('ressorts.show', [$r, 'tab' => 'aufgaben'], false);
@@ -256,7 +256,7 @@ class WiederkehrendTest extends OkTestCase
 
         // Mitglied ohne Leitung: keine Auswahl, Aenderung wird ignoriert
         $m = $this->person('mitglied', $r->kuerzel);
-        $this->actingAs($m)->get(route('aufgaben.show', $aufgabe))->assertSee('Nur dieses Turnier')->assertDontSee('name="wiederkehrend"', false);
+        $this->actingAs($m)->get(route('aufgaben.show', $aufgabe))->assertSee('Nur dieses Mal')->assertDontSee('name="wiederkehrend"', false);
         $this->actingAs($m)->patch(route('aufgaben.update', $aufgabe), ['wiederkehrend' => 'jedes_jahr']);
         $this->assertFalse($aufgabe->fresh()->vorlage->aktiv);
     }

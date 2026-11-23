@@ -28,7 +28,24 @@ class AppServiceProvider extends ServiceProvider
 
         \Illuminate\Support\Facades\View::composer('components.app', function ($view) {
             $user = auth()->user();
-            $view->with('navAusgabe', $user ? \App\Models\Ausgabe::naechste() : null);
+            // Gewaehltes Turnier: das der aktuellen Seite, sonst die Wahl in der Kopfzeile, sonst das naechste
+            $navAusgabe = null;
+            if ($user) {
+                $route = request()->route();
+                $hier = $route?->parameter('ausgabe');
+                $aufgabe = $route?->parameter('aufgabe');
+                if (! $hier instanceof \App\Models\Ausgabe && $aufgabe instanceof \App\Models\Aufgabe) {
+                    $hier = $aufgabe->ausgabe;
+                }
+                if ($hier instanceof \App\Models\Ausgabe) {
+                    session([\App\Models\Ausgabe::WAHL => $hier->id]);
+                    $navAusgabe = $hier;
+                } else {
+                    $navAusgabe = \App\Models\Ausgabe::gewaehlt();
+                }
+            }
+            $view->with('navAusgabe', $navAusgabe);
+            $view->with('navTurniere', $user ? \App\Models\Ausgabe::with('turnier')->orderByDesc('datum_von')->get() : collect());
             $view->with('ungelesen', $user ? $user->unreadNotifications()->count() : 0);
             $view->with('navRessorts', $user ? \App\Models\Ressort::orderBy('sortierung')->orderBy('name')->get(['id', 'name', 'kuerzel']) : collect());
         });

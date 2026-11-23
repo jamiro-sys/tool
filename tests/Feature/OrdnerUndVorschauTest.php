@@ -127,7 +127,7 @@ class OrdnerUndVorschauTest extends OkTestCase
         // Bearbeiten: nur noch Februar, mit Verlauf
         $this->actingAs($admin)->put(route('vorlagen.update', $zwei), $daten + ['titel' => 'Nur zwei QQQ', 'turniere' => [$feb->id]])->assertSessionHasNoErrors();
         $this->assertSame([$feb->id], $zwei->fresh()->turniere->pluck('id')->all());
-        $this->actingAs($admin)->get(route('vorlagen.show', $zwei))->assertSee('nur Hallencup Februar');
+        $this->actingAs($admin)->get(route('vorlagen.show', $zwei))->assertSee('Bei jedem Turnier (nur ');
         $this->actingAs($admin)->get(route('vorlagen.index', ['turnier' => $dez->id]))->assertDontSee('Nur zwei QQQ')->assertSee('Alle QQQ');
 
         // Export und Import nehmen die Turnierarten mit

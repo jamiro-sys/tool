@@ -1,11 +1,11 @@
 <x-app :titel="'Rückblick '.$ausgabe->titel">
     <x-seitenkopf titel="Rückblick" :ueber="$ausgabe->titel" :zurueck="route('ausgaben.show', $ausgabe)">
-        <x-slot:unter>Was lief gut, was machen wir nächstes Mal anders? Pro Aufgabe entscheidest du, ob sie nächstes Jahr wieder kommt. Erkenntnisse fliessen in den Jahresplan.</x-slot:unter>
+        <x-slot:unter>Was lief gut, was machen wir nächstes Mal anders? Pro Aufgabe entscheidest du, ob sie beim nächsten Mal wieder kommt. Erkenntnisse fliessen in den Jahresplan.</x-slot:unter>
     </x-seitenkopf>
 
     {{-- Ablauf in drei Schritten --}}
     <ol class="mb-6 grid gap-3 md:grid-cols-3">
-        @foreach (['Aufwand erfassen' => 'Wie lange hat jede Aufgabe wirklich gebraucht?', 'Nächstes Jahr?' => 'Pro Aufgabe Ja oder Nein: kommt sie beim nächsten Turnier wieder?', 'Erkenntnisse festhalten' => 'Was machen wir anders? Mit der Glühbirne direkt in den Jahresplan.'] as $t => $txt)
+        @foreach (['Aufwand erfassen' => 'Wie lange hat jede Aufgabe wirklich gebraucht?', 'Kommt wieder?' => 'Pro Aufgabe Ja oder Nein: kommt sie beim nächsten Mal wieder?', 'Erkenntnisse festhalten' => 'Was machen wir anders? Mit der Glühbirne direkt in den Jahresplan.'] as $t => $txt)
             <li class="karte flex gap-3 p-4">
                 <span class="zahl flex h-9 w-9 shrink-0 items-center justify-center bg-rot text-lg text-white">{{ $loop->iteration }}</span>
                 <span><span class="block text-sm font-bold uppercase tracking-label">{{ $t }}</span><span class="text-xs text-beton">{{ $txt }}</span></span>
@@ -38,9 +38,9 @@
                                     </div>
                                 </div>
                                 <div class="flex flex-wrap items-center gap-2" x-data="jahresplanSchalter(@js(route('aufgaben.naechstes-jahr', $a)), {{ $a->vorlage?->aktiv ? 'true' : 'false' }}, 'wert')">
-                                    <span class="label whitespace-nowrap">Nächstes Jahr</span>
+                                    <span class="label whitespace-nowrap">Kommt wieder?</span>
                                     @can('ressort-verwalten', $a->ressort)
-                                        <div class="grid grid-cols-2 border border-nacht/20 text-[11px] font-bold uppercase tracking-label" role="group" aria-label="Nächstes Jahr wieder: {{ $a->titel }}">
+                                        <div class="grid grid-cols-2 border border-nacht/20 text-[11px] font-bold uppercase tracking-label" role="group" aria-label="Kommt wieder: {{ $a->titel }}">
                                             <button type="button" class="px-3 py-1.5 uppercase" :class="wert ? 'bg-rot text-white' : 'text-beton hover:bg-nacht/5'" x-on:click="setze(true)" :aria-pressed="wert">Ja</button>
                                             <button type="button" class="px-3 py-1.5 uppercase" :class="wert ? 'text-beton hover:bg-nacht/5' : 'bg-nacht text-white'" x-on:click="setze(false)" :aria-pressed="!wert">Nein</button>
                                         </div>
@@ -115,7 +115,7 @@
             @if ($ohneVorlage->count())
                 <section class="karte border-l-4 border-l-gelb p-4">
                     <p class="titel text-sm">{{ $ohneVorlage->count() }} einmalige Aufgaben</p>
-                    <p class="mt-1 text-xs text-beton">Kommen sie nächstes Jahr wieder? Dann bei der Aufgabe auf Ja tippen.</p>
+                    <p class="mt-1 text-xs text-beton">Kommen sie beim nächsten Mal wieder? Dann bei der Aufgabe auf Ja tippen.</p>
                 </section>
             @endif
 

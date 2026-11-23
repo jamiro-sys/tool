@@ -69,7 +69,7 @@
                 <p class="label">Saison {{ $ausgabe->saison }}</p>
                 <p class="mt-1 text-sm">Gehört zusammen mit
                     @foreach ($geschwister as $g)<a href="{{ route('ausgaben.show', $g) }}" class="font-bold hover:text-rot">{{ $g->titel }}</a> ({{ $g->datumText() }})@if (! $loop->last), @endif @endforeach.
-                    @if ($saisonOffen)<a href="{{ route('aufgaben.index', $ausgabe) }}" class="ml-1 font-bold text-rot hover:underline">{{ $saisonOffen }} {{ $saisonOffen === 1 ? 'Saison-Aufgabe' : 'Saison-Aufgaben' }} offen</a>@endif
+                    @if ($saisonOffen)<a href="{{ route('aufgaben.index', $ausgabe) }}" class="ml-1 font-bold text-rot hover:underline">{{ $saisonOffen }} {{ $saisonOffen === 1 ? 'Aufgabe' : 'Aufgaben' }} für die ganze Saison offen</a>@endif
                 </p>
             </section>
         @endif

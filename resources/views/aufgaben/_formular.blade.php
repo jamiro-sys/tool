@@ -94,7 +94,7 @@
             <input type="hidden" name="jahresplan_mit" value="0">
             <input type="checkbox" name="jahresplan_mit" value="1" class="mt-1 h-4 w-4" @checked(old('jahresplan_mit', '1') === '1')>
             <span><span class="block text-sm font-bold">Auch im Jahresplan übernehmen</span>
-                <span class="block text-xs text-beton">Gilt dann auch in den kommenden Jahren. Ohne Häkchen nur für dieses Turnier.</span></span>
+                <span class="block text-xs text-beton">Gilt dann auch für alle künftigen Turniere. Ohne Häkchen gilt die Änderung nur hier.</span></span>
         </label>
     @endif
 </div>
