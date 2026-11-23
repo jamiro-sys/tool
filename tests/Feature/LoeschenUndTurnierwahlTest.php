@@ -43,6 +43,33 @@ class LoeschenUndTurnierwahlTest extends OkTestCase
         $this->assertFalse($v->fresh()->aktiv);
     }
 
+    public function test_mitglied_loescht_eigene_aufgabe(): void
+    {
+        $r = Ressort::first();
+        $ich = $this->person('mitglied', $r->kuerzel);
+        $andere = $this->person('mitglied', $r->kuerzel);
+        $a = $this->turnier('DEZ', '2030/31', '2030-12-07');
+        $v = Vorlage::create(['ressort_id' => $r->id, 'titel' => 'Eigen QQ', 'tage_vorher' => 30, 'aktiv' => true]);
+        $meine = Aufgabe::create(['ausgabe_id' => $a->id, 'vorlage_id' => $v->id, 'ressort_id' => $r->id, 'titel' => 'Eigen QQ', 'status' => 'offen', 'verantwortlich_id' => $ich->id]);
+        $fremde = Aufgabe::create(['ausgabe_id' => $a->id, 'ressort_id' => $r->id, 'titel' => 'Fremd QQ', 'status' => 'offen', 'verantwortlich_id' => $andere->id]);
+
+        // Eigene Aufgabe: Knopf sichtbar, aber ohne Jahresplan-Haekchen
+        $this->actingAs($ich)->get(route('aufgaben.show', $meine))->assertOk()->assertSee('data-loeschen', false)
+            ->assertDontSee('Auch im Jahresplan auf «Kommt nicht mehr» stellen')->assertSee('sag es der Ressortleitung');
+        $this->actingAs($ich)->get(route('aufgaben.show', $fremde))->assertOk()->assertDontSee('data-loeschen', false);
+        $this->actingAs($ich)->delete(route('aufgaben.destroy', $fremde))->assertForbidden();
+
+        // Lesende Person darf auch eigene nicht loeschen
+        $lesend = $this->person('lesend');
+        $fremde->update(['verantwortlich_id' => $lesend->id]);
+        $this->actingAs($lesend)->delete(route('aufgaben.destroy', $fremde))->assertForbidden();
+
+        // Jahresplan bleibt, auch wenn das Haekchen mitgeschickt wird
+        $this->actingAs($ich)->delete(route('aufgaben.destroy', $meine), ['aus_jahresplan' => 1])->assertRedirect(route('aufgaben.index', $a));
+        $this->assertNull(Aufgabe::find($meine->id));
+        $this->assertTrue($v->fresh()->aktiv);
+    }
+
     public function test_jahresplan_eintrag_loeschen(): void
     {
         $r = Ressort::first();

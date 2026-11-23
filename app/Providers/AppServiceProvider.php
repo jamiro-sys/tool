@@ -79,5 +79,9 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Gate::define('aufgabe-verwalten', fn (User $user, Aufgabe $aufgabe) => $user->leitetRessort($aufgabe->ressort_id));
+
+        // Loeschen: Ressortleitung und Admin, dazu die verantwortliche Person ihre eigenen Aufgaben
+        Gate::define('aufgabe-loeschen', fn (User $user, Aufgabe $aufgabe) => ! $user->istLesend()
+            && ($user->leitetRessort($aufgabe->ressort_id) || $aufgabe->verantwortlich_id === $user->id));
     }
 }

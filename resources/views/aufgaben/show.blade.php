@@ -9,7 +9,7 @@
     <div class="max-w-3xl">
     <x-seitenkopf :titel="$aufgabe->titel" :ueber="$aufgabe->ressort->name.' | '.$aufgabe->ausgabe->titel" :zurueck="route('aufgaben.index', $aufgabe->ausgabe)">
         <x-slot:aktionen>
-            @can('aufgabe-verwalten', $aufgabe)
+            @can('aufgabe-loeschen', $aufgabe)
                 <button type="button" class="knopf-leise" x-on:click="$dispatch('modal-loeschen')" data-loeschen><x-icon name="loeschen" class="h-4 w-4" /> Löschen</button>
             @endcan
             @if ($darf)
@@ -237,7 +237,7 @@
                 @csrf @method('PATCH')
                 @include('aufgaben._formular', ['aufgabe' => $aufgabe])
                 <div class="mt-5 flex items-center justify-end gap-2">
-                    @can('aufgabe-verwalten', $aufgabe)
+                    @can('aufgabe-loeschen', $aufgabe)
                         <button type="button" class="mr-auto label flex items-center gap-1 text-beton hover:text-rot" x-on:click="offen = false; $dispatch('modal-loeschen')"><x-icon name="loeschen" class="h-4 w-4" /> Löschen</button>
                     @endcan
                     <button type="button" class="knopf-leise" x-on:click="offen = false">Abbrechen</button>
@@ -247,7 +247,7 @@
         </x-modal>
     @endif
 
-    @can('aufgabe-verwalten', $aufgabe)
+    @can('aufgabe-loeschen', $aufgabe)
         <x-modal name="loeschen" titel="Aufgabe löschen">
             <form method="POST" action="{{ route('aufgaben.destroy', $aufgabe) }}" class="space-y-4 text-sm">
                 @csrf @method('DELETE')
@@ -263,7 +263,7 @@
                                 <span class="block text-xs text-beton">Ohne Häkchen kommt die Aufgabe bei neuen Turnieren wieder ({{ $aufgabe->vorlage->wieOftText() }}).</span></span>
                         </label>
                     @else
-                        <p class="text-beton">Im Jahresplan bleibt sie. Bei neuen Turnieren kommt sie wieder.</p>
+                        <p class="text-beton">Im Jahresplan bleibt sie, bei neuen Turnieren kommt sie wieder. Soll sie nicht mehr kommen, sag es der Ressortleitung.</p>
                     @endcan
                 @endif
                 <p class="text-xs text-beton">Nur dieses Mal nicht nötig? Dann besser «Entfällt» wählen, so bleibt sichtbar, dass sie bewusst weggelassen wurde.</p>
