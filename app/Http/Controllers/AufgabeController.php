@@ -121,7 +121,7 @@ class AufgabeController extends Controller
             $ziel = Ressort::findOrFail($daten['ressort_id']);
             abort_unless(Gate::allows('ressort-mitarbeiten', $ziel) || Gate::allows('ressort-verwalten', $ziel), 403, 'In dieses Ressort kannst du keine Aufgaben verschieben.');
         }
-        $darfPlan = Gate::allows('ressort-verwalten', $altesRessort);
+        $darfPlan = Gate::allows('aufgabe-jahresplan', $aufgabe);
 
         $this->checklisteAnwenden($daten, $aufgabe->checkliste ?? []);
 
@@ -132,7 +132,10 @@ class AufgabeController extends Controller
 
         // Wie oft? Jahresplan anpassen (nur Ressortleitung/Admin)
         $hinweis = null;
-        $darfPlan = $darfPlan && Gate::allows('ressort-verwalten', $aufgabe->ressort_id === $altesRessort->id ? $altesRessort : $aufgabe->load('ressort')->ressort);
+        // Nach einem Ressortwechsel muss es auch im neuen Ressort erlaubt sein (Leitung dort oder weiterhin eigene Aufgabe)
+        if ($aufgabe->ressort_id !== $altesRessort->id) {
+            $darfPlan = $darfPlan && Gate::allows('aufgabe-jahresplan', $aufgabe);
+        }
         if ($request->filled('wiederkehrend') && $darfPlan) {
             $planer = app(AusgabePlaner::class);
             if ($request->input('wiederkehrend') === 'jedes_jahr') {
@@ -221,7 +224,7 @@ class AufgabeController extends Controller
         Gate::authorize('aufgabe-loeschen', $aufgabe);
         $ausgabe = $aufgabe->ausgabe;
         $vorlage = $aufgabe->vorlage;
-        $ausPlan = $request->boolean('aus_jahresplan') && $vorlage?->aktiv && Gate::allows('ressort-verwalten', $aufgabe->ressort);
+        $ausPlan = $request->boolean('aus_jahresplan') && $vorlage?->aktiv && Gate::allows('aufgabe-jahresplan', $aufgabe);
         Aktivitaet::protokolliere('aufgabe.geloescht', 'Aufgabe gelöscht: '.$aufgabe->titel, $ausgabe);
         $aufgabe->verknuepfungen()->delete();
         $aufgabe->delete();
@@ -364,7 +367,7 @@ class AufgabeController extends Controller
     /** Einmalige Aufgabe in den Jahresplan aufnehmen: kommt ab jetzt bei jedem neuen Turnier. */
     public function wiederholen(Aufgabe $aufgabe, AusgabePlaner $planer)
     {
-        Gate::authorize('ressort-verwalten', $aufgabe->ressort);
+        Gate::authorize('aufgabe-jahresplan', $aufgabe);
         abort_if($aufgabe->vorlage_id, 409);
         // Wie im Formular: neu im Jahresplan zuerst fuer die Turnierart dieses Turniers
         $vorlage = $planer->inJahresplan($aufgabe, [$aufgabe->ausgabe->turnier_id]);

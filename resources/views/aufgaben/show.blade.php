@@ -256,7 +256,7 @@
                     <p class="border-l-4 border-rot bg-kreide px-3 py-2">Sie gilt für die ganze Saison {{ $aufgabe->ausgabe->saison }} und verschwindet damit auch bei den anderen Turnieren der Saison.</p>
                 @endif
                 @if ($jaehrlich)
-                    @can('ressort-verwalten', $aufgabe->ressort)
+                    @can('aufgabe-jahresplan', $aufgabe)
                         <label class="flex cursor-pointer items-start gap-3 border border-nacht/20 bg-white px-3 py-2.5 has-[:checked]:border-rot has-[:checked]:bg-rot/5">
                             <input type="checkbox" name="aus_jahresplan" value="1" class="mt-1 h-4 w-4">
                             <span><span class="block font-bold">Auch im Jahresplan auf «Kommt nicht mehr» stellen</span>
