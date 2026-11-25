@@ -51,11 +51,12 @@ class LoeschenUndTurnierwahlTest extends OkTestCase
         $a = $this->turnier('DEZ', '2030/31', '2030-12-07');
         $v = Vorlage::create(['ressort_id' => $r->id, 'titel' => 'Eigen QQ', 'tage_vorher' => 30, 'aktiv' => true]);
         $meine = Aufgabe::create(['ausgabe_id' => $a->id, 'vorlage_id' => $v->id, 'ressort_id' => $r->id, 'titel' => 'Eigen QQ', 'status' => 'offen', 'verantwortlich_id' => $ich->id]);
-        $fremde = Aufgabe::create(['ausgabe_id' => $a->id, 'ressort_id' => $r->id, 'titel' => 'Fremd QQ', 'status' => 'offen', 'verantwortlich_id' => $andere->id]);
+        $fremde = Aufgabe::create(['ausgabe_id' => $a->id, 'vorlage_id' => $v->id, 'ressort_id' => $r->id, 'titel' => 'Fremd QQ', 'status' => 'offen', 'verantwortlich_id' => $andere->id]);
 
-        // Eigene Aufgabe: Knopf sichtbar, aber ohne Jahresplan-Haekchen
+        // Eigene Aufgabe: Knopf und Jahresplan-Haekchen sichtbar
         $this->actingAs($ich)->get(route('aufgaben.show', $meine))->assertOk()->assertSee('data-loeschen', false)
-            ->assertDontSee('Auch im Jahresplan auf «Kommt nicht mehr» stellen')->assertSee('sag es der Ressortleitung');
+            ->assertSee('Auch im Jahresplan auf «Kommt nicht mehr» stellen');
+        // Fremde Aufgabe: kein Loeschen, Hinweis an die Ressortleitung
         $this->actingAs($ich)->get(route('aufgaben.show', $fremde))->assertOk()->assertDontSee('data-loeschen', false);
         $this->actingAs($ich)->delete(route('aufgaben.destroy', $fremde))->assertForbidden();
 
@@ -64,10 +65,42 @@ class LoeschenUndTurnierwahlTest extends OkTestCase
         $fremde->update(['verantwortlich_id' => $lesend->id]);
         $this->actingAs($lesend)->delete(route('aufgaben.destroy', $fremde))->assertForbidden();
 
-        // Jahresplan bleibt, auch wenn das Haekchen mitgeschickt wird
+        // Mit Haekchen: auch im Jahresplan "Kommt nicht mehr"
         $this->actingAs($ich)->delete(route('aufgaben.destroy', $meine), ['aus_jahresplan' => 1])->assertRedirect(route('aufgaben.index', $a));
         $this->assertNull(Aufgabe::find($meine->id));
-        $this->assertTrue($v->fresh()->aktiv);
+        $this->assertFalse($v->fresh()->aktiv);
+    }
+
+    public function test_mitglied_bearbeitet_eigene_aufgabe_mit_jahresplan(): void
+    {
+        $r = Ressort::first();
+        $ich = $this->person('mitglied', $r->kuerzel);
+        $andere = $this->person('mitglied', $r->kuerzel);
+        $a = $this->turnier('DEZ', '2030/31', '2030-12-07');
+        $v = Vorlage::create(['ressort_id' => $r->id, 'titel' => 'Plakat QQ', 'tage_vorher' => 30, 'aktiv' => true]);
+        $meine = Aufgabe::create(['ausgabe_id' => $a->id, 'vorlage_id' => $v->id, 'ressort_id' => $r->id, 'titel' => 'Plakat QQ', 'status' => 'offen', 'verantwortlich_id' => $ich->id]);
+        $w = Vorlage::create(['ressort_id' => $r->id, 'titel' => 'Kasse QQ', 'tage_vorher' => 30, 'aktiv' => true]);
+        $fremde = Aufgabe::create(['ausgabe_id' => $a->id, 'vorlage_id' => $w->id, 'ressort_id' => $r->id, 'titel' => 'Kasse QQ', 'status' => 'offen', 'verantwortlich_id' => $andere->id]);
+        $basis = ['ressort_id' => $r->id, 'wann_gesendet' => 1, 'tage_vorher' => 30, 'bezug' => 'beginn'];
+
+        // Eigene Aufgabe: Wie oft? und Haekchen im Bearbeiten-Fenster
+        $this->actingAs($ich)->get(route('aufgaben.show', $meine))->assertOk()->assertSee('data-wie-oft', false)->assertSee('Auch im Jahresplan übernehmen');
+        // Fremde Aufgabe im gleichen Ressort: bearbeiten ja, Jahresplan nein
+        $this->actingAs($ich)->get(route('aufgaben.show', $fremde))->assertOk()->assertDontSee('data-wie-oft', false)->assertDontSee('Auch im Jahresplan übernehmen');
+
+        // Titel aendern mit Haekchen: Jahresplan geht mit, Verlauf nennt die Person
+        $this->actingAs($ich)->patch(route('aufgaben.update', $meine), $basis + ['titel' => 'Plakat neu QQ', 'jahresplan_mit' => 1, 'wiederkehrend' => 'jedes_jahr', 'haeufigkeit' => 'turnier'])->assertSessionHasNoErrors();
+        $this->assertSame('Plakat neu QQ', $v->fresh()->titel);
+        $this->assertSame($ich->id, $v->versionen()->latest('id')->value('user_id'));
+
+        // Fremde Aufgabe: mitgeschickte Werte aendern den Jahresplan nicht
+        $this->actingAs($ich)->patch(route('aufgaben.update', $fremde), $basis + ['titel' => 'Kasse neu QQ', 'jahresplan_mit' => 1, 'wiederkehrend' => 'einmalig'])->assertSessionHasNoErrors();
+        $this->assertSame('Kasse QQ', $w->fresh()->titel);
+        $this->assertTrue($w->fresh()->aktiv);
+
+        // Eigene Aufgabe auf "Nur dieses Mal": kommt nicht mehr
+        $this->actingAs($ich)->patch(route('aufgaben.update', $meine), $basis + ['titel' => 'Plakat neu QQ', 'wiederkehrend' => 'einmalig'])->assertSessionHasNoErrors();
+        $this->assertFalse($v->fresh()->aktiv);
     }
 
     public function test_jahresplan_eintrag_loeschen(): void

@@ -38,7 +38,7 @@
             :datum="old('faellig_am', $a?->faellig_am)"
             :von="$wannAusgabe?->datum_von" :bis="$wannAusgabe?->datum_bis" />
     </div>
-    @if ($a ? auth()->user()->can('ressort-verwalten', $a->ressort) : auth()->user()->can('vorlagen-verwalten'))
+    @if ($a ? auth()->user()->can('aufgabe-jahresplan', $a) : auth()->user()->can('vorlagen-verwalten'))
         @include('aufgaben._wie_oft', ['a' => $a, 'schmal' => true])
     @endif
 
@@ -89,7 +89,7 @@
         </div>
     </div>
 
-    @if ($a && $a->vorlage?->aktiv && auth()->user()->can('ressort-verwalten', $a->ressort))
+    @if ($a && $a->vorlage?->aktiv && auth()->user()->can('aufgabe-jahresplan', $a))
         <label class="flex cursor-pointer items-start gap-3 border border-nacht/20 bg-white px-3 py-2.5 has-[:checked]:border-rot has-[:checked]:bg-rot/5">
             <input type="hidden" name="jahresplan_mit" value="0">
             <input type="checkbox" name="jahresplan_mit" value="1" class="mt-1 h-4 w-4" @checked(old('jahresplan_mit', '1') === '1')>

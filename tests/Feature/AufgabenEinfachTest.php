@@ -63,7 +63,8 @@ class AufgabenEinfachTest extends OkTestCase
 
         $this->actingAs($m)->get(route('aufgaben.show', $aufgabe))->assertOk()
             ->assertSeeInOrder(['data-steckbrief', 'Fällig', 'Wer', $m->name, 'Als erledigt markieren', 'Checkliste', 'Punkt QQ', 'Absprachen'])
-            ->assertDontSee('Bei welchen Turnieren?');
+            // «Wie oft?» nur im Fenster Bearbeiten, nicht auf der Seite selbst
+            ->assertSeeInOrder(['Absprachen', 'Aufgabe bearbeiten', 'Bei welchen Turnieren?']);
 
         // Abhaken mit Aufwand in einem Schritt
         $this->actingAs($m)->post(route('aufgaben.status', $aufgabe), ['status' => 'erledigt', 'aufwand_effektiv' => 1.5])->assertRedirect();
