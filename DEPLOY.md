@@ -21,13 +21,10 @@ Ein Update lädt eine neue Version nach `releases/`, sichert die Datenbank, migr
 1. **PHP**: Unter *PHP-Einstellungen* der Domain PHP 8.3 oder neuer wählen (FPM). Erweiterungen `pdo_mysql`, `mbstring`, `intl`, `gmp` (für Push) aktiv lassen.
 2. **Datenbank**: Unter *Datenbanken* eine MariaDB-Datenbank mit Benutzer anlegen.
 3. **SSH**: Unter *Webhosting-Zugang* SSH-Zugriff aktivieren (`/bin/bash`).
-4. **Dokumentstamm**: Unter *Hosting-Einstellungen* den Dokumentstamm auf den Ordner `ok-tool` setzen (nicht `current/public`: Netcup erlaubt kein erweitertes `open_basedir`). Das Update legt dort eine `.htaccess` an, die alles nach `current/public` weiterleitet.
-   Unter *Apache und nginx* bei *Zusätzliche nginx-Anweisungen* eintragen, damit nginx keine Dateien aus den internen Ordnern ausliefert:
+4. **Dokumentstamm**: Unter *Hosting-Einstellungen* den Dokumentstamm auf den Ordner `ok-tool` setzen (nicht `current/public`: Netcup erlaubt kein erweitertes `open_basedir`). Das Update legt dort eine `.htaccess` an, die alles nach `current/public` weiterleitet, `www` auf die Adresse ohne `www` umleitet und `shared/`, `releases/` und `current/` von aussen mit 404 sperrt.
+   Bei der Hauptdomain sperrt Netcup das Feld Dokumentstamm. Dann den Inhalt von `ok-tool` direkt in `httpdocs` der Hauptdomain legen und diesen Ordner als `DEPLOY_PFAD` verwenden. Zusätzliche nginx-Anweisungen gibt es bei Netcup Webhosting nicht, sie sind dank der `.htaccess` auch nicht nötig.
 
-   ```
-   location ~ ^/(shared|releases|current)/ { return 404; }
-   ```
-5. **SSL**: Let's Encrypt aktivieren und "Weiterleitung auf HTTPS" einschalten.
+5. **SSL**: Let's Encrypt für die Domain und `www` aktivieren und "Weiterleitung auf HTTPS" einschalten.
 6. **E-Mail**: Ein Postfach anlegen, z. B. `ok@deine-domain.ch`, für den Versand.
 
 ## 2. Einmal per SSH einrichten
@@ -131,6 +128,14 @@ Der Cron erledigt: Warteschlange (Mails, Push), Erinnerungen 07.15 Uhr, Tageszus
 ## 6. Push einschalten
 
 Unter *Admin > System > Push-Schlüssel erzeugen* klicken und die zwei Werte in `shared/.env` eintragen. Danach kann jede Person Push unter *Benachrichtigungen* auf ihrem Gerät aktivieren. Auf dem iPhone muss das Tool dafür zuerst über *Teilen > Zum Home-Bildschirm* installiert werden.
+
+## Aktuelle Installation
+
+- Adresse: `https://fcmuensterlingen-hallencup.ch` (`www` und `tool.fcmuensterlingen-hallencup.ch` leiten per 301 dorthin)
+- Ordner: `/fcmuensterlingen-hallencup.ch/httpdocs` (so sieht ihn SSH). Dieser Pfad steht fest in `.github/workflows/update.yml`, das Secret `DEPLOY_PFAD` wird nicht mehr verwendet
+- Cronjob: `php /fcmuensterlingen-hallencup.ch/httpdocs/current/artisan schedule:run`, alle 5 Minuten
+- Die Subdomain `tool` zeigt auf `/tool.fcmuensterlingen-hallencup.ch/httpdocs`, dort liegt nur eine `.htaccess` mit der Umleitung
+- Das frühere Tool liegt archiviert in `/fcmuensterlingen-hallencup.ch/archiv-altes-tool-2026-11-26`
 
 ## Hinweis zu chroot-SSH
 
