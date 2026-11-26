@@ -69,7 +69,8 @@ jobs:
         env:
           ZIEL: ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}
           PORT: ${{ secrets.SSH_PORT || 22 }}
-          BASIS: ${{ secrets.DEPLOY_PFAD }}
+          # Ordner, wie ihn die SSH-Sitzung (chroot) sieht. Das Tool liegt im httpdocs der Hauptdomain.
+          BASIS: /fcmuensterlingen-hallencup.ch/httpdocs
           PHP_BIN: ${{ vars.PHP_BIN || 'php' }}
         run: |
           RELEASE="$(date -u +%Y%m%d%H%M%S)-${GITHUB_SHA::7}"

@@ -25,13 +25,29 @@ cat > .htaccess <<'HTA'
 Options -Indexes
 <IfModule mod_rewrite.c>
     RewriteEngine On
+    # www auf die Adresse ohne www umleiten (ausser Let's-Encrypt-Pruefungen)
+    RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+    RewriteCond %{REQUEST_URI} !^/\.well-known/
+    RewriteRule ^ https://%1%{REQUEST_URI} [L,R=301]
+    # Interne Ordner und Dateien von aussen nicht erreichbar (404)
+    RewriteCond %{ENV:REDIRECT_STATUS} ^$
+    RewriteRule ^(shared|releases|current)(/|$) - [R=404,L]
+    RewriteRule ^(vorherige-version|current\.neu)$ - [R=404,L]
     # Schraegstrich am Ende hier entfernen, sonst leitet Laravel auf /current/public/... um
     RewriteCond %{REQUEST_URI} ^(.+)/$
     RewriteRule ^ %1 [L,R=301]
     RewriteRule ^(.*)$ current/public/$1 [L]
 </IfModule>
 HTA
-printf 'Require all denied\n' > shared/.htaccess
+cat > shared/.htaccess <<'HTA'
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^ - [R=404,L]
+</IfModule>
+<IfModule !mod_rewrite.c>
+    Require all denied
+</IfModule>
+HTA
 
 # Geteilte Daten verbinden. Relative Links, weil SSH (chroot) und Webserver
 # denselben Ordner unter verschiedenen absoluten Pfaden sehen.
